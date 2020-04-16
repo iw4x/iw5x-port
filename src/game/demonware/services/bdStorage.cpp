@@ -4,6 +4,7 @@
 #include "utils/cryptography.hpp"
 #include "utils/nt.hpp"
 #include "utils/io.hpp"
+#include "utils/string.hpp"
 
 namespace demonware
 {
@@ -14,6 +15,7 @@ namespace demonware
 		this->register_service(5, &bdStorage::list_legacy_user_files);
 		this->register_service(6, &bdStorage::list_publisher_files);
 		this->register_service(7, &bdStorage::get_publisher_file);
+		this->register_service(8, &bdStorage::update_legacy_user_file);
 		this->register_service(10, &bdStorage::set_user_file);
 		this->register_service(11, &bdStorage::delete_user_file);
 		this->register_service(12, &bdStorage::get_user_file);
@@ -71,14 +73,17 @@ namespace demonware
 		buffer->read_bool(&priv);
 		buffer->read_blob(&data);
 
-		printf("DW: Storing user file: %s\n", filename.data());
+		const auto id = *reinterpret_cast<const uint64_t*>(utils::cryptography::sha1::compute(filename).data());
+		std::string id_string = utils::string::va("%llX", id);
 
-		const auto path = get_user_file_path(filename);
+		printf("DW: Storing user file '%s' as %s\n", filename.data(), id_string.data());
+
+		const auto path = get_user_file_path(id_string);
 		utils::io::write_file(path, data);
 
 		auto info = new bdFileInfo;
 
-		info->file_id = *reinterpret_cast<const uint64_t*>(utils::cryptography::sha1::compute(filename).data());
+		info->file_id = id;
 		info->filename = filename;
 		info->create_time = uint32_t(time(nullptr));
 		info->modified_time = info->create_time;
@@ -91,14 +96,47 @@ namespace demonware
 		reply->send();
 	}
 
+	void bdStorage::update_legacy_user_file(i_server* server, byte_buffer* buffer) const
+	{
+		uint64_t id;
+		std::string data;
+
+		buffer->read_uint64(&id);
+		buffer->read_blob(&data);
+
+		std::string id_string = utils::string::va("%llX", id);
+
+		printf("DW: Updating user file %s\n", id_string.data());
+
+		const auto path = get_user_file_path(id_string);
+		utils::io::write_file(path, data);
+
+		auto info = new bdFileInfo;
+
+		info->file_id = id;
+		info->filename = "<>";
+		info->create_time = uint32_t(time(nullptr));
+		info->modified_time = info->create_time;
+		info->file_size = uint32_t(data.size());
+		info->owner_id = 0;
+		info->priv = false;
+
+		auto reply = server->create_reply(this->get_sub_type());
+		reply->add(info);
+		reply->send();
+	}
+
 	void bdStorage::get_legacy_user_file(i_server* server, byte_buffer* buffer) const
 	{
 		std::string filename, data;
 		buffer->read_string(&filename);
 
-		printf("DW: Loading user file: %s\n", filename.data());
+		const auto id = *reinterpret_cast<const uint64_t*>(utils::cryptography::sha1::compute(filename).data());
+		std::string id_string = utils::string::va("%llX", id);
 
-		const auto path = get_user_file_path(filename);
+		printf("DW: Loading user file: %s (%s)\n", filename.data(), id_string.data());
+
+		const auto path = get_user_file_path(id_string);
 		if (utils::io::read_file(path, &data))
 		{
 			auto reply = server->create_reply(this->get_sub_type());

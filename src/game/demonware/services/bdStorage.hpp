@@ -12,6 +12,7 @@ namespace demonware
 		std::vector<std::pair<std::regex, std::string>> publisher_resources_;
 
 		void set_legacy_user_file(i_server* server, byte_buffer* buffer) const;
+		void update_legacy_user_file(i_server* server, byte_buffer* buffer) const;
 		void get_legacy_user_file(i_server* server, byte_buffer* buffer) const;
 		void list_legacy_user_files(i_server* server, byte_buffer* buffer) const;
 		void list_publisher_files(i_server* server, byte_buffer* buffer);
