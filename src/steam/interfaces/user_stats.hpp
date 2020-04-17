@@ -2,8 +2,11 @@
 
 namespace steam
 {
-	class user_stats final
+	class user_stats
 	{
+	protected:
+		~user_stats() = default;
+
 	public:
 		virtual bool RequestCurrentStats();
 		virtual bool GetStat(const char* pchName, int* pData);

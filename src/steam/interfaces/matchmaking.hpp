@@ -21,8 +21,11 @@ namespace steam
 		int m_e_chat_room_enter_response;
 	};
 
-	class matchmaking final
+	class matchmaking
 	{
+	protected:
+		~matchmaking() = default;
+
 	public:
 		virtual int GetFavoriteGameCount();
 		virtual bool GetFavoriteGame(int iGame, unsigned int* pnAppID, unsigned int* pnIP, unsigned short* pnConnPort,

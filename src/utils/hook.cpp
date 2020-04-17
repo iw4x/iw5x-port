@@ -7,7 +7,7 @@ namespace utils
 	{
 		if (this->signatures_.empty()) return;
 
-		const auto start = reinterpret_cast<char*>(this->start_);
+		const auto start = static_cast<char*>(this->start_);
 
 		const unsigned int sig_count = this->signatures_.size();
 		const auto containers = this->signatures_.data();

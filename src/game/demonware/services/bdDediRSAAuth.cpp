@@ -19,8 +19,8 @@ namespace demonware
 		buffer.read_uint32(&seed);
 		buffer.read_uint32(&title_id);
 
-		unsigned char rsakey[140];
-		buffer.read_bytes(sizeof(rsakey), rsakey);
+		unsigned char rsa_key[140];
+		buffer.read_bytes(sizeof(rsa_key), rsa_key);
 
 		uint8_t ticket[1024];
 		buffer.read_bytes(std::min(ticket_size, static_cast<uint32_t>(sizeof(ticket))), ticket);
@@ -52,9 +52,9 @@ namespace demonware
 		register_hash(&sha1_desc);
 		register_prng(&yarrow_desc);
 
-		std::string encrypted_key = utils::cryptography::rsa::encrypt(std::string(SERVER_CD_KEY, 24),
-		                                                              std::string("DW-RSAENC", 10),
-		                                                              std::string(PCHAR(rsakey), sizeof(rsakey)));
+		auto encrypted_key = utils::cryptography::rsa::encrypt(std::string(SERVER_CD_KEY, 24),
+		                                                       std::string("DW-RSAENC", 10),
+		                                                       std::string(PCHAR(rsa_key), sizeof(rsa_key)));
 
 		bit_buffer response;
 		response.set_use_data_types(false);

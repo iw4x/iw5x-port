@@ -2,8 +2,11 @@
 
 namespace steam
 {
-	class friends final
+	class friends
 	{
+	protected:
+		~friends() = default;
+
 	public:
 		virtual const char* GetPersonaName();
 		virtual void SetPersonaName(const char* pchPersonaName);

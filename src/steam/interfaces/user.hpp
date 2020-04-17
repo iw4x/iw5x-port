@@ -9,8 +9,11 @@ namespace steam
 		int m_e_result;
 	};
 
-	class user final
+	class user
 	{
+	protected:
+		~user() = default;
+
 	public:
 		virtual int GetHSteamUser();
 		virtual bool LoggedOn();

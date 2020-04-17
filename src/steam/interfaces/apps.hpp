@@ -2,8 +2,11 @@
 
 namespace steam
 {
-	class apps final
+	class apps
 	{
+	protected:
+		~apps() = default;
+
 	public:
 		virtual bool BIsSubscribed();
 		virtual bool BIsLowViolence();

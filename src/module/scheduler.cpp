@@ -1,7 +1,6 @@
 #include <std_include.hpp>
 #include "scheduler.hpp"
 #include "utils/string.hpp"
-#include "game/structs.hpp"
 #include "game/game.hpp"
 #include "utils/hook.hpp"
 
@@ -60,8 +59,8 @@ void scheduler::execute_safe()
 
 void scheduler::execute_error()
 {
-	const char* message;
-	int level;
+	const char* message = nullptr;
+	int level = 0;
 
 	if (get_next_error(&message, &level) && message)
 	{

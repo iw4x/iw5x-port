@@ -264,7 +264,7 @@ namespace demonware
 		const auto path = get_user_file_path(filename);
 		utils::io::write_file(path, data);
 
-		auto info = new bdFileInfo;
+		auto* info = new bdFileInfo;
 
 		info->file_id = *reinterpret_cast<const uint64_t*>(utils::cryptography::sha1::compute(filename).data());
 		info->filename = filename;
@@ -281,7 +281,7 @@ namespace demonware
 
 	void bdStorage::get_user_file(i_server* server, byte_buffer* buffer) const
 	{
-		uint64_t owner;
+		uint64_t owner{};
 		std::string game, filename, platform, data;
 
 		buffer->read_string(&game);

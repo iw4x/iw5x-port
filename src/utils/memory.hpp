@@ -16,16 +16,16 @@ namespace utils
 
 			void free(const void* data);
 
-			void* allocate(const size_t length);
+			void* allocate(size_t length);
 
 			template <typename T>
-			inline T* allocate()
+			T* allocate()
 			{
 				return this->allocate_array<T>(1);
 			}
 
 			template <typename T>
-			inline T* allocate_array(const size_t count = 1)
+			T* allocate_array(const size_t count = 1)
 			{
 				return static_cast<T*>(this->allocate(count * sizeof(T)));
 			}

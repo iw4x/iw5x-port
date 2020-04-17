@@ -2,8 +2,11 @@
 
 namespace steam
 {
-	class game_server final
+	class game_server
 	{
+	protected:
+		~game_server() = default;
+
 	public:
 		virtual void LogOn();
 		virtual void LogOff();

@@ -12,8 +12,9 @@ namespace steam
 	};
 
 	template <size_t X, size_t ... Xs>
-	struct argument_size_calculator<X, Xs...> final : std::integral_constant<
-			size_t, X + ((argument_size_calculator<Xs...>::value + (sizeof(void*) - 1)) & ~(sizeof(void*) - 1))>
+	struct argument_size_calculator<X, Xs...> final
+		: std::integral_constant<size_t, X + ((argument_size_calculator<Xs...>::value
+			                         + (sizeof(void*) - 1)) & ~(sizeof(void*) - 1))>
 	{
 	};
 

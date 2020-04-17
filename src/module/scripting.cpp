@@ -120,13 +120,13 @@ private:
 	static void start_execution_stub()
 	{
 		module_loader::get<scripting>()->start_execution();
-		reinterpret_cast<void(*)()>(start_hook_.get_original())();
+		static_cast<void(*)()>(start_hook_.get_original())();
 	}
 
 	static void stop_execution_stub()
 	{
 		module_loader::get<scripting>()->stop_execution();
-		reinterpret_cast<void(*)()>(stop_hook_.get_original())();
+		static_cast<void(*)()>(stop_hook_.get_original())();
 	}
 
 	static void vm_notify_stub(const unsigned int notify_id, const unsigned short type,
@@ -142,7 +142,7 @@ private:
 
 			//printf("%X: %s\n", e.entity_id, e.name.data());
 
-			for (auto value = stack; value->type != game::native::SCRIPT_END; --value)
+			for (auto* value = stack; value->type != game::native::SCRIPT_END; --value)
 			{
 				e.arguments.emplace_back(*value);
 			}

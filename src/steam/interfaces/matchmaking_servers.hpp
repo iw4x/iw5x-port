@@ -2,8 +2,11 @@
 
 namespace steam
 {
-	class matchmaking_servers final
+	class matchmaking_servers
 	{
+	protected:
+		~matchmaking_servers() = default;
+
 	public:
 		virtual void* RequestInternetServerList(unsigned int iApp, void** ppchFilters, unsigned int nFilters,
 		                                        void* pRequestServersResponse);

@@ -64,6 +64,8 @@ namespace steam
 			void set_i_callback(const int i_callback) { callback_ = i_callback; }
 
 		protected:
+			~base() = default;
+
 			unsigned char flags_;
 			int callback_;
 		};

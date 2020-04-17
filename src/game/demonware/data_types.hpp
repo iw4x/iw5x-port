@@ -9,7 +9,7 @@ namespace demonware
 	public:
 		std::string file_data;
 
-		explicit bdFileData(const std::string& buffer) : file_data(buffer)
+		explicit bdFileData(std::string buffer) : file_data(std::move(buffer))
 		{
 		}
 
@@ -165,11 +165,11 @@ namespace demonware
 
 		void deserialize(byte_buffer* buffer) override
 		{
-			int size;
-			char* data;
+			int size{};
+			char* data{};
 			buffer->read_blob(&data, &size);
 
-			if (data && size >= sizeof this->session_id)
+			if (data && uint32_t(size) >= sizeof(this->session_id))
 			{
 				this->session_id = *reinterpret_cast<uint64_t*>(data);
 			}

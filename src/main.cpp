@@ -3,11 +3,14 @@
 #include "loader/loader.hpp"
 #include "loader/module_loader.hpp"
 #include "game/game.hpp"
-#include "loader/binary_loader.hpp"
 #include "utils/string.hpp"
 #include "utils/flags.hpp"
 
 //#define GENERATE_DIFFS
+
+#ifdef GENERATE_DIFFS
+#include "loader/binary_loader.hpp"
+#endif
 
 DECLSPEC_NORETURN void WINAPI exit_hook(const int code)
 {
@@ -18,11 +21,8 @@ DECLSPEC_NORETURN void WINAPI exit_hook(const int code)
 void verify_tls()
 {
 	const utils::nt::module self;
-	const auto self_tls = reinterpret_cast<PIMAGE_TLS_DIRECTORY>(self.get_ptr() + self
-	                                                                              .get_optional_header()
-	                                                                              ->
-	                                                                              DataDirectory
-		[IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress);
+	const auto self_tls = reinterpret_cast<PIMAGE_TLS_DIRECTORY>(self.get_ptr()
+		+ self.get_optional_header()->DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress);
 
 	const auto ref = DWORD(&tls_data);
 	const auto tls_index = *reinterpret_cast<DWORD*>(self_tls->AddressOfIndex);

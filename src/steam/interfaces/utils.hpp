@@ -2,8 +2,11 @@
 
 namespace steam
 {
-	class utils final
+	class utils
 	{
+	protected:
+		~utils() = default;
+
 	public:
 		virtual unsigned int GetSecondsSinceAppActive();
 		virtual unsigned int GetSecondsSinceComputerActive();

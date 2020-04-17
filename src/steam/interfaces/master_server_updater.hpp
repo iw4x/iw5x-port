@@ -2,8 +2,11 @@
 
 namespace steam
 {
-	class master_server_updater final
+	class master_server_updater
 	{
+	protected:
+		~master_server_updater() = default;
+
 	public:
 		virtual void SetActive(bool bActive);
 		virtual void SetHeartbeatInterval(int iHeartbeatInterval);
