@@ -21,7 +21,7 @@ html_frame::html_frame() : in_place_frame_(this), in_place_site_(this), ui_handl
 		throw std::runtime_error("Unable to initialize the OLE library");
 	}
 
-	set_browser_feature("FEATURE_BROWSER_EMULATION", 11000);
+	set_browser_feature("FEATURE_BROWSER_EMULATION", 12000);
 	set_browser_feature("FEATURE_GPU_RENDERING", 1);
 }
 
