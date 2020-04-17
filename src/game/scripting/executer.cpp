@@ -166,4 +166,9 @@ namespace game::scripting
 
 		return -1;
 	}
+
+	bool executer::function_exists(const std::string& function, const bool prefer_global)
+	{
+		return find_function_index(function, prefer_global) >= 0;
+	}
 }

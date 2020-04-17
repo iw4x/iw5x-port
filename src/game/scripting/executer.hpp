@@ -19,6 +19,8 @@ namespace game::scripting
 		chaiscript::Boxed_Value call(const std::string& function, unsigned int entity_id,
 		                             std::vector<chaiscript::Boxed_Value> arguments) const;
 
+		static bool function_exists(const std::string& function, bool prefer_global);
+
 	private:
 		context* context_;
 
