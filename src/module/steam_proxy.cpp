@@ -145,7 +145,7 @@ private:
 		const auto mod_id = "OIW5";
 		game_id.raw.mod_id = *reinterpret_cast<const unsigned int*>(mod_id) | 0x80000000;
 
-		this->client_user_.invoke<bool>("SpawnProcess", self.get_path().data(), cmdline.data(), 0, our_directory,
+		this->client_user_.invoke<bool>("SpawnProcess", self.get_path().data(), cmdline.data(), our_directory,
 		                                game_id.bits, title.data(), app_id, 0, 0);
 	}
 
