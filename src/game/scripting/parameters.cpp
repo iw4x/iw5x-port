@@ -133,7 +133,7 @@ namespace game::scripting
 		}
 		else
 		{
-			throw std::runtime_error("Unable to unbox value of type '" + value.get_type_info().bare_name() + "'");
+			throw std::runtime_error("Unable to unbox value of type '"s + value.get_type_info().bare_name() + "'");
 		}
 	}
 
