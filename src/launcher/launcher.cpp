@@ -64,7 +64,7 @@ void launcher::select_mode(const mode mode)
 
 std::string launcher::load_content(const int res)
 {
-	const auto resource = FindResource(utils::nt::module(), MAKEINTRESOURCE(res), RT_RCDATA);
+	const auto resource = FindResource(utils::nt::library(), MAKEINTRESOURCE(res), RT_RCDATA);
 	if (!resource) return {};
 
 	const auto handle = LoadResource(nullptr, resource);

@@ -12,7 +12,7 @@ namespace binary_loader
 {
 	std::string load_resource(const int id)
 	{
-		const auto res = FindResource(::utils::nt::module(), MAKEINTRESOURCE(id), RT_RCDATA);
+		const auto res = FindResource(::utils::nt::library(), MAKEINTRESOURCE(id), RT_RCDATA);
 		if (!res) return {};
 
 		const auto handle = LoadResource(nullptr, res);

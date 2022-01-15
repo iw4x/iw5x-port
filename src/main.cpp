@@ -20,7 +20,7 @@ DECLSPEC_NORETURN void WINAPI exit_hook(const int code)
 
 void verify_tls()
 {
-	const utils::nt::module self;
+	const utils::nt::library self;
 	const auto self_tls = reinterpret_cast<PIMAGE_TLS_DIRECTORY>(self.get_ptr()
 		+ self.get_optional_header()->DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress);
 
@@ -59,7 +59,7 @@ launcher::mode detect_mode_from_arguments()
 FARPROC load_binary(const launcher::mode mode)
 {
 	loader loader(mode);
-	utils::nt::module self;
+	utils::nt::library self;
 
 	loader.set_import_resolver([self](const std::string& module, const std::string& function) -> FARPROC
 	{

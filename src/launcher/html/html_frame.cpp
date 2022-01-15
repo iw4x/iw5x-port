@@ -170,7 +170,7 @@ void html_frame::set_browser_feature(const std::string& feature, DWORD value)
 		KEY_ALL_ACCESS, &key) != ERROR_SUCCESS)
 		return;
 
-	const utils::nt::module self;
+	const utils::nt::library self;
 	const auto name = self.get_name();
 	RegSetValueExA(key, name.data(), 0, REG_DWORD, reinterpret_cast<const BYTE*>(&value), sizeof(value));
 

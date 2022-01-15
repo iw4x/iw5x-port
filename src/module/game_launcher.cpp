@@ -36,7 +36,7 @@ private:
 
 	static void launch_game(const bool singleplayer)
 	{
-		const utils::nt::module self;
+		const utils::nt::library self;
 
 		STARTUPINFOA s_info;
 		PROCESS_INFORMATION p_info;

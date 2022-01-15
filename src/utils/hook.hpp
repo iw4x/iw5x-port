@@ -83,7 +83,7 @@ namespace utils
 		void* get_original() const;
 		void quick();
 
-		static bool iat(nt::module module, const std::string& target_module, const std::string& process, void* stub);
+		static bool iat(nt::library module, const std::string& target_module, const std::string& process, void* stub);
 
 		static void nop(void* place, size_t length);
 		static void nop(DWORD place, size_t length);

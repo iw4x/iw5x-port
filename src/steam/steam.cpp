@@ -3,7 +3,7 @@
 
 namespace steam
 {
-	::utils::nt::module overlay(nullptr);
+	::utils::nt::library overlay(nullptr);
 
 	uint64_t callbacks::call_id_ = 0;
 	std::recursive_mutex callbacks::mutex_;
@@ -107,14 +107,14 @@ namespace steam
 
 	bool SteamAPI_Init()
 	{
-		overlay = ::utils::nt::module("gameoverlayrenderer.dll");
+		overlay = ::utils::nt::library("gameoverlayrenderer.dll");
 
 		if (!overlay)
 		{
 			const auto steam_path = get_steam_install_directory();
 			if (!steam_path.empty())
 			{
-				overlay = ::utils::nt::module::load(steam_path + "gameoverlayrenderer.dll");
+				overlay = ::utils::nt::library::load(steam_path + "gameoverlayrenderer.dll");
 			}
 		}
 

@@ -7,12 +7,12 @@ loader::loader(const launcher::mode mode) : mode_(mode)
 {
 }
 
-FARPROC loader::load(const utils::nt::module& module) const
+FARPROC loader::load(const utils::nt::library& module) const
 {
 	const auto buffer = binary_loader::load(this->mode_);
 	if (buffer.empty()) return nullptr;
 
-	const utils::nt::module source(HMODULE(buffer.data()));
+	const utils::nt::library source(HMODULE(buffer.data()));
 	if (!source) return nullptr;
 
 	this->load_sections(module, source);
@@ -69,7 +69,7 @@ void loader::set_import_resolver(const std::function<FARPROC(const std::string&,
 	this->import_resolver_ = resolver;
 }
 
-void loader::load_section(const utils::nt::module& target, const utils::nt::module& source,
+void loader::load_section(const utils::nt::library& target, const utils::nt::library& source,
                           IMAGE_SECTION_HEADER* section)
 {
 	void* target_ptr = target.get_ptr() + section->VirtualAddress;
@@ -90,7 +90,7 @@ void loader::load_section(const utils::nt::module& target, const utils::nt::modu
 	}
 }
 
-void loader::load_sections(const utils::nt::module& target, const utils::nt::module& source) const
+void loader::load_sections(const utils::nt::library& target, const utils::nt::library& source) const
 {
 	for (auto& section : source.get_section_headers())
 	{
@@ -98,7 +98,7 @@ void loader::load_sections(const utils::nt::module& target, const utils::nt::mod
 	}
 }
 
-void loader::load_imports(const utils::nt::module& target, const utils::nt::module& source) const
+void loader::load_imports(const utils::nt::library& target, const utils::nt::library& source) const
 {
 	const auto import_directory = &source.get_optional_header()->DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT];
 
@@ -124,7 +124,7 @@ void loader::load_imports(const utils::nt::module& target, const utils::nt::modu
 			// is this an ordinal-only import?
 			if (IMAGE_SNAP_BY_ORDINAL(*name_table_entry))
 			{
-				auto module = utils::nt::module::load(name);
+				auto module = utils::nt::library::load(name);
 				if (module)
 				{
 					function = GetProcAddress(module, MAKEINTRESOURCEA(IMAGE_ORDINAL(*name_table_entry)));
@@ -140,7 +140,7 @@ void loader::load_imports(const utils::nt::module& target, const utils::nt::modu
 				if (this->import_resolver_) function = this->import_resolver_(name, function_name);
 				if (!function)
 				{
-					auto module = utils::nt::module::load(name);
+					auto module = utils::nt::library::load(name);
 					if (module)
 					{
 						function = GetProcAddress(module, function_name.data());

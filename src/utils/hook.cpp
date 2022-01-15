@@ -113,7 +113,7 @@ namespace utils
 		}
 	}
 
-	bool hook::iat(const nt::module module, const std::string& target_module, const std::string& process, void* stub)
+	bool hook::iat(const nt::library module, const std::string& target_module, const std::string& process, void* stub)
 	{
 		if (!module.is_valid()) return false;
 

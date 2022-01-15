@@ -57,7 +57,7 @@ public:
 	}
 
 private:
-	utils::nt::module steam_client_module_;
+	utils::nt::library steam_client_module_;
 
 	steam::interface client_engine_;
 	steam::interface client_user_;
@@ -105,9 +105,9 @@ private:
 		const auto steam_path = ::steam::get_steam_install_directory();
 		if (steam_path.empty()) return;
 
-		utils::nt::module::load(steam_path + "tier0_s.dll");
-		utils::nt::module::load(steam_path + "vstdlib_s.dll");
-		this->steam_client_module_ = utils::nt::module::load(steam_path + "steamclient.dll");
+		utils::nt::library::load(steam_path + "tier0_s.dll");
+		utils::nt::library::load(steam_path + "vstdlib_s.dll");
+		this->steam_client_module_ = utils::nt::library::load(steam_path + "steamclient.dll");
 		if (!this->steam_client_module_) return;
 
 		this->client_engine_ = load_client_engine();
@@ -130,7 +130,7 @@ private:
 
 		this->client_utils_.invoke<void>("SetAppIDForCurrentPipe", app_id, false);
 
-		const utils::nt::module self;
+		const utils::nt::library self;
 		const auto path = self.get_path();
 
 		char our_directory[MAX_PATH] = {0};
@@ -168,7 +168,7 @@ private:
 		this->steam_pipe_ = nullptr;
 		this->global_user_ = nullptr;
 
-		this->steam_client_module_ = utils::nt::module{nullptr};
+		this->steam_client_module_ = utils::nt::library{nullptr};
 	}
 };
 
