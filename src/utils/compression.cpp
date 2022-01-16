@@ -7,11 +7,7 @@ namespace utils::compression
 	std::string zlib::compress(const std::string& data)
 	{
 		memory::allocator allocator;
-		unsigned long length = (data.size() * 2);
-		if (!length) length = 2;
-
-		if (length < 100) length *= 10;
-
+		unsigned long length = compressBound(data.size());
 		const auto buffer = allocator.allocate_array<char>(length);
 		if (compress2(reinterpret_cast<Bytef*>(buffer), &length,
 		              reinterpret_cast<Bytef*>(const_cast<char*>(data.data())), data.size(),

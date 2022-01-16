@@ -3,15 +3,25 @@
 
 namespace game::scripting
 {
-	class variable_value final
+	class variable_value
 	{
 	public:
-		explicit variable_value(native::VariableValue value);
+		variable_value() = default;
+		variable_value(const native::VariableValue& value);
+		variable_value(const variable_value& other) noexcept;
+		variable_value(variable_value&& other) noexcept;
+
+		variable_value& operator=(const variable_value& other) noexcept;
+		variable_value& operator=(variable_value&& other) noexcept;
+
 		~variable_value();
 
-		explicit operator native::VariableValue() const;
+		const native::VariableValue& get() const;
 
 	private:
-		native::VariableValue value_;
+		void assign(const native::VariableValue& value);
+		void release();
+
+		native::VariableValue value_{{0}, native::SCRIPT_NONE};
 	};
 }

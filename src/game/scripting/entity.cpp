@@ -13,13 +13,7 @@ namespace game::scripting
 
 	entity::entity(entity&& other) noexcept
 	{
-		if (&other == this) return;
-
-		this->context_ = other.context_;
-		this->entity_id_ = other.entity_id_;
-
-		other.context_ = nullptr;
-		other.entity_id_ = 0;
+		this->operator=(std::move(other));
 	}
 
 	entity::entity(context* context, const unsigned int entity_id) : context_(context), entity_id_(entity_id)
@@ -36,7 +30,7 @@ namespace game::scripting
 	{
 		if (&other != this)
 		{
-			this->release();
+			this->~entity();
 
 			this->context_ = other.context_;
 			this->entity_id_ = other.entity_id_;
@@ -51,7 +45,7 @@ namespace game::scripting
 	{
 		if (&other != this)
 		{
-			this->release();
+			this->~entity();
 
 			this->context_ = other.context_;
 			this->entity_id_ = other.entity_id_;
@@ -114,7 +108,7 @@ namespace game::scripting
 	{
 		if (this->entity_id_)
 		{
-			native::VariableValue value;
+			native::VariableValue value{};
 			value.type = native::SCRIPT_OBJECT;
 			value.u.entityId = this->entity_id_;
 			native::AddRefToValue(&value);
