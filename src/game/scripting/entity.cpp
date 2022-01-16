@@ -1,4 +1,4 @@
-#include "std_include.hpp"
+#include <std_include.hpp>
 #include "context.hpp"
 
 namespace game::scripting
@@ -7,11 +7,12 @@ namespace game::scripting
 	{
 	}
 
-	entity::entity(const entity& other) : entity(other.context_, other.entity_id_)
+	entity::entity(const entity& other) : entity()
 	{
+		this->operator=(other);
 	}
 
-	entity::entity(entity&& other) noexcept
+	entity::entity(entity&& other) noexcept : entity()
 	{
 		this->operator=(std::move(other));
 	}
