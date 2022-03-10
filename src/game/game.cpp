@@ -7,6 +7,8 @@ namespace game
 	{
 		Cmd_AddCommand_t Cmd_AddCommand;
 
+		Cmd_RemoveCommand_t Cmd_RemoveCommand;
+
 		Com_Error_t Com_Error;
 
 		DB_LoadXAssets_t DB_LoadXAssets;
@@ -45,6 +47,10 @@ namespace game
 
 		SV_Cmd_EndTokenizedString_t SV_Cmd_EndTokenizedString;
 
+		SV_GameSendServerCommand_t SV_GameSendServerCommand;
+
+		SV_SendServerCommand_t SV_SendServerCommand;
+
 		XUIDToString_t XUIDToString;
 
 		decltype(longjmp)* _longjmp;
@@ -69,6 +75,8 @@ namespace game
 		scr_classStruct_t* g_classMap;
 
 		int* svs_clientCount;
+
+		gentity_s* g_entities;
 
 		namespace mp
 		{
@@ -386,7 +394,7 @@ namespace game
 				call func
 
 				popad
-				ret
+				retn
 			}
 		}
 
@@ -443,6 +451,30 @@ namespace game
 			}
 		}
 
+		__declspec(naked) void client_command_dedi(int clientNum)
+		{
+			static DWORD func = 0x47EA40;
+
+			__asm
+			{
+				mov edi, clientNum
+				call func
+				retn
+			}
+		}
+
+		void ClientCommand(int clientNum)
+		{
+			if (is_dedi())
+			{
+				client_command_dedi(clientNum);
+			}
+			else if (is_mp())
+			{
+				reinterpret_cast<void(*)(int)>(0x502CB0)(clientNum);
+			}
+		}
+
 		int GetProtocolVersion()
 		{
 			return 0x507C;
@@ -451,6 +483,61 @@ namespace game
 		void NetAdr_SetType(netadr_s* addr, netadrtype_t type)
 		{
 			addr->type = type;
+		}
+
+		__declspec(naked) void cbuf_add_text_dedi(LocalClientNum_t localClientNum, const char* text)
+		{
+			static DWORD func = 0x4CB5D0;
+
+			__asm
+			{
+				mov eax, text
+				push localClientNum
+				call func
+				add esp, 4h
+				retn
+			}
+		}
+
+		void Cbuf_AddText(LocalClientNum_t localClientNum, const char* text)
+		{
+			if (is_dedi())
+			{
+				cbuf_add_text_dedi(localClientNum, text);
+			}
+			else
+			{
+				reinterpret_cast<void(*)(LocalClientNum_t, const char*)>
+					(SELECT_VALUE(0x457C90, 0x545680, 0x0))(localClientNum, text);
+			}
+		}
+
+		__declspec(naked) void teleport_player_dedi(gentity_s* player, float* origin, float* angles)
+		{
+			static DWORD func = 0x48B840;
+
+			__asm
+			{
+				mov eax, player
+				mov ecx, origin
+				push angles
+				call func
+				add esp, 4h
+				retn
+			}
+		}
+
+		void TeleportPlayer(gentity_s* player, float* origin, float* angles)
+		{
+			if (is_dedi())
+			{
+				teleport_player_dedi(player, origin, angles);
+			}
+			else if (is_mp())
+			{
+				reinterpret_cast<void(*)(gentity_s*, float*, float*)>
+					(0x50D840)(player, origin, angles);
+			}
 		}
 	}
 
@@ -486,6 +573,8 @@ namespace game
 		mode = _mode;
 
 		native::Cmd_AddCommand = native::Cmd_AddCommand_t(SELECT_VALUE(0x558820, 0x545DF0, 0));
+
+		native::Cmd_RemoveCommand = native::Cmd_RemoveCommand_t(SELECT_VALUE(0x443A30, 0x545E20, 0x4CC060));
 
 		native::Com_Error = native::Com_Error_t(SELECT_VALUE(0x425540, 0x555450, 0x4D93F0));
 
@@ -528,6 +617,10 @@ namespace game
 
 		native::SV_Cmd_EndTokenizedString = native::SV_Cmd_EndTokenizedString_t(SELECT_VALUE(0x0, 0x545D70, 0x0));
 
+		native::SV_GameSendServerCommand = native::SV_GameSendServerCommand_t(SELECT_VALUE(0x0, 0x573220, 0x0));
+
+		native::SV_SendServerCommand = native::SV_SendServerCommand_t(SELECT_VALUE(0x0, 0x575DE0, 0x4FD5A0));
+
 		native::XUIDToString = native::XUIDToString_t(SELECT_VALUE(0x4FAA30, 0x55CC20, 0x0));
 
 		native::_longjmp = reinterpret_cast<decltype(longjmp)*>(SELECT_VALUE(0x73AC20, 0x7363BC, 0x655558));
@@ -558,5 +651,7 @@ namespace game
 
 		native::mp::svs_clients = reinterpret_cast<native::mp::client_t*>(0x4B5CF90);
 		native::dedi::svs_clients = reinterpret_cast<native::dedi::client_t*>(0x4A12E90);
+
+		native::g_entities = reinterpret_cast<native::gentity_s*>(SELECT_VALUE(0, 0x1A66E28, 0x191B900));
 	}
 }
