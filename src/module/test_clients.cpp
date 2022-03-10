@@ -107,7 +107,7 @@ void test_clients::spawn()
 	});
 }
 
-void test_clients::scr_shutdown_system_stub(unsigned char sys)
+void test_clients::scr_shutdown_system_mp_stub(unsigned char sys)
 {
 	game::native::SV_DropAllBots();
 	reinterpret_cast<void (*)(unsigned char)>(0x569E30)(sys);
@@ -126,7 +126,7 @@ __declspec(naked) void test_clients::reset_reliable_mp()
 		mov [esi + 0x20E74], eax // Move eax to reliableAcknowledge
 
 	resume:
-		push 0x5CE740 // SV_Netchan_Transmit
+		push 0x5CE740 // Sys_Milliseconds
 		retn
 	}
 }
@@ -176,7 +176,7 @@ void test_clients::post_load()
 void test_clients::patch_mp()
 {
 	utils::hook::nop(0x639803, 5); // LiveSteamServer_RunFrame
-	utils::hook(0x50C147, &test_clients::scr_shutdown_system_stub, HOOK_CALL).install()->quick(); // G_ShutdownGame
+	utils::hook(0x50C147, &test_clients::scr_shutdown_system_mp_stub, HOOK_CALL).install()->quick(); // G_ShutdownGame
 	utils::hook(0x57BBF9, &test_clients::reset_reliable_mp, HOOK_CALL).install()->quick(); // SV_SendMessageToClient
 	utils::hook(0x576DCC, &test_clients::check_timeouts_stub_mp, HOOK_JUMP).install()->quick(); // SV_CheckTimeouts
 }

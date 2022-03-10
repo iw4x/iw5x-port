@@ -16,7 +16,7 @@ private:
 	static game::native::gentity_s* sv_add_test_client();
 	static void spawn();
 
-	static void scr_shutdown_system_stub(unsigned char sys);
+	static void scr_shutdown_system_mp_stub(unsigned char sys);
 
 	static void reset_reliable_mp();
 
