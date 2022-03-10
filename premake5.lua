@@ -42,15 +42,14 @@ workspace "open-iw5"
 	objdir "%{wks.location}/obj"
 	targetdir "%{wks.location}/bin/%{cfg.platform}/%{cfg.buildcfg}"
 
-	configurations {
-		"Debug",
-		"Release",
-	}
+	configurations { "Debug", "Release" }
 
-	architecture "x32"
-	platforms "x32"
+	language "C++"
+	cppdialect "C++20"
 
-	buildoptions "/std:c++latest"
+	architecture "x86"
+	platforms "Win32"
+
 	systemversion "latest"
 	symbols "On"
 	staticruntime "On"
@@ -65,33 +64,22 @@ workspace "open-iw5"
 		"No64BitChecks"
 	}
 
-	configuration "windows"
-		defines {
-			"_WINDOWS",
-			"WIN32",
-		}
+	filter "platforms:Win*"
+		defines { "_WINDOWS", "WIN32" }
+	filter {}
 
-	configuration "Release"
-		optimize "Full"
-		buildoptions "/Os"
+	filter "configurations:Release"
+		optimize "Size"
+		buildoptions { "/GL" }
+		linkoptions { "/IGNORE:4702", "/LTCG" }
+		defines { "NDEBUG" }
+		flags { "FatalCompileWarnings" }
+	filter {}
 
-		defines {
-			"NDEBUG",
-		}
-
-		flags {
-			"FatalCompileWarnings",
-		}
-
-	configuration "Debug"
+	filter "configurations:Debug"
 		optimize "Debug"
-
-		defines {
-			"DEBUG",
-			"_DEBUG",
-		}
-
-	configuration {}
+		defines { "DEBUG", "_DEBUG" }
+	filter  {}
 
 	project "open-iw5"
 		kind "ConsoleApp"
@@ -102,7 +90,6 @@ workspace "open-iw5"
 		
 		linkoptions "/IGNORE:4254 /DYNAMICBASE:NO /SAFESEH:NO /LARGEADDRESSAWARE"
 		linkoptions "/LAST:.main"
-
 
 		files {
 			"./src/**.rc",

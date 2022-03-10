@@ -38,17 +38,43 @@ namespace game
 		typedef unsigned int (*SL_GetStringOfSize_t)(const char* str, unsigned int user, unsigned int len, int type);
 		extern SL_GetStringOfSize_t SL_GetStringOfSize;
 
+		typedef void (*Scr_AddEntityNum_t)(int entnum, unsigned int classnum);
+		extern Scr_AddEntityNum_t Scr_AddEntityNum;
+
+		typedef void (*Scr_Notify_t)(gentity_s* ent, unsigned __int16 stringValue, unsigned int paramcount);
+		extern Scr_Notify_t Scr_Notify;
+
 		typedef void (*Sys_ShowConsole_t)();
 		extern Sys_ShowConsole_t Sys_ShowConsole;
 
 		typedef void (*VM_Notify_t)(unsigned int notifyListOwnerId, unsigned int stringValue, VariableValue* top);
 		extern VM_Notify_t VM_Notify;
 
+		typedef unsigned int (*BG_NetDataChecksum_t)();
+		extern BG_NetDataChecksum_t BG_NetDataChecksum;
+
+		typedef int (*LiveStorage_GetPersistentDataDefVersion_t)();
+		extern LiveStorage_GetPersistentDataDefVersion_t LiveStorage_GetPersistentDataDefVersion;
+
+		typedef unsigned int (*LiveStorage_GetPersistentDataDefFormatChecksum_t)();
+		extern LiveStorage_GetPersistentDataDefFormatChecksum_t LiveStorage_GetPersistentDataDefFormatChecksum;
+
+		typedef void (*SV_DirectConnect_t)(netadr_s from);
+		extern SV_DirectConnect_t SV_DirectConnect;
+
+		typedef void (*SV_ClientEnterWorld_t)(mp::client_t* client, usercmd_s* cmd);
+		extern SV_ClientEnterWorld_t SV_ClientEnterWorld;
+
+		typedef void (*SV_Cmd_TokenizeString_t)(const char* text_in);
+		extern SV_Cmd_TokenizeString_t SV_Cmd_TokenizeString;
+
+		typedef void (*SV_Cmd_EndTokenizedString_t)();
+		extern SV_Cmd_EndTokenizedString_t SV_Cmd_EndTokenizedString;
+
 		extern decltype(longjmp)* _longjmp;
 
-		extern int* cmd_args;
-		extern int* cmd_argc;
-		extern const char*** cmd_argv;
+		extern CmdArgs* sv_cmd_args;
+		extern CmdArgs* cmd_args;
 
 		extern short* scrVarGlob;
 		extern char** scrMemTreePub;
@@ -66,6 +92,18 @@ namespace game
 
 		extern scr_classStruct_t* g_classMap;
 
+		extern int* svs_clientCount;
+
+		namespace mp
+		{
+			extern client_t* svs_clients;
+		}
+
+		namespace dedi
+		{
+			extern client_t* svs_clients;
+		}
+
 		void AddRefToValue(VariableValue* value);
 
 		void Conbuf_AppendText(const char* message);
@@ -82,9 +120,15 @@ namespace game
 		scr_call_t Scr_GetFunc(unsigned int index);
 		void Scr_NotifyId(unsigned int id, unsigned int stringValue, unsigned int paramcount);
 		int Scr_SetObjectField(unsigned int classnum, int entnum, int offset);
+		void Scr_AddString(const char* value);
 
 		const char* SL_ConvertToString(unsigned int stringValue);
 		unsigned int SL_GetString(const char* str, unsigned int user);
+
+		void SV_SendClientGameState(mp::client_t* client);
+		int SV_IsTestClient(int clientNum);
+		void SV_DropClient(mp::client_t* drop, const char* reason, bool tellThem);
+		void SV_DropAllBots();
 	}
 
 	bool is_mp();

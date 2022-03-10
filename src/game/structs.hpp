@@ -379,6 +379,15 @@ namespace game
 			int flags;
 		};
 
+		struct CmdArgs
+		{
+			int nesting;
+			int localClientNum[8];
+			int controllerIndex[8];
+			int argc[8];
+			const char** argv[8];
+		};
+
 		struct msg_t
 		{
 			int overflowed;
@@ -546,5 +555,158 @@ namespace game
 			bool (__cdecl *domainFunc)(dvar_t*, DvarValue);
 			dvar_t* hashNext;
 		};
+
+		struct usercmd_s
+		{
+			int serverTime;
+			int buttons;
+			int angles[3];
+			unsigned int weapon;
+			unsigned int offHand;
+			char forwardmove;
+			char rightmove;
+			unsigned __int16 airburstMarkDistance;
+			unsigned __int16 meleeChargeEnt;
+			unsigned char meleeChargeDist;
+			char selectedLoc[2];
+			unsigned char selectedLocAngle;
+			char remoteControlAngles[2];
+			char remoteControlMove[3];
+		};
+
+		static_assert(sizeof(usercmd_s) == 0x2C);
+
+		struct entityState_s
+		{
+			int number;
+		};
+
+		struct gentity_s
+		{
+			entityState_s s;
+		};
+
+		enum clientState_t
+		{
+			CS_FREE = 0,
+			CS_ZOMBIE = 1,
+			CS_RECONNECTING = 2,
+			CS_CONNECTED = 3,
+			CS_CLIENTLOADING = 4,
+			CS_ACTIVE = 5,
+		};
+
+		enum netsrc_t
+		{
+			NS_CLIENT1 = 0x0,
+			NS_CLIENT2 = 0x1,
+			NS_CLIENT3 = 0x2,
+			NS_CLIENT4 = 0x3,
+			NS_MAXCLIENTS = 0x4,
+			NS_SERVER = 0x4,
+			NS_PACKET = 0x5,
+			NS_INVALID_NETSRC = 0x6,
+		};
+
+		enum netadrtype_t
+		{
+			NA_BOT = 0x0,
+			NA_BAD = 0x1,
+			NA_LOOPBACK = 0x2,
+			NA_BROADCAST = 0x3,
+			NA_IP = 0x4,
+		};
+
+		struct netadr_s
+		{
+			netadrtype_t type;
+			unsigned char ip[4];
+			unsigned __int16 port;
+			unsigned char ipx[10];
+			unsigned int addrHandleIndex;
+		};
+
+		static_assert(sizeof(netadr_s) == 24);
+
+		struct netProfileInfo_t // Unused
+		{
+			unsigned char __pad0[0x5E0];
+		};
+
+		struct netchan_t
+		{
+			int outgoingSequence;
+			netsrc_t sock;
+			int dropped;
+			int incomingSequence;
+			netadr_s remoteAddress;
+			int qport;
+			int fragmentSequence;
+			int fragmentLength;
+			unsigned char* fragmentBuffer;
+			int fragmentBufferSize;
+			int unsentFragments;
+			int unsentFragmentStart;
+			int unsentLength;
+			unsigned char* unsentBuffer;
+			int unsentBufferSize;
+			netProfileInfo_t prof;
+		};
+
+		static_assert(sizeof(netchan_t) == 0x630);
+
+		struct clientHeader_t
+		{
+			clientState_t state;
+			int sendAsActive;
+			int deltaMessage;
+			int rateDealyed;
+			int hasAckedBaselineData;
+			int hugeSnapshotSent;
+			netchan_t netchan;
+			float predictedOrigin[3];
+			int predictedOriginServerTime;
+			int migrationState;
+			float predictedVehicleOrigin[3];
+			int predictedVehicleServerTime;
+		};
+
+		static_assert(sizeof(clientHeader_t) == 0x66C);
+
+		namespace mp
+		{
+			struct client_t
+			{
+				clientHeader_t header;
+				const char* dropReason; // 0x66C
+				char userinfo[1024]; // 0x670
+				unsigned char __pad0[0x209B8];
+				gentity_s* gentity; // 0x21428
+				unsigned char __pad1[0x20886];
+				unsigned __int16 scriptId; // 0x41CB2
+				int bIsTestClient; // 0x41CB4
+				int serverId; // 0x41CB8
+				unsigned char __pad2[0x369DC];
+			};
+
+			static_assert(sizeof(mp::client_t) == 0x78698);
+		}
+
+		namespace dedi
+		{
+			struct client_t
+			{
+				clientHeader_t header;
+				const char* dropReason;
+				char userinfo[1024];
+				unsigned char __pad0[0x4123E];
+				unsigned __int16 scriptId;
+				int bIsTestClient; // 0x41CB0
+				int serverId;
+				unsigned char __pad1[0x369D8];
+			};
+
+			static_assert(sizeof(dedi::client_t) == 0x78690);
+		}
 	}
 }

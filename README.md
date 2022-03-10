@@ -1,3 +1,4 @@
+[![Build](https://github.com/momo5502/open-iw5/workflows/Build/badge.svg)](https://github.com/momo5502/open-iw5/actions)
 ![issues](https://img.shields.io/github/issues/momo5502/open-iw5.svg)
 ![license](https://img.shields.io/github/license/momo5502/open-iw5.svg)
 ![forks](https://img.shields.io/github/forks/momo5502/open-iw5.svg)

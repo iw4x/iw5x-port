@@ -95,6 +95,8 @@ int main()
 	FARPROC entry_point;
 	enable_dpi_awareness();
 
+	std::srand(uint32_t(time(nullptr)));
+
 	{
 		auto premature_shutdown = true;
 		const auto _ = gsl::finally([&premature_shutdown]()
