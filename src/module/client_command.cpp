@@ -74,7 +74,7 @@ private:
 			if (!cheats_ok(ent))
 				return;
 
-			ent->flags = game::native::FL_GODMODE;
+			ent->flags ^= game::native::FL_GODMODE;
 
 			send_msg_to_client(ent->s.number, game::native::SV_CMD_CAN_IGNORE,
 				utils::string::va("%c \"%s\"", 0x65, (ent->flags & game::native::FL_GODMODE)
@@ -86,7 +86,7 @@ private:
 			if (!cheats_ok(ent))
 				return;
 
-			ent->flags = game::native::FL_DEMI_GODMODE;
+			ent->flags ^= game::native::FL_DEMI_GODMODE;
 
 			send_msg_to_client(ent->s.number, game::native::SV_CMD_CAN_IGNORE,
 				utils::string::va("%c \"%s\"", 0x65, (ent->flags & game::native::FL_DEMI_GODMODE)
@@ -98,7 +98,7 @@ private:
 			if (!cheats_ok(ent))
 				return;
 
-			ent->flags = game::native::FL_NOTARGET;
+			ent->flags ^= game::native::FL_NOTARGET;
 
 			send_msg_to_client(ent->s.number, game::native::SV_CMD_CAN_IGNORE,
 				utils::string::va("%c \"%s\"", 0x65, (ent->flags & game::native::FL_NOTARGET)
