@@ -576,15 +576,55 @@ namespace game
 
 		static_assert(sizeof(usercmd_s) == 0x2C);
 
+		struct playerState_s
+		{
+			unsigned char __pad0[0x4EC];
+			unsigned int perks[0x2];
+			unsigned int perkSlots[0x9];
+			unsigned char __pad1[0x2DE8];
+		};
+
+		struct gclient_s
+		{
+			playerState_s ps;
+			unsigned char __pad0[0x2CC];
+			int flags;
+			unsigned char __pad1[0x3B0];
+		};
+
+		static_assert(sizeof(gclient_s) == 0x3980);
+
 		struct entityState_s
 		{
 			int number;
 		};
 
+		struct EntHandle
+		{
+			unsigned __int16 number;
+			unsigned __int16 infoIndex;
+		};
+
 		struct gentity_s
 		{
 			entityState_s s;
+			unsigned char __pad0[0x154];
+			gclient_s* client; // 0x158
+			unsigned char __pad1[0x28];
+			int flags;
+			int eventTime;
+			int clipmask;
+			int processedFrame;
+			EntHandle parent;
+			int nextthink;
+			int health;
+			int maxHealth;
+			int damage;
+			int count;
+			unsigned char __pad2[0xc8];
 		};
+
+		static_assert(sizeof(gentity_s) == 0x274);
 
 		enum clientState_t
 		{
