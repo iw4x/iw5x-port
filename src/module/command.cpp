@@ -178,8 +178,8 @@ void command::pre_destroy()
 {
 	for (const auto& [key, val] : command::handlers)
 	{
-		handlers.erase(key);
 		game::native::Cmd_RemoveCommand(key.data());
+		handlers.erase(key);
 	}
 
 	command::allocator_.clear();
