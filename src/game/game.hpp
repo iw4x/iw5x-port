@@ -136,6 +136,8 @@ namespace game
 		void SV_DropAllBots();
 
 		int GetProtocolVersion();
+
+		void NetAdr_SetType(netadr_s* addr, netadrtype_t type);
 	}
 
 	bool is_mp();
