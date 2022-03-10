@@ -103,7 +103,7 @@ void command::add(const char* name, const std::function<void()>& callback)
 
 void command::add_sv(const char* name, std::function<void(game::native::gentity_s*, const command::params_sv&)> callback)
 {
-	// Since the console is not usable there is no point in calling add_raw
+	// Since the game console is not usable there is no point in calling add_raw
 	const auto command = utils::string::to_lower(name);
 
 	if (handlers_sv.find(command) == handlers_sv.end())
@@ -142,6 +142,7 @@ void command::client_command_stub(int client_num)
 	if (got != handlers_sv.end())
 	{
 		got->second(entity, params);
+		return;
 	}
 
 	game::native::ClientCommand(client_num);
