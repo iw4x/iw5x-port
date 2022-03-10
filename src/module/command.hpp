@@ -51,7 +51,6 @@ public:
 	static void add_sv(const char* name, std::function<void(game::native::gentity_s*, const params_sv&)> callback);
 
 	void post_load() override;
-	void pre_destroy() override;
 
 private:
 	static utils::memory::allocator allocator_;

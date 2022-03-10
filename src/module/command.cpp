@@ -174,15 +174,4 @@ void command::post_load()
 	}	
 }
 
-void command::pre_destroy()
-{
-	for (const auto& [key, val] : command::handlers)
-	{
-		game::native::Cmd_RemoveCommand(key.data());
-		handlers.erase(key);
-	}
-
-	command::allocator_.clear();
-}
-
 REGISTER_MODULE(command);
