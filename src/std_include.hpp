@@ -66,7 +66,9 @@
 #pragma comment(lib, "ws2_32.lib")
 
 #pragma warning(pop)
+
 #pragma warning(disable: 4100)
+#pragma warning(disable: 26812)
 
 #include "resource.hpp"
 

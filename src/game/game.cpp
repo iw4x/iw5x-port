@@ -23,15 +23,34 @@ namespace game
 
 		SL_GetStringOfSize_t SL_GetStringOfSize;
 
+		Scr_AddEntityNum_t Scr_AddEntityNum;
+
+		Scr_Notify_t Scr_Notify;
+
 		Sys_ShowConsole_t Sys_ShowConsole;
 
 		VM_Notify_t VM_Notify;
 
+		BG_NetDataChecksum_t BG_NetDataChecksum;
+
+		LiveStorage_GetPersistentDataDefVersion_t LiveStorage_GetPersistentDataDefVersion;
+
+		LiveStorage_GetPersistentDataDefFormatChecksum_t LiveStorage_GetPersistentDataDefFormatChecksum;
+
+		SV_DirectConnect_t SV_DirectConnect;
+
+		SV_ClientEnterWorld_t SV_ClientEnterWorld;
+
+		SV_Cmd_TokenizeString_t SV_Cmd_TokenizeString;
+
+		SV_Cmd_EndTokenizedString_t SV_Cmd_EndTokenizedString;
+
+		XUIDToString_t XUIDToString;
+
 		decltype(longjmp)* _longjmp;
 
-		int* cmd_args;
-		int* cmd_argc;
-		const char*** cmd_argv;
+		CmdArgs* sv_cmd_args;
+		CmdArgs* cmd_args;
 
 		short* scrVarGlob;
 		char** scrMemTreePub;
@@ -48,6 +67,18 @@ namespace game
 		jmp_buf* g_script_error;
 
 		scr_classStruct_t* g_classMap;
+
+		int* svs_clientCount;
+
+		namespace mp
+		{
+			client_t* svs_clients;
+		}
+
+		namespace dedi
+		{
+			client_t* svs_clients;
+		}
 
 		void AddRefToValue(VariableValue* value)
 		{
@@ -152,6 +183,31 @@ namespace game
 		void* MT_Alloc(const int numBytes, const int type)
 		{
 			return scrMemTreeGlob + 12 * size_t(MT_AllocIndex(numBytes, type));
+		}
+
+		__declspec(naked) dvar_t* dvar_find_malleable_var(const char* dvarName)
+		{
+			static DWORD func = 0x531320;
+
+			__asm
+			{
+				mov edi, dvarName
+				call func
+				retn
+			}
+		}
+
+		dvar_t* Dvar_FindVar(const char* dvarName)
+		{
+			if (is_dedi())
+			{
+				return dvar_find_malleable_var(dvarName);
+			}
+			else
+			{
+				return reinterpret_cast<dvar_t*(*)(const char*)>
+					(SELECT_VALUE(0x539550, 0x5BDCC0, 0x0))(dvarName);
+			}
 		}
 
 		const float* Scr_AllocVector(const float* v)
@@ -280,6 +336,31 @@ namespace game
 			}
 		}
 
+		__declspec(naked) void scr_add_string_dedi(const char* value)
+		{
+			static DWORD func = 0x4F1010;
+
+			__asm
+			{
+				mov edi, value
+				call func
+				retn
+			}
+		}
+
+		void Scr_AddString(const char* value)
+		{
+			if (is_dedi())
+			{
+				scr_add_string_dedi(value);
+			}
+			else if (is_mp())
+			{
+				reinterpret_cast<void(*)(const char*)>
+					(0x56AC00)(value);
+			}
+		}
+
 		const char* SL_ConvertToString(const unsigned int stringValue)
 		{
 			if (!stringValue) return nullptr;
@@ -291,6 +372,85 @@ namespace game
 		unsigned int SL_GetString(const char* str, const unsigned int user)
 		{
 			return SL_GetStringOfSize(str, user, strlen(str) + 1, 7);
+		}
+
+		__declspec(naked) void sv_send_client_game_state_mp(mp::client_t* /*client*/)
+		{
+			static DWORD func = 0x570FC0;
+
+			__asm
+			{
+				pushad
+
+				mov esi, [esp + 0x20 + 0x4]
+				call func
+
+				popad
+				ret
+			}
+		}
+
+		void SV_SendClientGameState(mp::client_t* client)
+		{
+			if (is_mp())
+			{
+				sv_send_client_game_state_mp(client);
+			}
+		}
+
+		int SV_IsTestClient(int clientNum)
+		{
+			assert(clientNum < *svs_clientCount);
+
+			if (is_dedi())
+			{
+				return dedi::svs_clients[clientNum].bIsTestClient;
+			}
+			else if (is_mp())
+			{
+				return mp::svs_clients[clientNum].bIsTestClient;
+			}
+
+			return 0;
+		}
+
+		void SV_DropClient(mp::client_t* drop, const char* reason, bool tellThem)
+		{
+			if (is_mp())
+			{
+				reinterpret_cast<void(*)(mp::client_t*, const char*, bool)>
+					(0x570980)(drop, reason, tellThem);
+			}
+		}
+
+		void sv_drop_all_bots_mp()
+		{
+			for (auto i = 0; i < *svs_clientCount; i++)
+			{
+				if (mp::svs_clients[i].header.state != CS_FREE
+					&& mp::svs_clients[i].header.netchan.remoteAddress.type == NA_BOT)
+				{
+					SV_DropClient(&mp::svs_clients[i], "EXE_TIMEDOUT", true);
+				}
+			}
+		}
+
+		void SV_DropAllBots()
+		{
+			if (is_mp())
+			{
+				sv_drop_all_bots_mp();
+			}
+		}
+
+		int GetProtocolVersion()
+		{
+			return 0x507C;
+		}
+
+		void NetAdr_SetType(netadr_s* addr, netadrtype_t type)
+		{
+			addr->type = type;
 		}
 	}
 
@@ -344,15 +504,36 @@ namespace game
 
 		native::SL_GetStringOfSize = native::SL_GetStringOfSize_t(SELECT_VALUE(0x4E13F0, 0x564650, 0x4E7490));
 
+		native::Scr_AddEntityNum = native::Scr_AddEntityNum_t(SELECT_VALUE(0x0, 0x56ABC0, 0x4EA2F0));
+
+		native::Scr_Notify = native::Scr_Notify_t(SELECT_VALUE(0x0, 0x52B190, 0x0));
+
 		native::Sys_ShowConsole = native::Sys_ShowConsole_t(SELECT_VALUE(0x470AF0, 0x5CF590, 0));
 
 		native::VM_Notify = native::VM_Notify_t(SELECT_VALUE(0x610200, 0x569720, 0x4EF450));
 
+		native::BG_NetDataChecksum = native::BG_NetDataChecksum_t(SELECT_VALUE(0x0, 0x41BB20, 0x0));
+
+		native::LiveStorage_GetPersistentDataDefVersion = native::LiveStorage_GetPersistentDataDefVersion_t(
+			SELECT_VALUE(0x0, 0x548D60, 0x4D0390));
+
+		native::LiveStorage_GetPersistentDataDefFormatChecksum = native::LiveStorage_GetPersistentDataDefFormatChecksum_t(
+			SELECT_VALUE(0x0, 0x548D80, 0x4D03D0));
+
+		native::SV_DirectConnect = native::SV_DirectConnect_t(SELECT_VALUE(0x0, 0x572750, 0x4F74C0));
+
+		native::SV_ClientEnterWorld = native::SV_ClientEnterWorld_t(SELECT_VALUE(0x0, 0x571100, 0x0));
+
+		native::SV_Cmd_TokenizeString = native::SV_Cmd_TokenizeString_t(SELECT_VALUE(0x0, 0x545D40, 0x0));
+
+		native::SV_Cmd_EndTokenizedString = native::SV_Cmd_EndTokenizedString_t(SELECT_VALUE(0x0, 0x545D70, 0x0));
+
+		native::XUIDToString = native::XUIDToString_t(SELECT_VALUE(0x4FAA30, 0x55CC20, 0x0));
+
 		native::_longjmp = reinterpret_cast<decltype(longjmp)*>(SELECT_VALUE(0x73AC20, 0x7363BC, 0x655558));
 
-		native::cmd_args = reinterpret_cast<int*>(SELECT_VALUE(0x1750750, 0x1C978D0, 0x1B455F8));
-		native::cmd_argc = reinterpret_cast<int*>(SELECT_VALUE(0x1750794, 0x1C97914, 0x1B4563C));
-		native::cmd_argv = reinterpret_cast<const char***>(SELECT_VALUE(0x17507B4, 0x1C97934, 0x1B4565C));
+		native::sv_cmd_args = reinterpret_cast<native::CmdArgs*>(SELECT_VALUE(0x0, 0x1CAA998, 0x1B5E7D8));
+		native::cmd_args = reinterpret_cast<native::CmdArgs*>(SELECT_VALUE(0x1750750, 0x1C978D0, 0x1B455F8));
 
 		native::scrVarGlob = reinterpret_cast<short*>(SELECT_VALUE(0x19AFC80, 0x1E72180, 0x1D3C800));
 		native::scrMemTreePub = reinterpret_cast<char**>(SELECT_VALUE(0x196FB00, 0x1E32000, 0x1C152A4));
@@ -371,6 +552,11 @@ namespace game
 
 		native::g_classMap = reinterpret_cast<native::scr_classStruct_t*>(SELECT_VALUE(0x92D140, 0x8B4300, 0x7C0408));
 
+		native::svs_clientCount = reinterpret_cast<int*>(SELECT_VALUE(0x0, 0x4B5CF8C, 0x4A12E8C));
+
 		native::levelEntityId = reinterpret_cast<unsigned int*>(SELECT_VALUE(0x1BCBCA4, 0x208E1A4, 0x1CD873C));
+
+		native::mp::svs_clients = reinterpret_cast<native::mp::client_t*>(0x4B5CF90);
+		native::dedi::svs_clients = reinterpret_cast<native::dedi::client_t*>(0x4A12E90);
 	}
 }
