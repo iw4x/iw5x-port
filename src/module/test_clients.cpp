@@ -99,21 +99,6 @@ void test_clients::spawn()
 		return;
 
 	game::native::Scr_AddEntityNum(ent->s.number, 0);
-
-	scheduler::once([ent]()
-	{
-		game::native::Scr_AddString("autoassign");
-		game::native::Scr_AddString("team_marinesopfor");
-		game::native::Scr_Notify(ent, static_cast<std::uint16_t>(game::native::SL_GetString("menuresponse", 0)), 2);
-
-		scheduler::once([ent]()
-		{
-			const auto string = std::format("class{}", std::to_string(std::rand() % 5));
-			game::native::Scr_AddString(string.data());
-			game::native::Scr_AddString("changeclass");
-			game::native::Scr_Notify(ent, static_cast<std::uint16_t>(game::native::SL_GetString("menuresponse", 0)), 2);
-		});
-	});
 }
 
 void test_clients::scr_shutdown_system_mp_stub(unsigned char sys)
