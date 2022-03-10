@@ -45,6 +45,8 @@ namespace game
 
 		SV_Cmd_EndTokenizedString_t SV_Cmd_EndTokenizedString;
 
+		XUIDToString_t XUIDToString;
+
 		decltype(longjmp)* _longjmp;
 
 		CmdArgs* sv_cmd_args;
@@ -183,6 +185,31 @@ namespace game
 			return scrMemTreeGlob + 12 * size_t(MT_AllocIndex(numBytes, type));
 		}
 
+		__declspec(naked) dvar_t* dvar_find_malleable_var(const char* dvarName)
+		{
+			static DWORD func = 0x531320;
+
+			__asm
+			{
+				mov edi, dvarName
+				call func
+				retn
+			}
+		}
+
+		dvar_t* Dvar_FindVar(const char* dvarName)
+		{
+			if (is_dedi())
+			{
+				return dvar_find_malleable_var(dvarName);
+			}
+			else
+			{
+				return reinterpret_cast<dvar_t*(*)(const char*)>
+					(SELECT_VALUE(0x539550, 0x5BDCC0, 0x0))(dvarName);
+			}
+		}
+
 		const float* Scr_AllocVector(const float* v)
 		{
 			const auto mem = static_cast<DWORD*>(MT_Alloc(16, 2));
@@ -309,7 +336,7 @@ namespace game
 			}
 		}
 
-		void scr_add_string_dedi(const char* value)
+		__declspec(naked) void scr_add_string_dedi(const char* value)
 		{
 			static DWORD func = 0x4F1010;
 
@@ -399,7 +426,7 @@ namespace game
 				if (mp::svs_clients[i].header.state != CS_FREE
 					&& mp::svs_clients[i].header.netchan.remoteAddress.type == NA_BOT)
 				{
-					SV_DropClient(&mp::svs_clients[i], "EXE_TIMEDOUT", 1);
+					SV_DropClient(&mp::svs_clients[i], "EXE_TIMEDOUT", true);
 				}
 			}
 		}
@@ -410,6 +437,11 @@ namespace game
 			{
 				sv_drop_all_bots_mp();
 			}
+		}
+
+		int GetProtocolVersion()
+		{
+			return 0x507C;
 		}
 	}
 
@@ -486,6 +518,8 @@ namespace game
 		native::SV_Cmd_TokenizeString = native::SV_Cmd_TokenizeString_t(SELECT_VALUE(0x0, 0x545D40, 0x0));
 
 		native::SV_Cmd_EndTokenizedString = native::SV_Cmd_EndTokenizedString_t(SELECT_VALUE(0x0, 0x545D70, 0x0));
+
+		native::XUIDToString = native::XUIDToString_t(SELECT_VALUE(0x4FAA30, 0x55CC20, 0x0));
 
 		native::_longjmp = reinterpret_cast<decltype(longjmp)*>(SELECT_VALUE(0x73AC20, 0x7363BC, 0x655558));
 

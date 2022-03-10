@@ -69,9 +69,8 @@ workspace "open-iw5"
 	filter {}
 
 	filter "configurations:Release"
-		optimize "Size"
-		buildoptions { "/GL" }
-		linkoptions { "/IGNORE:4702", "/LTCG" }
+		optimize "Full"
+		buildoptions { "/Os" }
 		defines { "NDEBUG" }
 		flags { "FatalCompileWarnings" }
 	filter {}

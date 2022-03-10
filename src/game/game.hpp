@@ -71,6 +71,9 @@ namespace game
 		typedef void (*SV_Cmd_EndTokenizedString_t)();
 		extern SV_Cmd_EndTokenizedString_t SV_Cmd_EndTokenizedString;
 
+		typedef void (*XUIDToString_t)(const unsigned __int64* xuid, char* str);
+		extern XUIDToString_t XUIDToString;
+
 		extern decltype(longjmp)* _longjmp;
 
 		extern CmdArgs* sv_cmd_args;
@@ -114,6 +117,8 @@ namespace game
 
 		void* MT_Alloc(int numBytes, int type);
 
+		dvar_t* Dvar_FindVar(const char* dvarName);
+
 		const float* Scr_AllocVector(const float* v);
 		void Scr_ClearOutParams();
 		scr_entref_t Scr_GetEntityIdRef(unsigned int id);
@@ -129,6 +134,8 @@ namespace game
 		int SV_IsTestClient(int clientNum);
 		void SV_DropClient(mp::client_t* drop, const char* reason, bool tellThem);
 		void SV_DropAllBots();
+
+		int GetProtocolVersion();
 	}
 
 	bool is_mp();

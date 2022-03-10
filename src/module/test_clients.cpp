@@ -30,13 +30,20 @@ game::native::gentity_s* test_clients::sv_add_test_client()
 		return nullptr;
 	}
 
+	assert(game::native::Dvar_FindVar("sv_running")->current.enabled);
+	assert(game::native::Dvar_FindVar("sv_maxclients")->current.integer <= *game::native::svs_clientCount);
+
 	static auto bot_port = 0;
 	char user_info[1024] = {0};
+	char xuid[32] = {0};
 
-	// Most basic string the game will accept. Xuid and Xnaddr can be empty
+	const std::uint64_t random_xuid = std::rand();
+	game::native::XUIDToString(&random_xuid, xuid);
+
+	// Most basic string the game will accept.
 	_snprintf_s(user_info, _TRUNCATE,
 		"connect bot%d \"\\invited\\0\\cl_anonymous\\0\\color\\4\\head\\default\\model\\multi\\snaps\\20\\rate\\5000\\name\\bot%d\\xuid\\%s\\xnaddr\\%s\\natType\\2\\protocol\\%d\\checksum\\%u\\statver\\%d %u\"",
-		bot_port, bot_port, "", "", 0x507C, game::native::BG_NetDataChecksum(),
+		bot_port, bot_port, xuid, "", game::native::GetProtocolVersion(), game::native::BG_NetDataChecksum(),
 		game::native::LiveStorage_GetPersistentDataDefVersion(), game::native::LiveStorage_GetPersistentDataDefFormatChecksum());
 
 	game::native::netadr_s adr;
@@ -50,8 +57,8 @@ game::native::gentity_s* test_clients::sv_add_test_client()
 	game::native::SV_Cmd_EndTokenizedString();
 
 	// Find the bot
-	auto idx = 0;
-	while (idx < *game::native::svs_clientCount)
+	auto idx = 1;
+	for (idx = 0; idx < *game::native::svs_clientCount; idx++)
 	{
 		if (game::native::mp::svs_clients[idx].header.state == game::native::clientState_t::CS_FREE)
 			continue;
@@ -121,7 +128,6 @@ __declspec(naked) void test_clients::reset_reliable_mp()
 		cmp [esi + 0x41CB4], 1 // bIsTestClient
 		jnz resume
 
-		push eax
 		mov eax, [esi + 0x20E70] // Move reliableSequence to eax
 		mov [esi + 0x20E74], eax // Move eax to reliableAcknowledge
 
@@ -165,7 +171,7 @@ void test_clients::post_load()
 	if (game::is_mp()) this->patch_mp();
 	else return; // No sp/dedi bots for now :(
 
-	command::add("spawnBot", [](const std::vector<std::string>& params)
+	command::add("spawnBot", []([[maybe_unused]] const std::vector<std::string>& params)
 	{
 		// Because I am unable to expand the scheduler at the moment
 		// we only get one bot at the time
