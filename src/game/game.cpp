@@ -374,15 +374,16 @@ namespace game
 			return SL_GetStringOfSize(str, user, strlen(str) + 1, 7);
 		}
 
-		constexpr auto sv_send_client_game_state_mp_addr = 0x570FC0;
 		__declspec(naked) void sv_send_client_game_state_mp(mp::client_t* /*client*/)
 		{
+			static DWORD func = 0x570FC0;
+
 			__asm
 			{
 				pushad
 
 				mov esi, [esp + 0x20 + 0x4]
-				call sv_send_client_game_state_mp_addr
+				call func
 
 				popad
 				ret
