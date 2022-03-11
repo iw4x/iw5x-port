@@ -13,6 +13,8 @@ namespace game
 
 		DB_LoadXAssets_t DB_LoadXAssets;
 
+		Dvar_RegisterBool_t Dvar_RegisterBool;
+
 		Dvar_SetIntByName_t Dvar_SetIntByName;
 
 		Dvar_SetFromStringByName_t Dvar_SetFromStringByName;
@@ -56,6 +58,8 @@ namespace game
 		XUIDToString_t XUIDToString;
 
 		SEH_LocalizeTextMessage_t SEH_LocalizeTextMessage;
+
+		PM_WeaponUseAmmo_t PM_WeaponUseAmmo;
 
 		decltype(longjmp)* _longjmp;
 
@@ -602,6 +606,8 @@ namespace game
 
 		native::DB_LoadXAssets = native::DB_LoadXAssets_t(SELECT_VALUE(0x48A8E0, 0x4CD020, 0x44F770));
 
+		native::Dvar_RegisterBool = native::Dvar_RegisterBool_t(SELECT_VALUE(0x4914D0, 0x5BE9F0, 0x0));
+
 		native::Dvar_SetIntByName = native::Dvar_SetIntByName_t(SELECT_VALUE(0x5396B0, 0x5BF560, 0x0));
 
 		native::Dvar_SetFromStringByName = native::Dvar_SetFromStringByName_t(
@@ -649,6 +655,8 @@ namespace game
 
 		native::SEH_LocalizeTextMessage = native::SEH_LocalizeTextMessage_t(
 			SELECT_VALUE(0x41EA20, 0x57E240, 0x0));
+
+		native::PM_WeaponUseAmmo = native::PM_WeaponUseAmmo_t(SELECT_VALUE(0x463F80, 0x42E930, 0x0));
 
 		native::_longjmp = reinterpret_cast<decltype(longjmp)*>(SELECT_VALUE(0x73AC20, 0x7363BC, 0x655558));
 
