@@ -163,7 +163,7 @@ void command::client_command_sp(int client_num, const char* s)
 {
 	auto* entity = &game::native::sp::g_entities[client_num];
 
-	assert(entity != nullptr); // On sp it should only be an assertion
+	assert(entity->client != nullptr); // On sp it should only be an assertion
 
 	params_sv params;
 
