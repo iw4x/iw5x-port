@@ -223,6 +223,8 @@ void command::add_sp_commands()
 		if (ent->health < 1)
 			return;
 
+		assert(ent->s.eType == game::native::ET_PLAYER);
+
 		ent->client->flags ^= 1;
 
 		const auto* msg = (ent->client->flags & 1) ? "GAME_NOCLIPON" : "GAME_NOCLIPOFF";
@@ -235,6 +237,8 @@ void command::add_sp_commands()
 
 		if (ent->health < 1)
 			return;
+
+		assert(ent->s.eType == game::native::ET_PLAYER);
 
 		ent->client->flags ^= 2;
 
