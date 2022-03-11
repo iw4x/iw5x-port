@@ -16,7 +16,7 @@ public:
 		if (game::is_mp())
 		{
 			// Set dvar limit
-			static const auto cg_fov_limit = 90.0f;
+			static const auto cg_fov_limit = 120.0f;
 			utils::hook::set(0x455148, &cg_fov_limit);
 
 			// Prevent value change via internal scripts

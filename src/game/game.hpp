@@ -14,6 +14,9 @@ namespace game
 		typedef void (*Cmd_AddCommand_t)(const char* cmdName, void (*function)(), cmd_function_t* allocedCmd);
 		extern Cmd_AddCommand_t Cmd_AddCommand;
 
+		typedef void (*Cmd_RemoveCommand_t)(const char* cmdName);
+		extern Cmd_RemoveCommand_t Cmd_RemoveCommand;
+
 		typedef void (*Com_Error_t)(int code, const char* fmt, ...);
 		extern Com_Error_t Com_Error;
 
@@ -71,11 +74,18 @@ namespace game
 		typedef void (*SV_Cmd_EndTokenizedString_t)();
 		extern SV_Cmd_EndTokenizedString_t SV_Cmd_EndTokenizedString;
 
+		typedef void (*SV_GameSendServerCommand_t)(int clientNum, svscmd_type type, const char* text);
+		extern SV_GameSendServerCommand_t SV_GameSendServerCommand;
+
+		typedef void (*SV_SendServerCommand_t)(dedi::client_t* cl, svscmd_type type, const char* fmt, ...);
+		extern SV_SendServerCommand_t SV_SendServerCommand;
+
 		typedef void (*XUIDToString_t)(const unsigned __int64* xuid, char* str);
 		extern XUIDToString_t XUIDToString;
 
 		extern decltype(longjmp)* _longjmp;
 
+		constexpr auto CMD_MAX_NESTING = 8;
 		extern CmdArgs* sv_cmd_args;
 		extern CmdArgs* cmd_args;
 
@@ -96,6 +106,8 @@ namespace game
 		extern scr_classStruct_t* g_classMap;
 
 		extern int* svs_clientCount;
+
+		extern gentity_s* g_entities;
 
 		namespace mp
 		{
@@ -135,9 +147,15 @@ namespace game
 		void SV_DropClient(mp::client_t* drop, const char* reason, bool tellThem);
 		void SV_DropAllBots();
 
+		void ClientCommand(int clientNum);
+
 		int GetProtocolVersion();
 
 		void NetAdr_SetType(netadr_s* addr, netadrtype_t type);
+
+		void Cbuf_AddText(LocalClientNum_t localClientNum, const char* text);
+
+		void TeleportPlayer(gentity_s* player, float* origin, float* angles);
 	}
 
 	bool is_mp();

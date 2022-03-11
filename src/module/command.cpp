@@ -1,54 +1,178 @@
 #include <std_include.hpp>
 #include "command.hpp"
+
 #include "utils/string.hpp"
-#include "game/structs.hpp"
-#include "game/game.hpp"
-#include "scheduler.hpp"
+#include "utils/hook.hpp"
 
 utils::memory::allocator command::allocator_;
-std::mutex command::mutex_;
-std::unordered_map<std::string, std::function<void(const std::vector<std::string>&)>> command::callbacks_;
+std::unordered_map<std::string, std::function<void(const command::params&)>> command::handlers;
+std::unordered_map<std::string, std::function<void(game::native::gentity_s*, command::params_sv&)>> command::handlers_sv;
 
-void command::add(const std::string& name, const std::function<void(const std::vector<std::string>&)>& callback)
+command::params::params()
+	: nesting_(game::native::cmd_args->nesting)
 {
-	std::lock_guard _(mutex_);
-	callbacks_[utils::string::to_lower(name)] = callback;
-
-	const auto cmd_name = allocator_.duplicate_string(name);
-	const auto cmd_function = allocator_.allocate<game::native::cmd_function_t>();
-
-	game::native::Cmd_AddCommand(cmd_name, dispatcher, cmd_function);
+	assert(game::native::cmd_args->nesting < game::native::CMD_MAX_NESTING);
 }
 
-void command::pre_destroy()
+int command::params::size() const
 {
-	std::lock_guard _(mutex_);
-	if (!callbacks_.empty())
+	return game::native::cmd_args->argc[this->nesting_];
+}
+
+const char* command::params::get(const int index) const
+{
+	if (index >= this->size())
 	{
-		callbacks_.clear();
+		return "";
+	}
+
+	return game::native::cmd_args->argv[this->nesting_][index];
+}
+
+std::string command::params::join(const int index) const
+{
+	std::string result;
+
+	for (auto i = index; i < this->size(); i++)
+	{
+		if (i > index) result.append(" ");
+		result.append(this->get(i));
+	}
+
+	return result;
+}
+
+command::params_sv::params_sv()
+	: nesting_(game::native::sv_cmd_args->nesting)
+{
+	assert(game::native::sv_cmd_args->nesting < game::native::CMD_MAX_NESTING);
+}
+
+int command::params_sv::size() const
+{
+	return game::native::sv_cmd_args->argc[this->nesting_];
+}
+
+const char* command::params_sv::get(const int index) const
+{
+	if (index >= this->size())
+	{
+		return "";
+	}
+
+	return game::native::sv_cmd_args->argv[this->nesting_][index];
+}
+
+std::string command::params_sv::join(const int index) const
+{
+	std::string result;
+
+	for (auto i = index; i < this->size(); i++)
+	{
+		if (i > index) result.append(" ");
+		result.append(this->get(i));
+	}
+
+	return result;
+}
+
+void command::add_raw(const char* name, void (*callback)())
+{
+	game::native::Cmd_AddCommand(name, callback, command::allocator_.allocate<game::native::cmd_function_t>());
+}
+
+void command::add(const char* name, const std::function<void(const command::params&)>& callback)
+{
+	const auto command = utils::string::to_lower(name);
+
+	if (handlers.find(command) == handlers.end())
+	{
+		add_raw(name, main_handler);
+	}
+
+	handlers[command] = callback;
+}
+
+void command::add(const char* name, const std::function<void()>& callback)
+{
+	add(name, [callback](const command::params&)
+	{
+		callback();
+	});
+}
+
+void command::add_sv(const char* name, std::function<void(game::native::gentity_s*, const command::params_sv&)> callback)
+{
+	// Since the game console is not usable there is no point in calling add_raw
+	const auto command = utils::string::to_lower(name);
+
+	if (handlers_sv.find(command) == handlers_sv.end())
+	{
+		handlers_sv[command] = callback;
 	}
 }
 
-void command::dispatcher()
+void command::main_handler()
 {
-	const auto cmd_index = game::native::cmd_args->nesting;
-	const auto arg_count = game::native::cmd_args->argc[cmd_index];
+	params params;
 
-	if (arg_count < 1) return;
+	const auto command = utils::string::to_lower(params[0]);
+	const auto got = handlers.find(command);
 
-	const auto command = utils::string::to_lower(game::native::cmd_args->argv[cmd_index][0]);
-	const auto handler = callbacks_.find(command);
-	if (handler == callbacks_.end()) return;
-
-	std::vector<std::string> arguments;
-	arguments.reserve(arg_count);
-
-	for (auto i = 0; i < game::native::cmd_args->argc[cmd_index]; ++i)
+	if (got != handlers.end())
 	{
-		arguments.emplace_back(game::native::cmd_args->argv[cmd_index][i]);
+		got->second(params);
+	}
+}
+
+void command::client_command_stub(int client_num)
+{
+	const auto entity = &game::native::g_entities[client_num];
+
+	if (entity->client == nullptr)
+	{
+		return;
 	}
 
-	handler->second(arguments);
+	params_sv params;
+
+	const auto command = utils::string::to_lower(params[0]);
+	const auto got = handlers_sv.find(command);
+
+	if (got != handlers_sv.end())
+	{
+		got->second(entity, params);
+		return;
+	}
+
+	game::native::ClientCommand(client_num);
+}
+
+__declspec(naked) void command::client_command_dedi_stub()
+{
+	__asm
+	{
+		pushad
+
+		push edi
+		call client_command_stub
+		add esp, 4h
+
+		popad
+		retn
+	}
+}
+
+void command::post_load()
+{
+	if (game::is_mp())
+	{
+		utils::hook(0x57192A, &command::client_command_stub, HOOK_CALL).install()->quick(); // SV_ExecuteClientCommand
+	}
+	else if (game::is_dedi())
+	{
+		utils::hook(0x4F96B5, &command::client_command_dedi_stub, HOOK_CALL).install()->quick(); // SV_ExecuteClientCommand
+	}	
 }
 
 REGISTER_MODULE(command);

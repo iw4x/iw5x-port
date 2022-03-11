@@ -158,7 +158,7 @@ void test_clients::post_load()
 	if (game::is_mp()) this->patch_mp();
 	else return; // No sp/dedi bots for now :(
 
-	command::add("spawnBot", []([[maybe_unused]] const std::vector<std::string>& params)
+	command::add("spawnBot", []()
 	{
 		// Because I am unable to expand the scheduler at the moment
 		// we only get one bot at the time

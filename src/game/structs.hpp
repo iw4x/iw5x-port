@@ -4,6 +4,11 @@ namespace game
 {
 	namespace native
 	{
+		typedef float vec_t;
+		typedef vec_t vec2_t[2];
+		typedef vec_t vec3_t[3];
+		typedef vec_t vec4_t[4];
+
 		enum bdLobbyErrorCode : uint32_t
 		{
 			BD_NO_ERROR = 0x0,
@@ -369,6 +374,23 @@ namespace game
 		};
 #pragma pack(pop)
 
+		enum svscmd_type
+		{
+			SV_CMD_CAN_IGNORE,
+			SV_CMD_RELIABLE,
+		};
+
+		enum LocalClientNum_t
+		{
+			LOCAL_CLIENT_0 = 0,
+			LOCAL_CLIENT_1 = 1,
+			LOCAL_CLIENT_2 = 2,
+			LOCAL_CLIENT_3 = 3,
+			LOCAL_CLIENT_LAST = 3,
+			LOCAL_CLIENT_COUNT = 4,
+			LOCAL_CLIENT_INVALID = -1,
+		};
+
 		struct cmd_function_t
 		{
 			cmd_function_t* next;
@@ -593,6 +615,28 @@ namespace game
 		};
 
 		static_assert(sizeof(gclient_s) == 0x3980);
+
+		enum entityFlag
+		{
+			FL_GODMODE = 0x1,
+			FL_DEMI_GODMODE = 0x2,
+			FL_NOTARGET = 0x4,
+			FL_NO_KNOCKBACK = 0x8,
+			FL_NO_RADIUS_DAMAGE = 0x10,
+			FL_SUPPORTS_LINKTO = 0x1000,
+			FL_NO_AUTO_ANIM_UPDATE = 0x2000,
+			FL_GRENADE_TOUCH_DAMAGE = 0x4000,
+			FL_STABLE_MISSILES = 0x20000,
+			FL_REPEAT_ANIM_UPDATE = 0x40000,
+			FL_VEHICLE_TARGET = 0x80000,
+			FL_GROUND_ENT = 0x100000,
+			FL_CURSOR_HINT = 0x200000,
+			FL_MISSILE_ATTRACTOR = 0x800000,
+			FL_WEAPON_BEING_GRABBED = 0x1000000,
+			FL_DELETE = 0x2000000,
+			FL_BOUNCE = 0x4000000,
+			FL_MOVER_SLIDE = 0x8000000
+		};
 
 		struct entityState_s
 		{
