@@ -26,7 +26,7 @@ private:
 			game::native::SV_SendServerCommand(&game::native::dedi::svs_clients[client_num],
 				type, string);
 		}
-		else if (game::is_mp())
+		else
 		{
 			game::native::SV_GameSendServerCommand(client_num, type, string);
 		}

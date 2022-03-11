@@ -13,6 +13,8 @@ namespace game
 
 		DB_LoadXAssets_t DB_LoadXAssets;
 
+		Dvar_SetIntByName_t Dvar_SetIntByName;
+
 		Dvar_SetFromStringByName_t Dvar_SetFromStringByName;
 
 		G_RunFrame_t G_RunFrame;
@@ -53,6 +55,8 @@ namespace game
 
 		XUIDToString_t XUIDToString;
 
+		SEH_LocalizeTextMessage_t SEH_LocalizeTextMessage;
+
 		decltype(longjmp)* _longjmp;
 
 		CmdArgs* sv_cmd_args;
@@ -86,6 +90,11 @@ namespace game
 		namespace dedi
 		{
 			client_t* svs_clients;
+		}
+
+		namespace sp
+		{
+			sp::gentity_s* g_entities;
 		}
 
 		void AddRefToValue(VariableValue* value)
@@ -539,6 +548,18 @@ namespace game
 					(0x50D840)(player, origin, angles);
 			}
 		}
+
+		void CG_GameMessage(LocalClientNum_t localClientNum, const char* msg)
+		{
+			if (is_mp())
+			{
+				reinterpret_cast<void(*)(LocalClientNum_t, const char*)>(0x456DC0)(localClientNum, msg);
+			}
+			else if (is_sp())
+			{
+				reinterpret_cast<void(*)(LocalClientNum_t, const char*, int /*flags*/)>(0x4228A0)(localClientNum, msg, 17);
+			}
+		}
 	}
 
 	launcher::mode mode = launcher::mode::none;
@@ -580,6 +601,8 @@ namespace game
 
 		native::DB_LoadXAssets = native::DB_LoadXAssets_t(SELECT_VALUE(0x48A8E0, 0x4CD020, 0x44F770));
 
+		native::Dvar_SetIntByName = native::Dvar_SetIntByName_t(SELECT_VALUE(0x5396B0, 0x5BF560, 0x0));
+
 		native::Dvar_SetFromStringByName = native::Dvar_SetFromStringByName_t(
 			SELECT_VALUE(0x4DD090, 0x5BF740, 0x518DF0));
 
@@ -595,7 +618,7 @@ namespace game
 
 		native::Scr_AddEntityNum = native::Scr_AddEntityNum_t(SELECT_VALUE(0x0, 0x56ABC0, 0x4EA2F0));
 
-		native::Scr_Notify = native::Scr_Notify_t(SELECT_VALUE(0x0, 0x52B190, 0x0));
+		native::Scr_Notify = native::Scr_Notify_t(SELECT_VALUE(0x4895B0, 0x52B190, 0x0));
 
 		native::Sys_ShowConsole = native::Sys_ShowConsole_t(SELECT_VALUE(0x470AF0, 0x5CF590, 0));
 
@@ -617,15 +640,18 @@ namespace game
 
 		native::SV_Cmd_EndTokenizedString = native::SV_Cmd_EndTokenizedString_t(SELECT_VALUE(0x0, 0x545D70, 0x0));
 
-		native::SV_GameSendServerCommand = native::SV_GameSendServerCommand_t(SELECT_VALUE(0x0, 0x573220, 0x0));
+		native::SV_GameSendServerCommand = native::SV_GameSendServerCommand_t(SELECT_VALUE(0x402130, 0x573220, 0x0));
 
-		native::SV_SendServerCommand = native::SV_SendServerCommand_t(SELECT_VALUE(0x0, 0x575DE0, 0x4FD5A0));
+		native::SV_SendServerCommand = native::SV_SendServerCommand_t(SELECT_VALUE(0x4F6990, 0x575DE0, 0x4FD5A0));
 
 		native::XUIDToString = native::XUIDToString_t(SELECT_VALUE(0x4FAA30, 0x55CC20, 0x0));
 
+		native::SEH_LocalizeTextMessage = native::SEH_LocalizeTextMessage_t(
+			SELECT_VALUE(0x41EA20, 0x57E240, 0x0));
+
 		native::_longjmp = reinterpret_cast<decltype(longjmp)*>(SELECT_VALUE(0x73AC20, 0x7363BC, 0x655558));
 
-		native::sv_cmd_args = reinterpret_cast<native::CmdArgs*>(SELECT_VALUE(0x0, 0x1CAA998, 0x1B5E7D8));
+		native::sv_cmd_args = reinterpret_cast<native::CmdArgs*>(SELECT_VALUE(0x1757218, 0x1CAA998, 0x1B5E7D8));
 		native::cmd_args = reinterpret_cast<native::CmdArgs*>(SELECT_VALUE(0x1750750, 0x1C978D0, 0x1B455F8));
 
 		native::scrVarGlob = reinterpret_cast<short*>(SELECT_VALUE(0x19AFC80, 0x1E72180, 0x1D3C800));
@@ -653,5 +679,6 @@ namespace game
 		native::dedi::svs_clients = reinterpret_cast<native::dedi::client_t*>(0x4A12E90);
 
 		native::g_entities = reinterpret_cast<native::gentity_s*>(SELECT_VALUE(0, 0x1A66E28, 0x191B900));
+		native::sp::g_entities = reinterpret_cast<native::sp::gentity_s*>(0x1197AD8);
 	}
 }

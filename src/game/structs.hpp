@@ -391,6 +391,12 @@ namespace game
 			LOCAL_CLIENT_INVALID = -1,
 		};
 
+		enum msgLocErrType_t
+		{
+			LOCMSG_SAFE,
+			LOCMSG_NOERR,
+		};
+
 		struct cmd_function_t
 		{
 			cmd_function_t* next;
@@ -578,6 +584,12 @@ namespace game
 			dvar_t* hashNext;
 		};
 
+		struct Bounds
+		{
+			float midPoint[3];
+			float halfSize[3];
+		};
+
 		struct usercmd_s
 		{
 			int serverTime;
@@ -636,6 +648,26 @@ namespace game
 			FL_DELETE = 0x2000000,
 			FL_BOUNCE = 0x4000000,
 			FL_MOVER_SLIDE = 0x8000000
+		};
+
+		enum entityType
+		{
+			ET_GENERAL,
+			ET_PLAYER,
+			ET_ITEM,
+			ET_MISSILE,
+			ET_INVISIBLE,
+			ET_SCRIPTMOVER,
+			ET_SOUND_BLEND,
+			ET_PRIMARY_LIGHT,
+			ET_TURRET,
+			ET_VEHICLE,
+			ET_VEHICLE_COLLMAP,
+			ET_VEHICLE_CORPSE,
+			ET_VEHICLE_SPAWNER,
+			ET_ACTOR,
+			ET_ACTOR_SPAWNER,
+			ET_ACTOR_CORPSE,
 		};
 
 		struct entityState_s
@@ -791,6 +823,62 @@ namespace game
 			};
 
 			static_assert(sizeof(dedi::client_t) == 0x78690);
+		}
+
+		namespace sp
+		{
+			struct gclient_s
+			{
+				unsigned char __pad0[0xAE04];
+				int flags;
+			}; // Warning, incorrect size
+
+			struct entityState_s
+			{
+				int eType;
+				unsigned char __pad0[0x80];
+				int number;
+				unsigned char __pad1[0x28];
+			};
+
+			static_assert(sizeof(entityState_s) == 0xB0);
+
+			struct entityShared_t
+			{
+				unsigned __int8 isLinked;
+				unsigned __int8 modelType;
+				unsigned __int8 svFlags;
+				unsigned __int8 eventType;
+				unsigned __int8 isInUse;
+				Bounds box;
+				int contents;
+				Bounds absBox;
+				float currentOrigin[3];
+				float currentAngles[3];
+				EntHandle ownerNum;
+				int eventTime;
+			};
+
+			static_assert(sizeof(entityShared_t) == 0x5C);
+
+			struct gentity_s
+			{
+				entityState_s s;
+				entityShared_t r;
+				sp::gclient_s* client; // 0x10C
+				unsigned char __pad0[0x2C];
+				int flags;
+				int clipmask;
+				int processedFrame;
+				EntHandle parent;
+				int nextthink;
+				int health;
+				int maxHealth;
+				int damage;
+				unsigned char __pad1[0x114];
+			};
+
+			static_assert(sizeof(gentity_s) == 0x270);
 		}
 	}
 }

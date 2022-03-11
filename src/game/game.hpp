@@ -23,6 +23,9 @@ namespace game
 		typedef void (*DB_LoadXAssets_t)(XZoneInfo* zoneInfo, unsigned int zoneCount, int sync);
 		extern DB_LoadXAssets_t DB_LoadXAssets;
 
+		typedef void (*Dvar_SetIntByName_t)(const char* dvarName, int value);
+		extern Dvar_SetIntByName_t Dvar_SetIntByName;
+
 		typedef void (*Dvar_SetFromStringByName_t)(const char* dvarName, const char* string);
 		extern Dvar_SetFromStringByName_t Dvar_SetFromStringByName;
 
@@ -83,6 +86,9 @@ namespace game
 		typedef void (*XUIDToString_t)(const unsigned __int64* xuid, char* str);
 		extern XUIDToString_t XUIDToString;
 
+		typedef char* (*SEH_LocalizeTextMessage_t)(const char* pszInputBuffer, const char* pszMessageType, msgLocErrType_t errType);
+		extern SEH_LocalizeTextMessage_t SEH_LocalizeTextMessage;
+
 		extern decltype(longjmp)* _longjmp;
 
 		constexpr auto CMD_MAX_NESTING = 8;
@@ -117,6 +123,11 @@ namespace game
 		namespace dedi
 		{
 			extern client_t* svs_clients;
+		}
+
+		namespace sp
+		{
+			extern sp::gentity_s* g_entities;
 		}
 
 		void AddRefToValue(VariableValue* value);
@@ -156,6 +167,8 @@ namespace game
 		void Cbuf_AddText(LocalClientNum_t localClientNum, const char* text);
 
 		void TeleportPlayer(gentity_s* player, float* origin, float* angles);
+
+		void CG_GameMessage(LocalClientNum_t localClientNum, const char* msg);
 	}
 
 	bool is_mp();
