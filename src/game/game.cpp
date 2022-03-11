@@ -549,7 +549,8 @@ namespace game
 			}
 		}
 
-		void CG_GameMessage(LocalClientNum_t localClientNum, const char* msg)
+		// SP takes one extra argument, all possible values are undocumented
+		void CG_GameMessage(LocalClientNum_t localClientNum, const char* msg, int flags)
 		{
 			if (is_mp())
 			{
@@ -557,7 +558,7 @@ namespace game
 			}
 			else if (is_sp())
 			{
-				reinterpret_cast<void(*)(LocalClientNum_t, const char*, int /*flags*/)>(0x4228A0)(localClientNum, msg, 17);
+				reinterpret_cast<void(*)(LocalClientNum_t, const char*, int)>(0x4228A0)(localClientNum, msg, flags);
 			}
 		}
 	}

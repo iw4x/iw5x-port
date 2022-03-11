@@ -168,7 +168,7 @@ namespace game
 
 		void TeleportPlayer(gentity_s* player, float* origin, float* angles);
 
-		void CG_GameMessage(LocalClientNum_t localClientNum, const char* msg);
+		void CG_GameMessage(LocalClientNum_t localClientNum, const char* msg, int flags = 0);
 	}
 
 	bool is_mp();
