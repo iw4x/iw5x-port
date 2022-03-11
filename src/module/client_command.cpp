@@ -1,8 +1,6 @@
 #include <std_include.hpp>
 #include "loader/module_loader.hpp"
 #include "command.hpp"
-
-#include "game/structs.hpp"
 #include "game/game.hpp"
 
 #include "utils/string.hpp"
