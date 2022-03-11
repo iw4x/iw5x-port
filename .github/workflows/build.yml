@@ -51,5 +51,5 @@ jobs:
         with:
           name: ${{matrix.configuration}} binaries
           path: |
-            build/bin/x32/${{matrix.configuration}}/open-iw5.exe
-            build/bin/x32/${{matrix.configuration}}/open-iw5.pdb
+            build/bin/Win32/${{matrix.configuration}}/open-iw5.exe
+            build/bin/Win32/${{matrix.configuration}}/open-iw5.pdb
