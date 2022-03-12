@@ -1,6 +1,5 @@
 #include <std_include.hpp>
 #include "loader/module_loader.hpp"
-#include "game/structs.hpp"
 #include "game/game.hpp"
 #include "utils/hook.hpp"
 

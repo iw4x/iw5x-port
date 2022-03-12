@@ -1,8 +1,6 @@
 #include <std_include.hpp>
 #include "loader/module_loader.hpp"
 #include "command.hpp"
-
-#include "game/structs.hpp"
 #include "game/game.hpp"
 
 #include "utils/string.hpp"
@@ -26,7 +24,7 @@ private:
 			game::native::SV_SendServerCommand(&game::native::dedi::svs_clients[client_num],
 				type, string);
 		}
-		else if (game::is_mp())
+		else
 		{
 			game::native::SV_GameSendServerCommand(client_num, type, string);
 		}

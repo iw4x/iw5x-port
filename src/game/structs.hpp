@@ -391,6 +391,12 @@ namespace game
 			LOCAL_CLIENT_INVALID = -1,
 		};
 
+		enum msgLocErrType_t
+		{
+			LOCMSG_SAFE,
+			LOCMSG_NOERR,
+		};
+
 		struct cmd_function_t
 		{
 			cmd_function_t* next;
@@ -527,6 +533,31 @@ namespace game
 			const char* name;
 		};
 
+		enum dvar_flags : std::uint16_t
+		{
+			DVAR_ARCHIVE = 0x1,
+			DVAR_CHEAT = 0x4,
+			DVAR_CODINFO = 0x8,
+			DVAR_SCRIPTINFO = 0x10,
+			DVAR_SERVERINFO = 0x400,
+			DVAR_WRITEPROTECTED = 0x800,
+			DVAR_READONLY = 0x2000,
+		}; // Incomplete
+
+		enum dvar_type : std::int8_t
+		{
+			DVAR_TYPE_BOOL = 0x0,
+			DVAR_TYPE_FLOAT = 0x1,
+			DVAR_TYPE_FLOAT_2 = 0x2,
+			DVAR_TYPE_FLOAT_3 = 0x3,
+			DVAR_TYPE_FLOAT_4 = 0x4,
+			DVAR_TYPE_INT = 0x5,
+			DVAR_TYPE_ENUM = 0x6,
+			DVAR_TYPE_STRING = 0x7,
+			DVAR_TYPE_COLOR = 0x8,
+			DVAR_TYPE_FLOAT_3_COLOR = 0x9,
+		};
+
 		union DvarValue
 		{
 			bool enabled;
@@ -578,6 +609,12 @@ namespace game
 			dvar_t* hashNext;
 		};
 
+		struct Bounds
+		{
+			float midPoint[3];
+			float halfSize[3];
+		};
+
 		struct usercmd_s
 		{
 			int serverTime;
@@ -597,6 +634,33 @@ namespace game
 		};
 
 		static_assert(sizeof(usercmd_s) == 0x2C);
+
+		enum PlayerHandIndex
+		{
+			WEAPON_HAND_RIGHT = 0,
+			WEAPON_HAND_LEFT = 1,
+			NUM_WEAPON_HANDS = 2,
+			WEAPON_HAND_DEFAULT = 0,
+		};
+
+		struct Weapon_s
+		{
+			unsigned int padding : 8;
+			unsigned int scopeVariation : 3;
+			unsigned int weaponOthers : 4;
+			unsigned int weaponUnderBarrels : 2;
+			unsigned int weaponScopes : 3;
+			unsigned int weaponIdx : 8;
+			unsigned int weaponVariation : 4;
+		};
+
+		union Weapon
+		{
+			Weapon_s _s_0;
+			unsigned int data;
+		};
+
+		static_assert(sizeof(Weapon) == 4);
 
 		struct playerState_s
 		{
@@ -636,6 +700,26 @@ namespace game
 			FL_DELETE = 0x2000000,
 			FL_BOUNCE = 0x4000000,
 			FL_MOVER_SLIDE = 0x8000000
+		};
+
+		enum entityType
+		{
+			ET_GENERAL,
+			ET_PLAYER,
+			ET_ITEM,
+			ET_MISSILE,
+			ET_INVISIBLE,
+			ET_SCRIPTMOVER,
+			ET_SOUND_BLEND,
+			ET_PRIMARY_LIGHT,
+			ET_TURRET,
+			ET_VEHICLE,
+			ET_VEHICLE_COLLMAP,
+			ET_VEHICLE_CORPSE,
+			ET_VEHICLE_SPAWNER,
+			ET_ACTOR,
+			ET_ACTOR_SPAWNER,
+			ET_ACTOR_CORPSE,
 		};
 
 		struct entityState_s
@@ -791,6 +875,62 @@ namespace game
 			};
 
 			static_assert(sizeof(dedi::client_t) == 0x78690);
+		}
+
+		namespace sp
+		{
+			struct gclient_s
+			{
+				unsigned char __pad0[0xAE04];
+				int flags;
+			}; // Warning, incorrect size
+
+			struct entityState_s
+			{
+				int eType;
+				unsigned char __pad0[0x80];
+				int number;
+				unsigned char __pad1[0x28];
+			};
+
+			static_assert(sizeof(entityState_s) == 0xB0);
+
+			struct entityShared_t
+			{
+				unsigned __int8 isLinked;
+				unsigned __int8 modelType;
+				unsigned __int8 svFlags;
+				unsigned __int8 eventType;
+				unsigned __int8 isInUse;
+				Bounds box;
+				int contents;
+				Bounds absBox;
+				float currentOrigin[3];
+				float currentAngles[3];
+				EntHandle ownerNum;
+				int eventTime;
+			};
+
+			static_assert(sizeof(entityShared_t) == 0x5C);
+
+			struct gentity_s
+			{
+				entityState_s s;
+				entityShared_t r;
+				sp::gclient_s* client; // 0x10C
+				unsigned char __pad0[0x2C];
+				int flags;
+				int clipmask;
+				int processedFrame;
+				EntHandle parent;
+				int nextthink;
+				int health;
+				int maxHealth;
+				int damage;
+				unsigned char __pad1[0x114];
+			};
+
+			static_assert(sizeof(gentity_s) == 0x270);
 		}
 	}
 }

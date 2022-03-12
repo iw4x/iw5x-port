@@ -49,6 +49,7 @@ public:
 	static void add(const char* name, const std::function<void()>& callback);
 
 	static void add_sv(const char* name, std::function<void(game::native::gentity_s*, const params_sv&)> callback);
+	static void add_sp_sv(const char* name, std::function<void(game::native::sp::gentity_s*, const params_sv&)> callback);
 
 	void post_load() override;
 
@@ -57,11 +58,16 @@ private:
 
 	static std::unordered_map<std::string, std::function<void(const params&)>> handlers;
 	static std::unordered_map<std::string, std::function<void(game::native::gentity_s*, params_sv&)>> handlers_sv;
+	static std::unordered_map<std::string, std::function<void(game::native::sp::gentity_s*, params_sv&)>> handlers_sp_sv;
 
 	static void main_handler();
 
 	static void client_command_stub(int client_num);
+	static void client_command_sp(int client_num, const char* s);
+	static void client_command_sp_stub();
 	static void client_command_dedi_stub();
 
 	static void add_raw(const char* name, void (*callback)());
+
+	static void add_sp_commands();
 };
