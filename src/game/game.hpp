@@ -27,6 +27,10 @@ namespace game
 			unsigned __int16 flags, const char* description);
 		extern Dvar_RegisterBool_t Dvar_RegisterBool;
 
+		typedef const dvar_t* (*Dvar_RegisterFloat_t)(const char* dvarName, float value,
+			float min, float max, unsigned __int16 flags, const char* description);
+		extern Dvar_RegisterFloat_t Dvar_RegisterFloat;
+
 		typedef void (*Dvar_SetIntByName_t)(const char* dvarName, int value);
 		extern Dvar_SetIntByName_t Dvar_SetIntByName;
 
@@ -96,6 +100,9 @@ namespace game
 		typedef void (*PM_WeaponUseAmmo_t)(playerState_s* ps, const Weapon weapon, bool isAlternate, int amount, PlayerHandIndex hand);
 		extern PM_WeaponUseAmmo_t PM_WeaponUseAmmo;
 
+		typedef void (*Cmd_ExecuteSingleCommand_t)(LocalClientNum_t localClientNum, int controllerIndex, const char* text);
+		extern Cmd_ExecuteSingleCommand_t Cmd_ExecuteSingleCommand;
+
 		extern decltype(longjmp)* _longjmp;
 
 		constexpr auto CMD_MAX_NESTING = 8;
@@ -120,6 +127,8 @@ namespace game
 
 		extern int* svs_clientCount;
 
+		constexpr auto MAX_GENTITIES = 2048u;
+		constexpr auto ENTITYNUM_NONE = MAX_GENTITIES - 1u;
 		extern gentity_s* g_entities;
 
 		namespace mp

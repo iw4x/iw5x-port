@@ -15,6 +15,8 @@ namespace game
 
 		Dvar_RegisterBool_t Dvar_RegisterBool;
 
+		Dvar_RegisterFloat_t Dvar_RegisterFloat;
+
 		Dvar_SetIntByName_t Dvar_SetIntByName;
 
 		Dvar_SetFromStringByName_t Dvar_SetFromStringByName;
@@ -60,6 +62,8 @@ namespace game
 		SEH_LocalizeTextMessage_t SEH_LocalizeTextMessage;
 
 		PM_WeaponUseAmmo_t PM_WeaponUseAmmo;
+
+		Cmd_ExecuteSingleCommand_t Cmd_ExecuteSingleCommand;
 
 		decltype(longjmp)* _longjmp;
 
@@ -608,6 +612,8 @@ namespace game
 
 		native::Dvar_RegisterBool = native::Dvar_RegisterBool_t(SELECT_VALUE(0x4914D0, 0x5BE9F0, 0x0));
 
+		native::Dvar_RegisterFloat = native::Dvar_RegisterFloat_t(SELECT_VALUE(0x4F9CC0, 0x5BEA80, 0x0));
+
 		native::Dvar_SetIntByName = native::Dvar_SetIntByName_t(SELECT_VALUE(0x5396B0, 0x5BF560, 0x0));
 
 		native::Dvar_SetFromStringByName = native::Dvar_SetFromStringByName_t(
@@ -657,6 +663,9 @@ namespace game
 			SELECT_VALUE(0x41EA20, 0x57E240, 0x0));
 
 		native::PM_WeaponUseAmmo = native::PM_WeaponUseAmmo_t(SELECT_VALUE(0x463F80, 0x42E930, 0x0));
+
+		native::Cmd_ExecuteSingleCommand = native::Cmd_ExecuteSingleCommand_t(
+			SELECT_VALUE(0x4D6960, 0x5462B0, 0x4CC360));
 
 		native::_longjmp = reinterpret_cast<decltype(longjmp)*>(SELECT_VALUE(0x73AC20, 0x7363BC, 0x655558));
 
