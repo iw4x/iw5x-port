@@ -323,13 +323,17 @@ void command::add_sp_commands()
 
 void command::post_load()
 {
+	if (game::is_dedi())
+	{
+		utils::hook(0x4F96B5, &command::client_command_dedi_stub, HOOK_CALL).install()->quick(); // SV_ExecuteClientCommand
+		return;
+	}
+
+	add("quit", game::native::Com_Quit_f);
+
 	if (game::is_mp())
 	{
 		utils::hook(0x57192A, &command::client_command_stub, HOOK_CALL).install()->quick(); // SV_ExecuteClientCommand
-	}
-	else if (game::is_dedi())
-	{
-		utils::hook(0x4F96B5, &command::client_command_dedi_stub, HOOK_CALL).install()->quick(); // SV_ExecuteClientCommand
 	}
 	else
 	{

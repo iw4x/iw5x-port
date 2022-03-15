@@ -120,6 +120,9 @@ namespace game
 		typedef void (*Cmd_ExecuteSingleCommand_t)(LocalClientNum_t localClientNum, int controllerIndex, const char* text);
 		extern Cmd_ExecuteSingleCommand_t Cmd_ExecuteSingleCommand;
 
+		typedef void (*Com_Quit_f_t)();
+		extern Com_Quit_f_t Com_Quit_f;
+
 		extern decltype(longjmp)* _longjmp;
 
 		constexpr auto CMD_MAX_NESTING = 8;
