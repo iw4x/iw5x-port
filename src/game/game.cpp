@@ -65,7 +65,15 @@ namespace game
 
 		CM_TransformedCapsuleTrace_t CM_TransformedCapsuleTrace;
 
+		Weapon_RocketLauncher_Fire_t Weapon_RocketLauncher_Fire;
+
+		PM_playerTrace_t PM_playerTrace;
+
+		PM_trace_t PM_trace;
+
 		Cmd_ExecuteSingleCommand_t Cmd_ExecuteSingleCommand;
+
+		Com_Quit_f_t Com_Quit_f;
 
 		decltype(longjmp)* _longjmp;
 
@@ -669,8 +677,17 @@ namespace game
 		native::CM_TransformedCapsuleTrace = native::CM_TransformedCapsuleTrace_t(
 			SELECT_VALUE(0x4F9B80, 0x541340, 0x0));
 
+		native::Weapon_RocketLauncher_Fire = native::Weapon_RocketLauncher_Fire_t(
+			SELECT_VALUE(0x48C920, 0x5305D0, 0x0));
+
+		native::PM_playerTrace = native::PM_playerTrace_t(SELECT_VALUE(0x4CE600, 0x421F00, 0x0));
+
+		native::PM_trace = native::PM_trace_t(SELECT_VALUE(0x544BF0, 0x41CEB0, 0x0));
+
 		native::Cmd_ExecuteSingleCommand = native::Cmd_ExecuteSingleCommand_t(
 			SELECT_VALUE(0x4D6960, 0x5462B0, 0x4CC360));
+
+		native::Com_Quit_f = native::Com_Quit_f_t(SELECT_VALUE(0x4F48B0, 0x5556B0, 0x4D95B0));
 
 		native::_longjmp = reinterpret_cast<decltype(longjmp)*>(SELECT_VALUE(0x73AC20, 0x7363BC, 0x655558));
 
