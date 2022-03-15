@@ -37,7 +37,7 @@ private:
 		const float* start, const float* end, const game::native::Bounds* bounds,
 		int pass_entity_num, int content_mask);
 
-	static void pm_trace(const game::native::pmove_t* pm, game::native::trace_t* results,
+	static void pm_trace_stub(const game::native::pmove_t* pm, game::native::trace_t* results,
 		const float* start, const float* end, const game::native::Bounds* bounds, int pass_entity_num, int content_mask);
 
 	static void patch_mp();

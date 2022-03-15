@@ -122,7 +122,7 @@ void player_movement::pm_player_trace_stub(game::native::pmove_t* pm, game::nati
 	}
 }
 
-void player_movement::pm_trace(const game::native::pmove_t* pm, game::native::trace_t* results,
+void player_movement::pm_trace_stub(const game::native::pmove_t* pm, game::native::trace_t* results,
 	const float* start, const float* end, const game::native::Bounds* bounds, int pass_entity_num, int content_mask)
 {
 	game::native::PM_trace(pm, results, start, end, bounds, pass_entity_num, content_mask);
@@ -166,9 +166,9 @@ void player_movement::patch_mp()
 	utils::hook(0x422861, &player_movement::pm_player_trace_stub, HOOK_CALL).install()->quick(); // PM_JitterPoint
 	utils::hook(0x4228B5, &player_movement::pm_player_trace_stub, HOOK_CALL).install()->quick(); // PM_JitterPoint
 
-	utils::hook(0x41F995, &player_movement::pm_trace, HOOK_CALL).install()->quick(); // PM_CheckDuck
-	utils::hook(0x41F8D8, &player_movement::pm_trace, HOOK_CALL).install()->quick(); // PM_CheckDuck
-	utils::hook(0x41F941, &player_movement::pm_trace, HOOK_CALL).install()->quick(); // PM_CheckDuck
+	utils::hook(0x41F995, &player_movement::pm_trace_stub, HOOK_CALL).install()->quick(); // PM_CheckDuck
+	utils::hook(0x41F8D8, &player_movement::pm_trace_stub, HOOK_CALL).install()->quick(); // PM_CheckDuck
+	utils::hook(0x41F941, &player_movement::pm_trace_stub, HOOK_CALL).install()->quick(); // PM_CheckDuck
 }
 
 void player_movement::patch_sp()
@@ -188,9 +188,9 @@ void player_movement::patch_sp()
 	utils::hook(0x643F84, &player_movement::pm_player_trace_stub, HOOK_CALL).install()->quick(); // PM_JitterPoint
 	utils::hook(0x643FDB, &player_movement::pm_player_trace_stub, HOOK_CALL).install()->quick(); // PM_JitterPoint
 
-	utils::hook(0x64181A, &player_movement::pm_trace, HOOK_CALL).install()->quick(); // PM_CheckDuck
-	utils::hook(0x641701, &player_movement::pm_trace, HOOK_CALL).install()->quick(); // PM_CheckDuck
-	utils::hook(0x6417A9, &player_movement::pm_trace, HOOK_CALL).install()->quick(); // PM_CheckDuck
+	utils::hook(0x64181A, &player_movement::pm_trace_stub, HOOK_CALL).install()->quick(); // PM_CheckDuck
+	utils::hook(0x641701, &player_movement::pm_trace_stub, HOOK_CALL).install()->quick(); // PM_CheckDuck
+	utils::hook(0x6417A9, &player_movement::pm_trace_stub, HOOK_CALL).install()->quick(); // PM_CheckDuck
 }
 
 void player_movement::post_load()
