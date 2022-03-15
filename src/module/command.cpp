@@ -123,6 +123,20 @@ void command::add_sp_sv(const char* name, std::function<void(game::native::sp::g
 	}
 }
 
+void command::execute(std::string command, bool sync)
+{
+	command += "\n";
+
+	if (sync)
+	{
+		game::native::Cmd_ExecuteSingleCommand(game::native::LOCAL_CLIENT_0, 0, command.data());
+	}
+	else
+	{
+		game::native::Cbuf_AddText(game::native::LOCAL_CLIENT_0, command.data());
+	}
+}
+
 void command::main_handler()
 {
 	params params;
@@ -218,6 +232,9 @@ void command::add_sp_commands()
 {
 	add("noclip", []()
 	{
+		if (!game::native::Dvar_FindVar("sv_running")->current.enabled)
+			return;
+
 		const auto* ent = &game::native::sp::g_entities[0];
 
 		if (ent->health < 1)
@@ -233,6 +250,9 @@ void command::add_sp_commands()
 
 	add("ufo", []()
 	{
+		if (!game::native::Dvar_FindVar("sv_running")->current.enabled)
+			return;
+
 		const auto* ent = &game::native::sp::g_entities[0];
 
 		if (ent->health < 1)
@@ -248,6 +268,9 @@ void command::add_sp_commands()
 
 	add("god", []()
 	{
+		if (!game::native::Dvar_FindVar("sv_running")->current.enabled)
+			return;
+
 		auto* ent = &game::native::sp::g_entities[0];
 
 		if (ent->health < 1)
@@ -263,6 +286,9 @@ void command::add_sp_commands()
 
 	add("demigod", []()
 	{
+		if (!game::native::Dvar_FindVar("sv_running")->current.enabled)
+			return;
+
 		auto* ent = &game::native::sp::g_entities[0];
 
 		if (ent->health < 1)
@@ -278,6 +304,9 @@ void command::add_sp_commands()
 
 	add("notarget", []()
 	{
+		if (!game::native::Dvar_FindVar("sv_running")->current.enabled)
+			return;
+
 		auto* ent = &game::native::sp::g_entities[0];
 
 		if (ent->health < 1)

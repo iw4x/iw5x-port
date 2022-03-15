@@ -615,6 +615,53 @@ namespace game
 			float halfSize[3];
 		};
 
+		enum TraceHitType
+		{
+			TRACE_HITTYPE_NONE = 0x0,
+			TRACE_HITTYPE_ENTITY = 0x1,
+			TRACE_HITTYPE_DYNENT_MODEL = 0x2,
+			TRACE_HITTYPE_DYNENT_BRUSH = 0x3,
+			TRACE_HITTYPE_GLASS = 0x4,
+		};
+
+		struct trace_t
+		{
+			float fraction;
+			float normal[3];
+			int surfaceFlags;
+			int contents;
+			const char* material;
+			TraceHitType hitType;
+			unsigned __int16 hitId;
+			unsigned __int16 modelIndex;
+			unsigned __int16 partName;
+			unsigned __int16 partGroup;
+			bool allsolid;
+			bool startsolid;
+			bool walkable;
+		};
+
+		static_assert(sizeof(trace_t) == 0x2C);
+
+		struct pml_t
+		{
+			float forward[3];
+			float right[3];
+			float up[3];
+			float frametime;
+			int msec;
+			int walking;
+			int groundPlane;
+			int almostGroundPlane;
+			trace_t groundTrace;
+			float impactSpeed;
+			float previous_origin[3];
+			float previous_velocity[3];
+			unsigned int holdrand;
+		};
+
+		static_assert(sizeof(pml_t) == 0x84);
+
 		struct usercmd_s
 		{
 			int serverTime;
@@ -661,6 +708,40 @@ namespace game
 		};
 
 		static_assert(sizeof(Weapon) == 4);
+
+		enum ViewLockTypes
+		{
+			PLAYERVIEWLOCK_NONE = 0x0,
+			PLAYERVIEWLOCK_FULL = 0x1,
+			PLAYERVIEWLOCK_WEAPONJITTER = 0x2,
+			PLAYERVIEWLOCKCOUNT = 0x3,
+		};
+
+		enum playerStateFlag
+		{
+			PMF_PRONE = 0x1,
+			PMF_DUCKED = 0x2,
+			PMF_MANTLE = 0x4,
+			PMF_LADDER = 0x8,
+			PMF_SIGHT_AIMING = 0x10,
+			PMF_BACKWARDS_RUN = 0x20,
+			PMF_WALKING = 0x40,
+			PMF_TIME_HARDLANDING = 0x80,
+			PMF_TIME_KNOCKBACK = 0x100,
+			PMF_PRONEMOVE_OVERRIDDEN = 0x200,
+			PMF_RESPAWNED = 0x400,
+			PMF_FROZEN = 0x800,
+			PMF_LADDER_FALL = 0x1000,
+			PMF_JUMPING = 0x2000,
+			PMF_SPRINTING = 0x4000,
+			PMF_SHELLSHOCKED = 0x8000,
+			PMF_MELEE_CHARGE = 0x10000,
+			PMF_NO_SPRINT = 0x20000,
+			PMF_NO_JUMP = 0x40000,
+			PMF_REMOTE_CONTROLLING = 0x80000,
+			PMF_ANIM_SCRIPTED = 0x100000,
+			PMF_DIVING = 0x400000,
+		};
 
 		struct playerState_s
 		{
@@ -915,8 +996,8 @@ namespace game
 
 			struct gentity_s
 			{
-				entityState_s s;
-				entityShared_t r;
+				sp::entityState_s s;
+				sp::entityShared_t r;
 				sp::gclient_s* client; // 0x10C
 				unsigned char __pad0[0x2C];
 				int flags;

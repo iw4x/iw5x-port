@@ -51,6 +51,8 @@ public:
 	static void add_sv(const char* name, std::function<void(game::native::gentity_s*, const params_sv&)> callback);
 	static void add_sp_sv(const char* name, std::function<void(game::native::sp::gentity_s*, const params_sv&)> callback);
 
+	static void execute(std::string command, bool sync = false);
+
 	void post_load() override;
 
 private:
