@@ -709,6 +709,21 @@ namespace game
 
 		static_assert(sizeof(Weapon) == 4);
 
+		struct weaponParms
+		{
+			float forward[3];
+			float right[3];
+			float up[3];
+			float muzzleTrace[3];
+			float gunForward[3];
+			Weapon weapon;
+			bool isAlternate;
+			const void* weapDef;
+			const void* weapCompleteDef;
+		};
+
+		static_assert(sizeof(weaponParms) == 0x4C);
+
 		enum ViewLockTypes
 		{
 			PLAYERVIEWLOCK_NONE = 0x0,
@@ -745,11 +760,48 @@ namespace game
 
 		struct playerState_s
 		{
-			unsigned char __pad0[0x4EC];
+			int commandTime;
+			int pm_type;
+			int pm_time;
+			int pm_flags;
+			int otherFlags;
+			int linkFlags;
+			int bobCycle;
+			float origin[3];
+			float velocity[3];
+			unsigned char __pad0[0x4B8];
 			unsigned int perks[0x2];
 			unsigned int perkSlots[0x9];
 			unsigned char __pad1[0x2DE8];
 		};
+
+		static_assert(sizeof(playerState_s) == 0x3300);
+
+		struct pmove_t
+		{
+			playerState_s* ps;
+			usercmd_s cmd;
+			usercmd_s oldcmd;
+			int tracemask;
+			int numtouch;
+			int touchents[32];
+			Bounds bounds;
+			float speed;
+			int proneChange;
+			float maxSprintTimeMultiplier;
+			bool mantleStarted;
+			float mantleEndPos[3];
+			int mantleDuration;
+			int viewChangeTime;
+			float viewChange;
+			float fTorsoPitch;
+			float fWaistPitch;
+			int remoteTurretFireTime;
+			int lastUpdateCMDServerTime;
+			unsigned char handler;
+		};
+
+		static_assert(sizeof(pmove_t) == 0x138);
 
 		struct gclient_s
 		{
@@ -834,6 +886,17 @@ namespace game
 		};
 
 		static_assert(sizeof(gentity_s) == 0x274);
+
+		struct missileFireParms
+		{
+			gentity_s* target;
+			float targetPosOrOffset[3];
+			float autoDetonateTime;
+			bool lockon;
+			bool topFire;
+		};
+
+		static_assert(sizeof(missileFireParms) == 0x18);
 
 		enum clientState_t
 		{

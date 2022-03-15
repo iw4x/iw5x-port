@@ -105,6 +105,18 @@ namespace game
 			const float* origin, const float* angles);
 		extern CM_TransformedCapsuleTrace_t CM_TransformedCapsuleTrace;
 
+		typedef gentity_s* (*Weapon_RocketLauncher_Fire_t)(gentity_s* ent, const Weapon weapon, float spread,
+			weaponParms* wp, const float* gunVel, missileFireParms* fireParms, missileFireParms* magicBullet);
+		extern Weapon_RocketLauncher_Fire_t Weapon_RocketLauncher_Fire;
+
+		typedef void (*PM_playerTrace_t)(pmove_t* pm, trace_t* results, const float* start, const float* end,
+			const Bounds* bounds, int passEntityNum, int contentMask);
+		extern PM_playerTrace_t PM_playerTrace;
+
+		typedef void (*PM_trace_t)(const pmove_t* pm, trace_t* results, const float* start, const float* end,
+			const Bounds* bounds, int passEntityNum, int contentMask);
+		extern PM_trace_t PM_trace;
+
 		typedef void (*Cmd_ExecuteSingleCommand_t)(LocalClientNum_t localClientNum, int controllerIndex, const char* text);
 		extern Cmd_ExecuteSingleCommand_t Cmd_ExecuteSingleCommand;
 
