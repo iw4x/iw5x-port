@@ -63,6 +63,8 @@ namespace game
 
 		PM_WeaponUseAmmo_t PM_WeaponUseAmmo;
 
+		CM_TransformedCapsuleTrace_t CM_TransformedCapsuleTrace;
+
 		Cmd_ExecuteSingleCommand_t Cmd_ExecuteSingleCommand;
 
 		decltype(longjmp)* _longjmp;
@@ -663,6 +665,9 @@ namespace game
 			SELECT_VALUE(0x41EA20, 0x57E240, 0x0));
 
 		native::PM_WeaponUseAmmo = native::PM_WeaponUseAmmo_t(SELECT_VALUE(0x463F80, 0x42E930, 0x0));
+
+		native::CM_TransformedCapsuleTrace = native::CM_TransformedCapsuleTrace_t(
+			SELECT_VALUE(0x4F9B80, 0x541340, 0x0));
 
 		native::Cmd_ExecuteSingleCommand = native::Cmd_ExecuteSingleCommand_t(
 			SELECT_VALUE(0x4D6960, 0x5462B0, 0x4CC360));

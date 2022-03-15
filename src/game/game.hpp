@@ -100,6 +100,11 @@ namespace game
 		typedef void (*PM_WeaponUseAmmo_t)(playerState_s* ps, const Weapon weapon, bool isAlternate, int amount, PlayerHandIndex hand);
 		extern PM_WeaponUseAmmo_t PM_WeaponUseAmmo;
 
+		typedef void (*CM_TransformedCapsuleTrace_t)(game::native::trace_t* results, const float* start, const float* end,
+			const game::native::Bounds* bounds, const game::native::Bounds* capsule, int contents,
+			const float* origin, const float* angles);
+		extern CM_TransformedCapsuleTrace_t CM_TransformedCapsuleTrace;
+
 		typedef void (*Cmd_ExecuteSingleCommand_t)(LocalClientNum_t localClientNum, int controllerIndex, const char* text);
 		extern Cmd_ExecuteSingleCommand_t Cmd_ExecuteSingleCommand;
 
