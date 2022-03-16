@@ -117,6 +117,9 @@ namespace game
 			const Bounds* bounds, int passEntityNum, int contentMask);
 		extern PM_trace_t PM_trace;
 
+		typedef void (*Vec3Normalize_t)(float* v);
+		extern Vec3Normalize_t Vec3Normalize;
+
 		typedef void (*Cmd_ExecuteSingleCommand_t)(LocalClientNum_t localClientNum, int controllerIndex, const char* text);
 		extern Cmd_ExecuteSingleCommand_t Cmd_ExecuteSingleCommand;
 

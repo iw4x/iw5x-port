@@ -71,6 +71,8 @@ namespace game
 
 		PM_trace_t PM_trace;
 
+		Vec3Normalize_t Vec3Normalize;
+
 		Cmd_ExecuteSingleCommand_t Cmd_ExecuteSingleCommand;
 
 		Com_Quit_f_t Com_Quit_f;
@@ -220,13 +222,13 @@ namespace game
 			return scrMemTreeGlob + 12 * size_t(MT_AllocIndex(numBytes, type));
 		}
 
-		__declspec(naked) dvar_t* dvar_find_malleable_var(const char* dvarName)
+		__declspec(naked) dvar_t* dvar_find_malleable_var(const char* dvar_name)
 		{
 			static DWORD func = 0x531320;
 
 			__asm
 			{
-				mov edi, dvarName
+				mov edi, dvar_name
 				call func
 				retn
 			}
@@ -294,7 +296,7 @@ namespace game
 			}
 		}
 
-		__declspec(naked) void scr_notify_id_multiplayer(unsigned int id, unsigned int stringValue,
+		__declspec(naked) void scr_notify_id_multiplayer(unsigned int id, unsigned int string_value,
 		                                                 unsigned int paramcount)
 		{
 			static DWORD func = 0x56B5E0;
@@ -302,7 +304,7 @@ namespace game
 			__asm
 			{
 				mov eax, paramcount
-				push stringValue
+				push string_value
 				push id
 				call func
 				add esp, 8h
@@ -310,7 +312,7 @@ namespace game
 			}
 		}
 
-		__declspec(naked) void scr_notify_id_singleplayer(unsigned int id, unsigned int stringValue,
+		__declspec(naked) void scr_notify_id_singleplayer(unsigned int id, unsigned int string_value,
 		                                                  unsigned int paramcount)
 		{
 			static DWORD func = 0x610980;
@@ -318,7 +320,7 @@ namespace game
 			__asm
 			{
 				mov eax, paramcount
-				push stringValue
+				push string_value
 				push id
 				call func
 				add esp, 8h
@@ -478,13 +480,13 @@ namespace game
 			}
 		}
 
-		__declspec(naked) void client_command_dedi(int clientNum)
+		__declspec(naked) void client_command_dedi(int client_num)
 		{
 			static DWORD func = 0x47EA40;
 
 			__asm
 			{
-				mov edi, clientNum
+				mov edi, client_num
 				call func
 				retn
 			}
@@ -512,14 +514,14 @@ namespace game
 			addr->type = type;
 		}
 
-		__declspec(naked) void cbuf_add_text_dedi(LocalClientNum_t localClientNum, const char* text)
+		__declspec(naked) void cbuf_add_text_dedi(LocalClientNum_t local_client_num, const char* text)
 		{
 			static DWORD func = 0x4CB5D0;
 
 			__asm
 			{
 				mov eax, text
-				push localClientNum
+				push local_client_num
 				call func
 				add esp, 4h
 				retn
@@ -683,6 +685,8 @@ namespace game
 		native::PM_playerTrace = native::PM_playerTrace_t(SELECT_VALUE(0x4CE600, 0x421F00, 0x0));
 
 		native::PM_trace = native::PM_trace_t(SELECT_VALUE(0x544BF0, 0x41CEB0, 0x0));
+
+		native::Vec3Normalize = native::Vec3Normalize_t(SELECT_VALUE(0x536A20, 0x415EE0, 0x0));
 
 		native::Cmd_ExecuteSingleCommand = native::Cmd_ExecuteSingleCommand_t(
 			SELECT_VALUE(0x4D6960, 0x5462B0, 0x4CC360));

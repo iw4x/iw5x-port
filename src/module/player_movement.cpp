@@ -1,9 +1,13 @@
 #include <std_include.hpp>
-#include "player_movement.hpp"
+#include "game/game.hpp"
 
 #include "utils/hook.hpp"
 
+#include "player_movement.hpp"
+
 const game::native::dvar_t* player_movement::player_sustainAmmo;
+const game::native::dvar_t* player_movement::jump_ladderPushVel;
+const game::native::dvar_t* player_movement::jump_height;
 const game::native::dvar_t* player_movement::pm_bounces;
 const game::native::dvar_t* player_movement::pm_playerEjection;
 const game::native::dvar_t* player_movement::pm_playerCollision;
@@ -19,11 +23,12 @@ void player_movement::pm_weapon_use_ammo(game::native::playerState_s* ps, const 
 	}
 }
 
-__declspec(naked) void player_movement::pm_step_slide_move_stub_mp()
+static DWORD bounce_addr = SELECT_VALUE(0x43D91F, 0x424D58, 0x0);
+static DWORD dont_bounce_addr = SELECT_VALUE(0x43D933, 0x424D6C, 0x0);
+__declspec(naked) void player_movement::pm_step_slide_move_stub()
 {
 	__asm
 	{
-		// Check value of pm_bounces
 		push eax
 		mov eax, player_movement::pm_bounces
 		cmp byte ptr [eax + 0xC], 1
@@ -34,42 +39,13 @@ __declspec(naked) void player_movement::pm_step_slide_move_stub_mp()
 
 		// Code hook skipped
 		cmp dword ptr [esp + 0x24], 0
-		jnz dontBounce
+		jnz dont_bounce
 
 	bounce:
-		push 0x424D58
-		retn
+		jmp bounce_addr
 
-	dontBounce:
-		push 0x424D6C
-		retn
-	}
-}
-
-__declspec(naked) void player_movement::pm_step_slide_move_stub_sp()
-{
-	__asm
-	{
-		// Check value of pm_bounces
-		push eax
-		mov eax, player_movement::pm_bounces
-		cmp byte ptr [eax + 0xC], 1
-		pop eax
-
-		// Bounce if enabled is true
-		je bounce
-
-		// Code hook skipped
-		cmp dword ptr [esp + 0x24], 0
-		jnz dontBounce
-
-	bounce:
-		push 0x43D91F
-		retn
-
-	dontBounce:
-		push 0x43D933
-		retn
+	dont_bounce:
+		jmp dont_bounce_addr
 	}
 }
 
@@ -133,6 +109,34 @@ void player_movement::pm_trace_stub(const game::native::pmove_t* pm, game::nativ
 	}
 }
 
+static DWORD push_off_ladder_addr = SELECT_VALUE(0x63EA4C, 0x41686C, 0x0);
+__declspec(naked) void player_movement::jump_push_off_ladder_stub()
+{
+	__asm
+	{
+		push eax
+		mov eax, player_movement::jump_ladderPushVel
+		fld dword ptr [eax + 0xC]
+		pop eax
+
+		jmp push_off_ladder_addr
+	}
+}
+
+static DWORD jump_start_addr = 0x41696F;
+void player_movement::jump_start_stub()
+{
+	__asm
+	{
+		push eax
+		mov eax, player_movement::jump_height
+		fld dword ptr [eax + 0xC]
+		pop eax
+
+		jmp jump_start_addr
+	}
+}
+
 const game::native::dvar_t* player_movement::dvar_register_player_sustain_ammo(const char* dvar_name,
 		bool value, unsigned __int16 /*flags*/, const char* description)
 {
@@ -140,6 +144,24 @@ const game::native::dvar_t* player_movement::dvar_register_player_sustain_ammo(c
 		value, game::native::DVAR_CODINFO, description);
 
 	return player_movement::player_sustainAmmo;
+}
+
+const game::native::dvar_t* player_movement::dvar_register_jump_ladder_push_vel(const char* dvar_name,
+	float value, float min, float max, unsigned __int16 /*flags*/, const char* description)
+{
+	player_movement::jump_ladderPushVel = game::native::Dvar_RegisterFloat(dvar_name,
+		value, min, max, game::native::DVAR_CODINFO, description);
+
+	return player_movement::jump_ladderPushVel;
+}
+
+const game::native::dvar_t* player_movement::dvar_register_jump_height(const char* dvar_name,
+	float value, float min, float max, unsigned __int16 /*flags*/, const char* description)
+{
+	player_movement::jump_height = game::native::Dvar_RegisterFloat(dvar_name,
+		value, min, max, game::native::DVAR_CODINFO, description);
+
+	return player_movement::jump_height;
 }
 
 void player_movement::patch_mp()
@@ -150,12 +172,14 @@ void player_movement::patch_mp()
 		false, game::native::DVAR_CODINFO, "CoD4 rocket jumps");
 
 	utils::hook(0x418D9C, &player_movement::dvar_register_player_sustain_ammo, HOOK_CALL).install()->quick();
+	utils::hook(0x4160A7, &player_movement::dvar_register_jump_ladder_push_vel, HOOK_CALL).install()->quick();
+	utils::hook(0x41602B, &player_movement::dvar_register_jump_height, HOOK_CALL).install()->quick();
 
 	utils::hook(0x42B5DA, &player_movement::pm_weapon_use_ammo, HOOK_CALL).install()->quick();
 	utils::hook(0x42B2BD, &player_movement::pm_weapon_use_ammo, HOOK_CALL).install()->quick();
 	utils::hook(0x42AE95, &player_movement::pm_weapon_use_ammo, HOOK_CALL).install()->quick();
 
-	utils::hook(0x424D51, &player_movement::pm_step_slide_move_stub_mp, HOOK_JUMP).install()->quick();
+	utils::hook(0x424D51, &player_movement::pm_step_slide_move_stub, HOOK_JUMP).install()->quick();
 
 	utils::hook(0x4F9EFB, &player_movement::stuck_in_client_stub, HOOK_CALL).install()->quick(); // ClientEndFrame
 	utils::hook(0x57CF45, &player_movement::cm_transformed_capsule_trace_stub, HOOK_CALL).install()->quick(); // SV_ClipMoveToEntity
@@ -169,18 +193,26 @@ void player_movement::patch_mp()
 	utils::hook(0x41F995, &player_movement::pm_trace_stub, HOOK_CALL).install()->quick(); // PM_CheckDuck
 	utils::hook(0x41F8D8, &player_movement::pm_trace_stub, HOOK_CALL).install()->quick(); // PM_CheckDuck
 	utils::hook(0x41F941, &player_movement::pm_trace_stub, HOOK_CALL).install()->quick(); // PM_CheckDuck
+
+	utils::hook(0x416866, &player_movement::jump_push_off_ladder_stub, HOOK_JUMP).install()->quick(); // Jump_Check
+	utils::hook::nop(0x41686B, 1); // Nop skipped opcode
+
+	utils::hook(0x416969, &player_movement::jump_start_stub, HOOK_JUMP).install()->quick(); // Jump_Check
+	utils::hook::nop(0x41696E, 1); // Nop skipped opcode
 }
 
 void player_movement::patch_sp()
 {
 	player_movement::player_sustainAmmo = game::native::Dvar_RegisterBool("player_sustainAmmo",
 		false, game::native::DVAR_CODINFO, "Firing weapon will not decrease clip ammo");
+	player_movement::jump_ladderPushVel = game::native::Dvar_RegisterFloat("jump_ladderPushVel",
+		128.0f, 0.0f, 1024.0f, game::native::DVAR_CODINFO, "The velocity of a jump off of a ladder");
 
 	utils::hook(0x648C3A, &player_movement::pm_weapon_use_ammo, HOOK_CALL).install()->quick();
 	utils::hook(0x64891D, &player_movement::pm_weapon_use_ammo, HOOK_CALL).install()->quick();
 	utils::hook(0x6484E2, &player_movement::pm_weapon_use_ammo, HOOK_CALL).install()->quick();
 
-	utils::hook(0x43D918, &player_movement::pm_step_slide_move_stub_sp, HOOK_JUMP).install()->quick();
+	utils::hook(0x43D918, &player_movement::pm_step_slide_move_stub, HOOK_JUMP).install()->quick();
 
 	utils::hook(0x41F9A6, &player_movement::cm_transformed_capsule_trace_stub, HOOK_CALL).install()->quick(); // SV_ClipMoveToEntity
 	utils::hook(0x57B14F, &player_movement::cm_transformed_capsule_trace_stub, HOOK_CALL).install()->quick(); // CG_ClipMoveToEntity
@@ -191,6 +223,9 @@ void player_movement::patch_sp()
 	utils::hook(0x64181A, &player_movement::pm_trace_stub, HOOK_CALL).install()->quick(); // PM_CheckDuck
 	utils::hook(0x641701, &player_movement::pm_trace_stub, HOOK_CALL).install()->quick(); // PM_CheckDuck
 	utils::hook(0x6417A9, &player_movement::pm_trace_stub, HOOK_CALL).install()->quick(); // PM_CheckDuck
+
+	utils::hook(0x63EA46, player_movement::jump_push_off_ladder_stub, HOOK_JUMP).install()->quick(); // Jump_Check
+	utils::hook::nop(0x63EA4B, 1); // Nop skipped opcode
 }
 
 void player_movement::post_load()
