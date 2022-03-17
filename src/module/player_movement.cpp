@@ -172,7 +172,7 @@ void player_movement::jump_apply_slowdown_stub(game::native::playerState_s* ps)
 	if ((ps->pm_flags & game::native::PMF_DIVING) == 0
 		&& player_movement::jump_slowdownEnable->current.enabled)
 	{
-			game::native::VectorScale(ps->velocity, scale, ps->velocity);
+		game::native::VectorScale(ps->velocity, scale, ps->velocity);
 	}
 }
 
