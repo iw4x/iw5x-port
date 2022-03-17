@@ -784,7 +784,8 @@ namespace game
 			int groundEntityNum;
 			float vLadderVec[3];
 			int jumpTime;
-			unsigned char __pad0[0x474];
+			float jumpOriginZ;
+			unsigned char __pad0[0x470];
 			unsigned int perks[0x2];
 			unsigned int perkSlots[0x9];
 			unsigned char __pad1[0x2DE8];

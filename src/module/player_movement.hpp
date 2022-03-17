@@ -8,6 +8,7 @@ public:
 
 private:
 	static const game::native::dvar_t* player_sustainAmmo;
+	static const game::native::dvar_t* jump_slowdownEnable;
 	static const game::native::dvar_t* jump_ladderPushVel;
 	static const game::native::dvar_t* jump_height;
 	static const game::native::dvar_t* pm_bounces;
@@ -16,6 +17,10 @@ private:
 	static const game::native::dvar_t* pm_rocketJump;
 	static const game::native::dvar_t* pm_elevators;
 
+	static DWORD bounce_addr;
+	static DWORD dont_bounce_addr;
+	static DWORD push_off_ladder_addr;
+
 	static void pm_weapon_use_ammo(game::native::playerState_s* ps, const game::native::Weapon weapon,
 		bool is_alternate, int amount, game::native::PlayerHandIndex hand);
 
@@ -23,6 +28,8 @@ private:
 		float value, float min, float max, unsigned __int16 flags, const char* description);
 	static const game::native::dvar_t* dvar_register_jump_height(const char* dvar_name,
 		float value, float min, float max, unsigned __int16 flags, const char* description);
+	static const game::native::dvar_t* dvar_register_jump_slowdown_enable(const char* dvar_name,
+		bool value, unsigned __int16 flags, const char* description);
 	static const game::native::dvar_t* dvar_register_player_sustain_ammo(const char* dvar_name,
 		bool value, unsigned __int16 flags, const char* description);
 
@@ -47,6 +54,8 @@ private:
 	static void jump_push_off_ladder_stub();
 	// On SP this is already unlocked
 	static void jump_start_stub();
+
+	static void jump_apply_slowdown_stub(game::native::playerState_s* ps);
 
 	static void patch_mp();
 	static void patch_sp();

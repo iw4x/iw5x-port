@@ -117,6 +117,9 @@ namespace game
 			const Bounds* bounds, int passEntityNum, int contentMask);
 		extern PM_trace_t PM_trace;
 
+		typedef void (*Jump_ClearState_t)(playerState_s* ps);
+		extern Jump_ClearState_t Jump_ClearState;
+
 		typedef void (*Vec3Normalize_t)(float* v);
 		extern Vec3Normalize_t Vec3Normalize;
 
@@ -153,6 +156,13 @@ namespace game
 		constexpr auto MAX_GENTITIES = 2048u;
 		constexpr auto ENTITYNUM_NONE = MAX_GENTITIES - 1u;
 		extern gentity_s* g_entities;
+
+		// PM Global Definitions & Functions
+		constexpr auto JUMP_LAND_SLOWDOWN_TIME = 1800;
+
+		// From Quake III, to match game's assembly
+		template <typename T, typename R>
+		constexpr auto VectorScale(T v, R s, T out) { out[0] = v[0] * s; out[1] = v[1] * s; out[2] = v[2] * s; }
 
 		namespace mp
 		{

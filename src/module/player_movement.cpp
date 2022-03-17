@@ -6,6 +6,7 @@
 #include "player_movement.hpp"
 
 const game::native::dvar_t* player_movement::player_sustainAmmo;
+const game::native::dvar_t* player_movement::jump_slowdownEnable;
 const game::native::dvar_t* player_movement::jump_ladderPushVel;
 const game::native::dvar_t* player_movement::jump_height;
 const game::native::dvar_t* player_movement::pm_bounces;
@@ -13,6 +14,10 @@ const game::native::dvar_t* player_movement::pm_playerEjection;
 const game::native::dvar_t* player_movement::pm_playerCollision;
 const game::native::dvar_t* player_movement::pm_rocketJump;
 const game::native::dvar_t* player_movement::pm_elevators;
+
+DWORD player_movement::bounce_addr;
+DWORD player_movement::dont_bounce_addr;
+DWORD player_movement::push_off_ladder_addr;
 
 void player_movement::pm_weapon_use_ammo(game::native::playerState_s* ps, const game::native::Weapon weapon,
 	bool is_alternate, int amount, game::native::PlayerHandIndex hand)
@@ -23,8 +28,6 @@ void player_movement::pm_weapon_use_ammo(game::native::playerState_s* ps, const 
 	}
 }
 
-static DWORD bounce_addr = SELECT_VALUE(0x43D91F, 0x424D58, 0x0);
-static DWORD dont_bounce_addr = SELECT_VALUE(0x43D933, 0x424D6C, 0x0);
 __declspec(naked) void player_movement::pm_step_slide_move_stub()
 {
 	__asm
@@ -109,7 +112,6 @@ void player_movement::pm_trace_stub(const game::native::pmove_t* pm, game::nativ
 	}
 }
 
-static DWORD push_off_ladder_addr = SELECT_VALUE(0x63EA4C, 0x41686C, 0x0);
 __declspec(naked) void player_movement::jump_push_off_ladder_stub()
 {
 	__asm
@@ -123,7 +125,6 @@ __declspec(naked) void player_movement::jump_push_off_ladder_stub()
 	}
 }
 
-static DWORD jump_start_addr = 0x41696F;
 void player_movement::jump_start_stub()
 {
 	__asm
@@ -133,7 +134,45 @@ void player_movement::jump_start_stub()
 		fld dword ptr [eax + 0xC]
 		pop eax
 
-		jmp jump_start_addr
+		push 0x41696F
+		retn
+	}
+}
+
+void player_movement::jump_apply_slowdown_stub(game::native::playerState_s* ps)
+{
+	assert(ps->pm_flags & game::native::PMF_JUMPING);
+
+	auto scale = 1.0f;
+
+	if (ps->pm_time <= game::native::JUMP_LAND_SLOWDOWN_TIME)
+	{
+		if (ps->pm_time == 0)
+		{
+			const auto height = ps->jumpOriginZ + 18.0f;
+
+			if (height <= ps->origin[2])
+			{
+				scale = 0.5f;
+				ps->pm_time = 1200;
+			}
+			else
+			{
+				scale = 0.65f;
+				ps->pm_time = game::native::JUMP_LAND_SLOWDOWN_TIME;
+			}
+		}
+	}
+	else
+	{
+		game::native::Jump_ClearState(ps);
+		scale = 0.65f;
+	}
+
+	if ((ps->pm_flags & game::native::PMF_DIVING) == 0
+		&& player_movement::jump_slowdownEnable->current.enabled)
+	{
+			game::native::VectorScale(ps->velocity, scale, ps->velocity);
 	}
 }
 
@@ -155,6 +194,15 @@ const game::native::dvar_t* player_movement::dvar_register_jump_ladder_push_vel(
 	return player_movement::jump_ladderPushVel;
 }
 
+const game::native::dvar_t* player_movement::dvar_register_jump_slowdown_enable(const char* dvar_name,
+	bool value, unsigned __int16 /*flags*/, const char* description)
+{
+	player_movement::jump_slowdownEnable = game::native::Dvar_RegisterBool(dvar_name,
+		value, game::native::DVAR_CODINFO, description);
+
+	return player_movement::jump_slowdownEnable;
+}
+
 const game::native::dvar_t* player_movement::dvar_register_jump_height(const char* dvar_name,
 	float value, float min, float max, unsigned __int16 /*flags*/, const char* description)
 {
@@ -171,9 +219,11 @@ void player_movement::patch_mp()
 	player_movement::pm_rocketJump = game::native::Dvar_RegisterBool("pm_rocketJump",
 		false, game::native::DVAR_CODINFO, "CoD4 rocket jumps");
 
+	// Un-Cheat the dvars
 	utils::hook(0x418D9C, &player_movement::dvar_register_player_sustain_ammo, HOOK_CALL).install()->quick();
 	utils::hook(0x4160A7, &player_movement::dvar_register_jump_ladder_push_vel, HOOK_CALL).install()->quick();
 	utils::hook(0x41602B, &player_movement::dvar_register_jump_height, HOOK_CALL).install()->quick();
+	utils::hook(0x416074, &player_movement::dvar_register_jump_slowdown_enable, HOOK_CALL).install()->quick();
 
 	utils::hook(0x42B5DA, &player_movement::pm_weapon_use_ammo, HOOK_CALL).install()->quick();
 	utils::hook(0x42B2BD, &player_movement::pm_weapon_use_ammo, HOOK_CALL).install()->quick();
@@ -199,6 +249,8 @@ void player_movement::patch_mp()
 
 	utils::hook(0x416969, &player_movement::jump_start_stub, HOOK_JUMP).install()->quick(); // Jump_Check
 	utils::hook::nop(0x41696E, 1); // Nop skipped opcode
+
+	utils::hook(0x4225CA, &player_movement::jump_apply_slowdown_stub, HOOK_CALL).install()->quick(); // PM_WalkMove
 }
 
 void player_movement::patch_sp()
@@ -237,6 +289,10 @@ void player_movement::post_load()
 	{
 		return;
 	}
+
+	player_movement::bounce_addr = SELECT_VALUE(0x43D91F, 0x424D58, 0x0);
+	player_movement::dont_bounce_addr = SELECT_VALUE(0x43D933, 0x424D6C, 0x0);
+	player_movement::push_off_ladder_addr = SELECT_VALUE(0x63EA4C, 0x41686C, 0x0);
 
 	player_movement::pm_bounces = game::native::Dvar_RegisterBool("pm_bounces", false,
 		game::native::dvar_flags::DVAR_CODINFO, "CoD4 Bounces");

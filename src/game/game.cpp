@@ -71,6 +71,8 @@ namespace game
 
 		PM_trace_t PM_trace;
 
+		Jump_ClearState_t Jump_ClearState;
+
 		Vec3Normalize_t Vec3Normalize;
 
 		Cmd_ExecuteSingleCommand_t Cmd_ExecuteSingleCommand;
@@ -685,6 +687,8 @@ namespace game
 		native::PM_playerTrace = native::PM_playerTrace_t(SELECT_VALUE(0x4CE600, 0x421F00, 0x0));
 
 		native::PM_trace = native::PM_trace_t(SELECT_VALUE(0x544BF0, 0x41CEB0, 0x0));
+
+		native::Jump_ClearState = native::Jump_ClearState_t(SELECT_VALUE(0x514CE0, 0x4160F0, 0x0));
 
 		native::Vec3Normalize = native::Vec3Normalize_t(SELECT_VALUE(0x536A20, 0x415EE0, 0x0));
 
