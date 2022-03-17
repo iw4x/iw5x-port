@@ -125,7 +125,7 @@ __declspec(naked) void player_movement::jump_push_off_ladder_stub()
 	}
 }
 
-void player_movement::jump_start_stub()
+__declspec(naked) void player_movement::jump_start_stub()
 {
 	__asm
 	{
@@ -173,6 +173,40 @@ void player_movement::jump_apply_slowdown_stub(game::native::playerState_s* ps)
 		&& player_movement::jump_slowdownEnable->current.enabled)
 	{
 		game::native::VectorScale(ps->velocity, scale, ps->velocity);
+	}
+}
+
+float player_movement::jump_get_land_factor(game::native::playerState_s* ps)
+{
+	assert(ps->pm_flags & game::native::PMF_JUMPING);
+	assert(ps->pm_time <= game::native::JUMP_LAND_SLOWDOWN_TIME);
+
+	if (!player_movement::jump_slowdownEnable->current.enabled
+		|| (ps->pm_flags & game::native::PMF_DIVING) != 0)
+	{
+		return 1.0f;
+	}
+
+	if (ps->pm_time < 1700)
+	{
+		return (ps->pm_time * 1.5f * 0.000588f) + 1.0f;
+	}
+
+	return 2.5f;
+}
+
+__declspec(naked) void player_movement::jump_get_land_factor_stub()
+{
+	__asm
+	{
+		pushad
+
+		push eax // ps
+		call player_movement::jump_get_land_factor
+		add esp, 4
+
+		popad
+		ret
 	}
 }
 
@@ -251,6 +285,7 @@ void player_movement::patch_mp()
 	utils::hook::nop(0x41696E, 1); // Nop skipped opcode
 
 	utils::hook(0x4225CA, &player_movement::jump_apply_slowdown_stub, HOOK_CALL).install()->quick(); // PM_WalkMove
+	utils::hook(0x41669B, &player_movement::jump_get_land_factor_stub, HOOK_CALL).install()->quick(); // Jump_Start
 }
 
 void player_movement::patch_sp()

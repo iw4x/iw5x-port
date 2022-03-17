@@ -56,6 +56,8 @@ private:
 	static void jump_start_stub();
 
 	static void jump_apply_slowdown_stub(game::native::playerState_s* ps);
+	static float jump_get_land_factor(game::native::playerState_s* ps);
+	static void jump_get_land_factor_stub();
 
 	static void patch_mp();
 	static void patch_sp();
