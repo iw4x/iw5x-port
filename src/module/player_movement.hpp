@@ -10,6 +10,7 @@ private:
 	static const game::native::dvar_t* player_sustainAmmo;
 	static const game::native::dvar_t* jump_slowdownEnable;
 	static const game::native::dvar_t* jump_ladderPushVel;
+	static const game::native::dvar_t* jump_enableFallDamage;
 	static const game::native::dvar_t* jump_height;
 	static const game::native::dvar_t* pm_bounces;
 	static const game::native::dvar_t* pm_playerEjection;
@@ -58,6 +59,9 @@ private:
 	static void jump_apply_slowdown_stub(game::native::playerState_s* ps);
 	static float jump_get_land_factor(game::native::playerState_s* ps);
 	static void jump_get_land_factor_stub();
+
+	static void pm_crash_land_stub_mp();
+	static void pm_crash_land_stub_sp();
 
 	static void patch_mp();
 	static void patch_sp();

@@ -8,6 +8,7 @@
 const game::native::dvar_t* player_movement::player_sustainAmmo;
 const game::native::dvar_t* player_movement::jump_slowdownEnable;
 const game::native::dvar_t* player_movement::jump_ladderPushVel;
+const game::native::dvar_t* player_movement::jump_enableFallDamage;
 const game::native::dvar_t* player_movement::jump_height;
 const game::native::dvar_t* player_movement::pm_bounces;
 const game::native::dvar_t* player_movement::pm_playerEjection;
@@ -210,6 +211,52 @@ __declspec(naked) void player_movement::jump_get_land_factor_stub()
 	}
 }
 
+__declspec(naked) void player_movement::pm_crash_land_stub_mp()
+{
+	static DWORD func = 0x41E6B0;
+
+	__asm
+	{
+		push eax
+		mov eax, player_movement::jump_enableFallDamage
+		cmp byte ptr [eax + 0xC], 0
+		pop eax
+
+		// If disabled just return
+		jz skip_crash
+
+		// Arguments are in the registers
+		call func
+
+	skip_crash:
+		ret
+	}
+}
+
+__declspec(naked) void player_movement::pm_crash_land_stub_sp()
+{
+	static DWORD func = 0x6405A0;
+
+	__asm
+	{
+		push eax
+		mov eax, player_movement::jump_enableFallDamage
+		cmp byte ptr [eax + 0xC], 0
+		pop eax
+
+		// If disabled just return
+		jz skip_crash
+
+		// ps is in the esi register
+		push [esp + 0x4] // pml
+		call func
+		add esp, 4
+
+	skip_crash:
+		ret
+	}
+}
+
 const game::native::dvar_t* player_movement::dvar_register_player_sustain_ammo(const char* dvar_name,
 		bool value, unsigned __int16 /*flags*/, const char* description)
 {
@@ -286,6 +333,8 @@ void player_movement::patch_mp()
 
 	utils::hook(0x4225CA, &player_movement::jump_apply_slowdown_stub, HOOK_CALL).install()->quick(); // PM_WalkMove
 	utils::hook(0x41669B, &player_movement::jump_get_land_factor_stub, HOOK_CALL).install()->quick(); // Jump_Start
+
+	utils::hook(0x422BE0, &player_movement::pm_crash_land_stub_mp, HOOK_CALL).install()->quick(); // PM_GroundTrace
 }
 
 void player_movement::patch_sp()
@@ -313,6 +362,8 @@ void player_movement::patch_sp()
 
 	utils::hook(0x63EA46, player_movement::jump_push_off_ladder_stub, HOOK_JUMP).install()->quick(); // Jump_Check
 	utils::hook::nop(0x63EA4B, 1); // Nop skipped opcode
+
+	utils::hook(0x6442DF, &player_movement::pm_crash_land_stub_sp, HOOK_CALL).install()->quick(); // PM_GroundTrace
 }
 
 void player_movement::post_load()
@@ -335,6 +386,8 @@ void player_movement::post_load()
 		true, game::native::DVAR_CODINFO, "Push intersecting players away from each other");
 	player_movement::pm_elevators = game::native::Dvar_RegisterBool("pm_elevators",
 		false, game::native::DVAR_CODINFO, "CoD4 Elevators");
+	player_movement::jump_enableFallDamage = game::native::Dvar_RegisterBool("jump_enableFallDamage",
+		true, game::native::dvar_flags::DVAR_CODINFO, "Enable fall damage");
 
 	if (game::is_mp()) this->patch_mp();
 	else if (game::is_sp()) this->patch_sp();
