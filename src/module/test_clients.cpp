@@ -2,7 +2,6 @@
 
 #include "test_clients.hpp"
 #include "command.hpp"
-#include "scheduler.hpp"
 
 #include "utils/hook.hpp"
 
@@ -76,7 +75,7 @@ game::native::gentity_s* test_clients::sv_add_test_client()
 		return nullptr;
 	}
 
-	auto client = &game::native::mp::svs_clients[idx];
+	const auto client = &game::native::mp::svs_clients[idx];
 	client->bIsTestClient = 1;
 
 	game::native::SV_SendClientGameState(client);
@@ -124,10 +123,10 @@ __declspec(naked) void test_clients::reset_reliable_mp()
 	}
 }
 
-bool test_clients::check_timeouts(const game::native::mp::client_t* cl)
+bool test_clients::check_timeouts(const game::native::mp::client_t* client)
 {
-	return (!cl->bIsTestClient || cl->header.state == game::native::clientState_t::CS_ZOMBIE)
-		&& cl->header.netchan.remoteAddress.type != game::native::netadrtype_t::NA_LOOPBACK;
+	return (!client->bIsTestClient || client->header.state == game::native::clientState_t::CS_ZOMBIE)
+		&& client->header.netchan.remoteAddress.type != game::native::netadrtype_t::NA_LOOPBACK;
 }
 
 __declspec(naked) void test_clients::check_timeouts_stub_mp()

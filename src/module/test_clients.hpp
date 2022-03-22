@@ -18,6 +18,6 @@ private:
 
 	static void reset_reliable_mp();
 
-	static bool check_timeouts(const game::native::mp::client_t* cl);
+	static bool check_timeouts(const game::native::mp::client_t* client);
 	static void check_timeouts_stub_mp();
 };
