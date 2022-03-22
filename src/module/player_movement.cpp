@@ -264,7 +264,7 @@ bool player_movement::jump_get_step_height_stub_mp(game::native::playerState_s* 
 {
 	assert(ps->pm_flags & game::native::PMF_JUMPING);
 	assert(origin != nullptr);
-	assert(stepSize != nullptr);
+	assert(step_size != nullptr);
 
 	if (origin[2] >= (jump_height->current.value + ps->jumpOriginZ))
 	{
