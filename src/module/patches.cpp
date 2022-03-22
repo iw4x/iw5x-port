@@ -44,6 +44,7 @@ private:
 
 	void patch_dedi() const
 	{
+		utils::hook::nop(0x4FE051, 5);
 	}
 
 	static __declspec(noreturn) void long_jump_stub(jmp_buf buf, const int value) noexcept(false)
