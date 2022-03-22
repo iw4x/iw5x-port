@@ -44,6 +44,7 @@ private:
 
 	void patch_dedi() const
 	{
+		// Skip call to queryserverinfo handler in SV_ConnectionlessPacket
 		utils::hook::nop(0x4FE051, 5);
 	}
 
