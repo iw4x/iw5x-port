@@ -12,6 +12,7 @@ private:
 	static const game::native::dvar_t* jump_ladderPushVel;
 	static const game::native::dvar_t* jump_enableFallDamage;
 	static const game::native::dvar_t* jump_height;
+	static const game::native::dvar_t* jump_stepSize;
 	static const game::native::dvar_t* pm_bounces;
 	static const game::native::dvar_t* pm_playerEjection;
 	static const game::native::dvar_t* pm_playerCollision;
@@ -28,6 +29,8 @@ private:
 	static const game::native::dvar_t* dvar_register_jump_ladder_push_vel(const char* dvar_name,
 		float value, float min, float max, unsigned __int16 flags, const char* description);
 	static const game::native::dvar_t* dvar_register_jump_height(const char* dvar_name,
+		float value, float min, float max, unsigned __int16 flags, const char* description);
+	static const game::native::dvar_t* dvar_register_jump_step_size(const char* dvar_name,
 		float value, float min, float max, unsigned __int16 flags, const char* description);
 	static const game::native::dvar_t* dvar_register_jump_slowdown_enable(const char* dvar_name,
 		bool value, unsigned __int16 flags, const char* description);
@@ -62,6 +65,9 @@ private:
 
 	static void pm_crash_land_stub_mp();
 	static void pm_crash_land_stub_sp();
+
+	static bool jump_get_step_height_stub_mp(game::native::playerState_s* ps, const float* origin, float* stepSize);
+	static void jump_get_step_height_stub_sp();
 
 	static void patch_mp();
 	static void patch_sp();

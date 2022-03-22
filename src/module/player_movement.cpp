@@ -10,6 +10,7 @@ const game::native::dvar_t* player_movement::jump_slowdownEnable;
 const game::native::dvar_t* player_movement::jump_ladderPushVel;
 const game::native::dvar_t* player_movement::jump_enableFallDamage;
 const game::native::dvar_t* player_movement::jump_height;
+const game::native::dvar_t* player_movement::jump_stepSize;
 const game::native::dvar_t* player_movement::pm_bounces;
 const game::native::dvar_t* player_movement::pm_playerEjection;
 const game::native::dvar_t* player_movement::pm_playerCollision;
@@ -257,6 +258,42 @@ __declspec(naked) void player_movement::pm_crash_land_stub_sp()
 	}
 }
 
+bool player_movement::jump_get_step_height_stub_mp(game::native::playerState_s* ps, const float* origin, float* step_size)
+{
+	assert(ps->pm_flags & game::native::PMF_JUMPING);
+	assert(origin != nullptr);
+	assert(stepSize != nullptr);
+
+	if (origin[2] >= (jump_height->current.value + ps->jumpOriginZ))
+	{
+		return false;
+	}
+
+	*step_size = jump_stepSize->current.value;
+
+	if (ps->jumpOriginZ + jump_height->current.value < origin[2] + *step_size)
+	{
+		*step_size = (ps->jumpOriginZ + jump_height->current.value) - origin[2];
+	}
+
+	return true;
+}
+
+// On SP, only a simple patch is required because jump_height is still implemented by the game
+__declspec(naked) void player_movement::jump_get_step_height_stub_sp()
+{
+	__asm
+	{
+		push eax
+		mov eax, player_movement::jump_stepSize
+		fadd dword ptr [eax + 0xC]
+		pop eax
+
+		push 0x48C1FB
+		retn
+	}
+}
+
 const game::native::dvar_t* player_movement::dvar_register_player_sustain_ammo(const char* dvar_name,
 		bool value, unsigned __int16 /*flags*/, const char* description)
 {
@@ -273,6 +310,15 @@ const game::native::dvar_t* player_movement::dvar_register_jump_ladder_push_vel(
 		value, min, max, game::native::DVAR_CODINFO, description);
 
 	return player_movement::jump_ladderPushVel;
+}
+
+const game::native::dvar_t* player_movement::dvar_register_jump_step_size(const char* dvar_name,
+	float value, float min, float max, unsigned __int16 /*flags*/, const char* description)
+{
+	player_movement::jump_stepSize = game::native::Dvar_RegisterFloat(dvar_name,
+		value, min, max, game::native::DVAR_CODINFO, description);
+
+	return player_movement::jump_stepSize;
 }
 
 const game::native::dvar_t* player_movement::dvar_register_jump_slowdown_enable(const char* dvar_name,
@@ -305,6 +351,7 @@ void player_movement::patch_mp()
 	utils::hook(0x4160A7, &player_movement::dvar_register_jump_ladder_push_vel, HOOK_CALL).install()->quick();
 	utils::hook(0x41602B, &player_movement::dvar_register_jump_height, HOOK_CALL).install()->quick();
 	utils::hook(0x416074, &player_movement::dvar_register_jump_slowdown_enable, HOOK_CALL).install()->quick();
+	utils::hook(0x41605E, &player_movement::dvar_register_jump_step_size, HOOK_CALL).install()->quick();
 
 	utils::hook(0x42B5DA, &player_movement::pm_weapon_use_ammo, HOOK_CALL).install()->quick();
 	utils::hook(0x42B2BD, &player_movement::pm_weapon_use_ammo, HOOK_CALL).install()->quick();
@@ -335,6 +382,8 @@ void player_movement::patch_mp()
 	utils::hook(0x41669B, &player_movement::jump_get_land_factor_stub, HOOK_CALL).install()->quick(); // Jump_Start
 
 	utils::hook(0x422BE0, &player_movement::pm_crash_land_stub_mp, HOOK_CALL).install()->quick(); // PM_GroundTrace
+
+	utils::hook(0x424B2B, &player_movement::jump_get_step_height_stub_mp, HOOK_CALL).install()->quick(); // PM_StepSlideMove
 }
 
 void player_movement::patch_sp()
@@ -343,6 +392,8 @@ void player_movement::patch_sp()
 		false, game::native::DVAR_CODINFO, "Firing weapon will not decrease clip ammo");
 	player_movement::jump_ladderPushVel = game::native::Dvar_RegisterFloat("jump_ladderPushVel",
 		128.0f, 0.0f, 1024.0f, game::native::DVAR_CODINFO, "The velocity of a jump off of a ladder");
+	player_movement::jump_stepSize = game::native::Dvar_RegisterFloat("jump_stepSize",
+		18.0f, 0.0f, 64.0f, game::native::DVAR_CODINFO, "The maximum step up to the top of a jump arc");
 
 	utils::hook(0x648C3A, &player_movement::pm_weapon_use_ammo, HOOK_CALL).install()->quick();
 	utils::hook(0x64891D, &player_movement::pm_weapon_use_ammo, HOOK_CALL).install()->quick();
@@ -364,6 +415,9 @@ void player_movement::patch_sp()
 	utils::hook::nop(0x63EA4B, 1); // Nop skipped opcode
 
 	utils::hook(0x6442DF, &player_movement::pm_crash_land_stub_sp, HOOK_CALL).install()->quick(); // PM_GroundTrace
+
+	utils::hook(0x48C1F5, &player_movement::jump_get_step_height_stub_sp, HOOK_JUMP).install()->quick(); // PM_StepSlideMove
+	utils::hook::nop(0x48C1FA, 1); // Nop skipped opcode
 }
 
 void player_movement::post_load()
