@@ -15,6 +15,8 @@ namespace game
 
 		Dvar_RegisterBool_t Dvar_RegisterBool;
 
+		Dvar_RegisterInt_t Dvar_RegisterInt;
+
 		Dvar_RegisterFloat_t Dvar_RegisterFloat;
 
 		Dvar_SetIntByName_t Dvar_SetIntByName;
@@ -625,6 +627,8 @@ namespace game
 		native::DB_LoadXAssets = native::DB_LoadXAssets_t(SELECT_VALUE(0x48A8E0, 0x4CD020, 0x44F770));
 
 		native::Dvar_RegisterBool = native::Dvar_RegisterBool_t(SELECT_VALUE(0x4914D0, 0x5BE9F0, 0x0));
+
+		native::Dvar_RegisterInt = native::Dvar_RegisterInt_t(SELECT_VALUE(0x48CD40, 0x5BEA40, 0x0));
 
 		native::Dvar_RegisterFloat = native::Dvar_RegisterFloat_t(SELECT_VALUE(0x4F9CC0, 0x5BEA80, 0x0));
 

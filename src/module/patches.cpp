@@ -40,6 +40,8 @@ private:
 
 	void patch_mp() const
 	{
+		// Note: on SP it's already unlocked to 1000
+		utils::hook(0x55411F, &dvar_register_com_max_fps, HOOK_CALL).install()->quick();
 	}
 
 	void patch_dedi() const
@@ -55,6 +57,12 @@ private:
 #endif
 
 		longjmp(buf, value);
+	}
+
+	static const game::native::dvar_t* dvar_register_com_max_fps(const char* dvarName, int value,
+		int min, int /*max*/, unsigned __int16 flags, const char* description)
+	{
+		return game::native::Dvar_RegisterInt(dvarName, value, min, 1000, flags, description);
 	}
 };
 
