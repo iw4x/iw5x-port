@@ -268,7 +268,7 @@ __declspec(naked) void player_movement::jump_get_step_height_stub()
 	{
 		push eax
 		mov eax, player_movement::jump_stepSize
-		fadd dword ptr [eax + 0xC]
+		fld dword ptr [eax + 0xC]
 		pop eax
 
 		jmp jump_get_step_height_addr
@@ -415,8 +415,8 @@ void player_movement::patch_mp()
 
 	utils::hook(0x422BE0, &player_movement::pm_crash_land_stub_mp, HOOK_CALL).install()->quick(); // PM_GroundTrace
 
-	utils::hook(0x416154, &player_movement::jump_get_step_height_stub, HOOK_JUMP).install()->quick(); // PM_StepSlideMove
-	utils::hook::nop(0x416159, 1); // Nop skipped opcode
+	utils::hook(0x41613F, &player_movement::jump_get_step_height_stub, HOOK_JUMP).install()->quick(); // PM_StepSlideMove
+	utils::hook::nop(0x416144, 1); // Nop skipped opcode
 
 	// Modify the hardcoded value of the spread with the value of jump_spreadAdd
 	utils::hook(0x4166F0, &player_movement::jump_start_stub, HOOK_JUMP).install()->quick();
@@ -457,8 +457,8 @@ void player_movement::patch_sp()
 
 	utils::hook(0x6442DF, &player_movement::pm_crash_land_stub_sp, HOOK_CALL).install()->quick(); // PM_GroundTrace
 
-	utils::hook(0x48C1F5, &player_movement::jump_get_step_height_stub, HOOK_JUMP).install()->quick(); // PM_StepSlideMove
-	utils::hook::nop(0x48C1FA, 1); // Nop skipped opcode
+	utils::hook(0x48C1DC, &player_movement::jump_get_step_height_stub, HOOK_JUMP).install()->quick(); // PM_StepSlideMove
+	utils::hook::nop(0x48C1E1, 1); // Nop skipped opcode
 
 	// Modify the hardcoded value of the spread with the value of jump_spreadAdd
 	utils::hook(0x63E90A, &player_movement::jump_start_stub, HOOK_JUMP).install()->quick();
@@ -481,7 +481,7 @@ void player_movement::post_load()
 	player_movement::dont_bounce_addr = SELECT_VALUE(0x43D933, 0x424D6C, 0x0);
 	player_movement::push_off_ladder_addr = SELECT_VALUE(0x63EA4C, 0x41686C, 0x0);
 	player_movement::jump_start_addr = SELECT_VALUE(0x63E910, 0x4166F6, 0x0);
-	player_movement::jump_get_step_height_addr = SELECT_VALUE(0x48C1FB, 0x41615A, 0x0);
+	player_movement::jump_get_step_height_addr = SELECT_VALUE(0x48C1E2, 0x416145, 0x0);
 
 	player_movement::pm_bounces = game::native::Dvar_RegisterBool("pm_bounces", false,
 		game::native::dvar_flags::DVAR_CODINFO, "CoD4 Bounces");
