@@ -23,6 +23,7 @@ DWORD player_movement::bounce_addr;
 DWORD player_movement::dont_bounce_addr;
 DWORD player_movement::push_off_ladder_addr;
 DWORD player_movement::jump_start_addr;
+DWORD player_movement::jump_get_step_height_addr;
 
 void player_movement::pm_weapon_use_ammo(game::native::playerState_s* ps, const game::native::Weapon weapon,
 	bool is_alternate, int amount, game::native::PlayerHandIndex hand)
@@ -261,29 +262,7 @@ __declspec(naked) void player_movement::pm_crash_land_stub_sp()
 	}
 }
 
-bool player_movement::jump_get_step_height_stub_mp(game::native::playerState_s* ps, const float* origin, float* step_size)
-{
-	assert(ps->pm_flags & game::native::PMF_JUMPING);
-	assert(origin != nullptr);
-	assert(step_size != nullptr);
-
-	if (origin[2] >= (jump_height->current.value + ps->jumpOriginZ))
-	{
-		return false;
-	}
-
-	*step_size = jump_stepSize->current.value;
-
-	if (ps->jumpOriginZ + jump_height->current.value < origin[2] + *step_size)
-	{
-		*step_size = (ps->jumpOriginZ + jump_height->current.value) - origin[2];
-	}
-
-	return true;
-}
-
-// On SP, only a simple patch is required because jump_height is still implemented by the game
-__declspec(naked) void player_movement::jump_get_step_height_stub_sp()
+__declspec(naked) void player_movement::jump_get_step_height_stub()
 {
 	__asm
 	{
@@ -292,8 +271,7 @@ __declspec(naked) void player_movement::jump_get_step_height_stub_sp()
 		fadd dword ptr [eax + 0xC]
 		pop eax
 
-		push 0x48C1FB
-		retn
+		jmp jump_get_step_height_addr
 	}
 }
 
@@ -437,7 +415,8 @@ void player_movement::patch_mp()
 
 	utils::hook(0x422BE0, &player_movement::pm_crash_land_stub_mp, HOOK_CALL).install()->quick(); // PM_GroundTrace
 
-	utils::hook(0x424B2B, &player_movement::jump_get_step_height_stub_mp, HOOK_CALL).install()->quick(); // PM_StepSlideMove
+	utils::hook(0x416154, &player_movement::jump_get_step_height_stub, HOOK_JUMP).install()->quick(); // PM_StepSlideMove
+	utils::hook::nop(0x416159, 1); // Nop skipped opcode
 
 	// Modify the hardcoded value of the spread with the value of jump_spreadAdd
 	utils::hook(0x4166F0, &player_movement::jump_start_stub, HOOK_JUMP).install()->quick();
@@ -478,7 +457,7 @@ void player_movement::patch_sp()
 
 	utils::hook(0x6442DF, &player_movement::pm_crash_land_stub_sp, HOOK_CALL).install()->quick(); // PM_GroundTrace
 
-	utils::hook(0x48C1F5, &player_movement::jump_get_step_height_stub_sp, HOOK_JUMP).install()->quick(); // PM_StepSlideMove
+	utils::hook(0x48C1F5, &player_movement::jump_get_step_height_stub, HOOK_JUMP).install()->quick(); // PM_StepSlideMove
 	utils::hook::nop(0x48C1FA, 1); // Nop skipped opcode
 
 	// Modify the hardcoded value of the spread with the value of jump_spreadAdd
@@ -502,6 +481,7 @@ void player_movement::post_load()
 	player_movement::dont_bounce_addr = SELECT_VALUE(0x43D933, 0x424D6C, 0x0);
 	player_movement::push_off_ladder_addr = SELECT_VALUE(0x63EA4C, 0x41686C, 0x0);
 	player_movement::jump_start_addr = SELECT_VALUE(0x63E910, 0x4166F6, 0x0);
+	player_movement::jump_get_step_height_addr = SELECT_VALUE(0x48C1FB, 0x41615A, 0x0);
 
 	player_movement::pm_bounces = game::native::Dvar_RegisterBool("pm_bounces", false,
 		game::native::dvar_flags::DVAR_CODINFO, "CoD4 Bounces");

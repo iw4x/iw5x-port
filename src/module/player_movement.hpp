@@ -24,6 +24,7 @@ private:
 	static DWORD dont_bounce_addr;
 	static DWORD push_off_ladder_addr;
 	static DWORD jump_start_addr;
+	static DWORD jump_get_step_height_addr;
 
 	static void pm_weapon_use_ammo(game::native::playerState_s* ps, const game::native::Weapon weapon,
 		bool is_alternate, int amount, game::native::PlayerHandIndex hand);
@@ -70,8 +71,7 @@ private:
 	static void pm_crash_land_stub_mp();
 	static void pm_crash_land_stub_sp();
 
-	static bool jump_get_step_height_stub_mp(game::native::playerState_s* ps, const float* origin, float* stepSize);
-	static void jump_get_step_height_stub_sp();
+	static void jump_get_step_height_stub();
 
 	static void jump_start_stub();
 
