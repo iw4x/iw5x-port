@@ -3,7 +3,6 @@
 #include <utils/string.hpp>
 #include <utils/hook.hpp>
 
-#include "game/structs.hpp"
 #include "game/game.hpp"
 
 #include "command.hpp"
