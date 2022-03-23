@@ -1,10 +1,11 @@
 #include <std_include.hpp>
+#include <utils/nt.hpp>
+#include <utils/io.hpp>
+#include <utils/cryptography.hpp>
+#include <utils/string.hpp>
+#include <utils/compression.hpp>
+
 #include "binary_loader.hpp"
-#include "utils/nt.hpp"
-#include "utils/io.hpp"
-#include "utils/cryptography.hpp"
-#include "utils/string.hpp"
-#include "utils/compression.hpp"
 
 #define DEDI_HASH "F271C305117B79242E254E9F64BD5AA2993CAC8E57975243EBD44CD576418D20"
 

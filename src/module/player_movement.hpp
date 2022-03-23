@@ -1,5 +1,4 @@
 #pragma once
-#include "loader/module_loader.hpp"
 
 class player_movement final : public module
 {
@@ -15,6 +14,7 @@ private:
 	static const game::native::dvar_t* jump_stepSize;
 	static const game::native::dvar_t* jump_spreadAdd;
 	static const game::native::dvar_t* pm_bounces;
+	static const game::native::dvar_t* pm_bouncesAllAngles;
 	static const game::native::dvar_t* pm_playerEjection;
 	static const game::native::dvar_t* pm_playerCollision;
 	static const game::native::dvar_t* pm_rocketJump;
@@ -74,6 +74,8 @@ private:
 	static void jump_get_step_height_stub_sp();
 
 	static void jump_start_stub();
+
+	static void pm_project_velocity_stub(const float* vel_in, const float* normal, float* vel_out);
 
 	static void patch_mp();
 	static void patch_sp();

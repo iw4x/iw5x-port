@@ -1,8 +1,10 @@
 #include <std_include.hpp>
+#include <loader/module_loader.hpp>
+
 #include <discord_rpc.h>
-#include "loader/module_loader.hpp"
-#include "scheduler.hpp"
+
 #include "game/game.hpp"
+#include "scheduler.hpp"
 
 class discord final : public module
 {

@@ -228,7 +228,7 @@ namespace utils::nt
 
 	void relaunch_self()
 	{
-		const utils::nt::library self;
+		const library self;
 
 		STARTUPINFOA startup_info;
 		PROCESS_INFORMATION process_info;

@@ -1,7 +1,8 @@
 #include <std_include.hpp>
+#include <utils/string.hpp>
+
 #include "loader.hpp"
 #include "binary_loader.hpp"
-#include "utils/string.hpp"
 
 loader::loader(const launcher::mode mode) : mode_(mode)
 {

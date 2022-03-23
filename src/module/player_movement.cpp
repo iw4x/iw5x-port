@@ -1,8 +1,8 @@
 #include <std_include.hpp>
+#include <loader/module_loader.hpp>
+#include <utils/hook.hpp>
+
 #include "game/game.hpp"
-
-#include "utils/hook.hpp"
-
 #include "player_movement.hpp"
 
 const game::native::dvar_t* player_movement::player_sustainAmmo;
@@ -13,6 +13,7 @@ const game::native::dvar_t* player_movement::jump_height;
 const game::native::dvar_t* player_movement::jump_stepSize;
 const game::native::dvar_t* player_movement::jump_spreadAdd;
 const game::native::dvar_t* player_movement::pm_bounces;
+const game::native::dvar_t* player_movement::pm_bouncesAllAngles;
 const game::native::dvar_t* player_movement::pm_playerEjection;
 const game::native::dvar_t* player_movement::pm_playerCollision;
 const game::native::dvar_t* player_movement::pm_rocketJump;
@@ -309,6 +310,33 @@ __declspec(naked) void player_movement::jump_start_stub()
 	}
 }
 
+void player_movement::pm_project_velocity_stub(const float* vel_in, const float* normal, float* vel_out)
+{
+	const auto length_squared_2d = vel_in[0] * vel_in[0] + vel_in[1] * vel_in[1];
+
+	if (std::fabsf(normal[2]) < 0.001f || length_squared_2d == 0.0f)
+	{
+		vel_out[0] = vel_in[0];
+		vel_out[1] = vel_in[1];
+		vel_out[2] = vel_in[2];
+		return;
+	}
+
+	auto new_z = vel_in[0] * normal[0] + vel_in[1] * normal[1];
+	new_z = -new_z / normal[2];
+
+	const auto length_scale = std::sqrtf((vel_in[2] * vel_in[2] + length_squared_2d) /
+		(new_z * new_z + length_squared_2d));
+
+	if (player_movement::pm_bouncesAllAngles->current.enabled
+		|| (length_scale < 1.f || new_z < 0.f || vel_in[2] > 0.f))
+	{
+		vel_out[0] = vel_in[0] * length_scale;
+		vel_out[1] = vel_in[1] * length_scale;
+		vel_out[2] = new_z * length_scale;
+	}
+}
+
 const game::native::dvar_t* player_movement::dvar_register_player_sustain_ammo(const char* dvar_name,
 		bool value, unsigned __int16 /*flags*/, const char* description)
 {
@@ -414,6 +442,8 @@ void player_movement::patch_mp()
 	// Modify the hardcoded value of the spread with the value of jump_spreadAdd
 	utils::hook(0x4166F0, &player_movement::jump_start_stub, HOOK_JUMP).install()->quick();
 	utils::hook::nop(0x4166F5, 1); // Nop skipped opcode
+
+	utils::hook(0x424E0A, &player_movement::pm_project_velocity_stub, HOOK_CALL).install()->quick(); // PM_StepSlideMove
 }
 
 void player_movement::patch_sp()
@@ -454,6 +484,8 @@ void player_movement::patch_sp()
 	// Modify the hardcoded value of the spread with the value of jump_spreadAdd
 	utils::hook(0x63E90A, &player_movement::jump_start_stub, HOOK_JUMP).install()->quick();
 	utils::hook::nop(0x63E90F, 1); // Nop skipped opcode
+
+	utils::hook(0x43D9D1, &player_movement::pm_project_velocity_stub, HOOK_CALL).install()->quick(); // PM_StepSlideMove
 }
 
 void player_movement::post_load()
@@ -473,6 +505,8 @@ void player_movement::post_load()
 
 	player_movement::pm_bounces = game::native::Dvar_RegisterBool("pm_bounces", false,
 		game::native::dvar_flags::DVAR_CODINFO, "CoD4 Bounces");
+	player_movement::pm_bouncesAllAngles = game::native::Dvar_RegisterBool("pm_bouncesAllAngles", false,
+		game::native::dvar_flags::DVAR_CODINFO, "Force bounces from all angles");
 	player_movement::pm_playerCollision = game::native::Dvar_RegisterBool("pm_playerCollision",
 		true, game::native::DVAR_CODINFO, "Push intersecting players away from each other");
 	player_movement::pm_elevators = game::native::Dvar_RegisterBool("pm_elevators",

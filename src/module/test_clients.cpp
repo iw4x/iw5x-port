@@ -1,9 +1,10 @@
 #include <std_include.hpp>
+#include <loader/module_loader.hpp>
+#include <utils/hook.hpp>
 
+#include "game/game.hpp"
 #include "test_clients.hpp"
 #include "command.hpp"
-
-#include "utils/hook.hpp"
 
 bool test_clients::can_add()
 {

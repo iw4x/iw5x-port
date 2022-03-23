@@ -1,6 +1,7 @@
 #include <std_include.hpp>
-#include "loader/module_loader.hpp"
-#include "utils/hook.hpp"
+#include <loader/module_loader.hpp>
+#include <utils/hook.hpp>
+
 #include "game/game.hpp"
 
 class patches final : public module

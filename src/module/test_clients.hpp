@@ -1,6 +1,4 @@
 #pragma once
-#include "loader/module_loader.hpp"
-#include "game/game.hpp"
 
 class test_clients final : public module
 {

@@ -1,5 +1,4 @@
 #pragma once
-#include "loader/module_loader.hpp"
 #include "utils/concurrent_list.hpp"
 
 class scheduler final : public module

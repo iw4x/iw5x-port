@@ -1,5 +1,6 @@
 #pragma once
-#include "loader/module_loader.hpp"
+#include <loader/module_loader.hpp>
+
 #include "game/demonware/stun_server.hpp"
 #include "game/demonware/service_server.hpp"
 
