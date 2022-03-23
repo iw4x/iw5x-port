@@ -27,6 +27,10 @@ namespace game
 			unsigned __int16 flags, const char* description);
 		extern Dvar_RegisterBool_t Dvar_RegisterBool;
 
+		typedef const dvar_t* (*Dvar_RegisterInt_t)(const char* dvarName, int value,
+			int min, int max, unsigned __int16 flags, const char* description);
+		extern Dvar_RegisterInt_t Dvar_RegisterInt;
+
 		typedef const dvar_t* (*Dvar_RegisterFloat_t)(const char* dvarName, float value,
 			float min, float max, unsigned __int16 flags, const char* description);
 		extern Dvar_RegisterFloat_t Dvar_RegisterFloat;
