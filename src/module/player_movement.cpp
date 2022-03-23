@@ -328,7 +328,7 @@ void player_movement::pm_project_velocity_stub(const float* vel_in, const float*
 	const auto length_scale = std::sqrtf((vel_in[2] * vel_in[2] + length_squared_2d) /
 		(new_z * new_z + length_squared_2d));
 
-	if (player_movement::pm_bouncesAllAngles->current.enabled
+	if (player_movement::pm_bouncesAllAngles->current.enabled == true
 		|| (length_scale < 1.f || new_z < 0.f || vel_in[2] > 0.f))
 	{
 		vel_out[0] = vel_in[0] * length_scale;
