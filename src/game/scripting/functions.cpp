@@ -1,4 +1,4 @@
-#include "std_include.hpp"
+#include <std_include.hpp>
 #include "functions.hpp"
 
 namespace game::scripting

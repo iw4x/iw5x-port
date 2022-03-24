@@ -1,6 +1,7 @@
-#include "std_include.hpp"
+#include <std_include.hpp>
+#include <utils/string.hpp>
+
 #include "game/game.hpp"
-#include "utils/string.hpp"
 #include "functions.hpp"
 #include "stack_isolation.hpp"
 #include "safe_executer.hpp"
