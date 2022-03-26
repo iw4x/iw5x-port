@@ -1,10 +1,5 @@
 #pragma once
-#include "loader/module_loader.hpp"
-
-#include "game/structs.hpp"
-#include "game/game.hpp"
-
-#include "utils/memory.hpp"
+#include <utils/memory.hpp>
 
 class command final : public module
 {

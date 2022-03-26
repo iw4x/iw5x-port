@@ -1,7 +1,8 @@
 #include <std_include.hpp>
-#include "loader/module_loader.hpp"
+#include <loader/module_loader.hpp>
+#include <utils/hook.hpp>
+
 #include "game/game.hpp"
-#include "utils/hook.hpp"
 
 static __declspec(naked) void db_load_stub_client(game::native::XZoneInfo*, unsigned int, int)
 {

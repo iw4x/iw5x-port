@@ -1,7 +1,7 @@
 #include <std_include.hpp>
-#include "loader/module_loader.hpp"
-#include "utils/nt.hpp"
-#include "utils/string.hpp"
+#include <loader/module_loader.hpp>
+#include <utils/nt.hpp>
+#include <utils/string.hpp>
 
 class game_launcher final : public module
 {

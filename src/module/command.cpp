@@ -1,8 +1,11 @@
 #include <std_include.hpp>
-#include "command.hpp"
+#include <loader/module_loader.hpp>
+#include <utils/string.hpp>
+#include <utils/hook.hpp>
 
-#include "utils/string.hpp"
-#include "utils/hook.hpp"
+#include "game/game.hpp"
+
+#include "command.hpp"
 
 utils::memory::allocator command::allocator_;
 std::unordered_map<std::string, std::function<void(const command::params&)>> command::handlers;

@@ -1,7 +1,8 @@
 #include <std_include.hpp>
-#include "loader/module_loader.hpp"
-#include "utils/hook.hpp"
-#include "utils/io.hpp"
+#include <loader/module_loader.hpp>
+#include <utils/hook.hpp>
+#include <utils/io.hpp>
+
 #include "game/scripting/context.hpp"
 #include "scheduler.hpp"
 

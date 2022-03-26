@@ -1,9 +1,9 @@
 #include <std_include.hpp>
-#include "loader/module_loader.hpp"
-#include "command.hpp"
-#include "game/game.hpp"
+#include <loader/module_loader.hpp>
+#include <utils/string.hpp>
 
-#include "utils/string.hpp"
+#include "game/game.hpp"
+#include "command.hpp"
 
 class client_command final : public module
 {

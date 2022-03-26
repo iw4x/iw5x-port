@@ -1,7 +1,8 @@
 #include <std_include.hpp>
-#include "loader/module_loader.hpp"
+#include <loader/module_loader.hpp>
+#include <utils/hook.hpp>
+
 #include "game/game.hpp"
-#include "utils/hook.hpp"
 
 class security final : public module
 {

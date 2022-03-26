@@ -1,9 +1,7 @@
 #include <std_include.hpp>
-#include "dw.hpp"
-#include "utils/hook.hpp"
-#include "game/game.hpp"
-#include "utils/nt.hpp"
-#include "utils/cryptography.hpp"
+#include <utils/hook.hpp>
+#include <utils/nt.hpp>
+#include <utils/cryptography.hpp>
 
 #include "game/demonware/services/bdLSGHello.hpp"       // 7
 #include "game/demonware/services/bdStorage.hpp"        // 10
@@ -12,6 +10,9 @@
 #include "game/demonware/services/bdDML.hpp"            // 27
 #include "game/demonware/services/bdDediRSAAuth.hpp"    // 26
 #include "game/demonware/services/bdSteamAuth.hpp"      // 28
+
+#include "game/game.hpp"
+#include "dw.hpp"
 
 namespace demonware
 {

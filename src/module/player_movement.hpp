@@ -1,5 +1,4 @@
 #pragma once
-#include "loader/module_loader.hpp"
 
 class player_movement final : public module
 {
@@ -15,6 +14,7 @@ private:
 	static const game::native::dvar_t* jump_stepSize;
 	static const game::native::dvar_t* jump_spreadAdd;
 	static const game::native::dvar_t* pm_bounces;
+	static const game::native::dvar_t* pm_bouncesAllAngles;
 	static const game::native::dvar_t* pm_playerEjection;
 	static const game::native::dvar_t* pm_playerCollision;
 	static const game::native::dvar_t* pm_rocketJump;
@@ -24,6 +24,7 @@ private:
 	static DWORD dont_bounce_addr;
 	static DWORD push_off_ladder_addr;
 	static DWORD jump_start_addr;
+	static DWORD jump_get_step_height_addr;
 
 	static void pm_weapon_use_ammo(game::native::playerState_s* ps, const game::native::Weapon weapon,
 		bool is_alternate, int amount, game::native::PlayerHandIndex hand);
@@ -70,10 +71,11 @@ private:
 	static void pm_crash_land_stub_mp();
 	static void pm_crash_land_stub_sp();
 
-	static bool jump_get_step_height_stub_mp(game::native::playerState_s* ps, const float* origin, float* stepSize);
-	static void jump_get_step_height_stub_sp();
+	static void jump_get_step_height_stub();
 
 	static void jump_start_stub();
+
+	static void pm_project_velocity_stub(const float* vel_in, const float* normal, float* vel_out);
 
 	static void patch_mp();
 	static void patch_sp();

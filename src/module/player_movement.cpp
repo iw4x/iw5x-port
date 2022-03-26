@@ -1,8 +1,8 @@
 #include <std_include.hpp>
+#include <loader/module_loader.hpp>
+#include <utils/hook.hpp>
+
 #include "game/game.hpp"
-
-#include "utils/hook.hpp"
-
 #include "player_movement.hpp"
 
 const game::native::dvar_t* player_movement::player_sustainAmmo;
@@ -13,6 +13,7 @@ const game::native::dvar_t* player_movement::jump_height;
 const game::native::dvar_t* player_movement::jump_stepSize;
 const game::native::dvar_t* player_movement::jump_spreadAdd;
 const game::native::dvar_t* player_movement::pm_bounces;
+const game::native::dvar_t* player_movement::pm_bouncesAllAngles;
 const game::native::dvar_t* player_movement::pm_playerEjection;
 const game::native::dvar_t* player_movement::pm_playerCollision;
 const game::native::dvar_t* player_movement::pm_rocketJump;
@@ -22,6 +23,7 @@ DWORD player_movement::bounce_addr;
 DWORD player_movement::dont_bounce_addr;
 DWORD player_movement::push_off_ladder_addr;
 DWORD player_movement::jump_start_addr;
+DWORD player_movement::jump_get_step_height_addr;
 
 void player_movement::pm_weapon_use_ammo(game::native::playerState_s* ps, const game::native::Weapon weapon,
 	bool is_alternate, int amount, game::native::PlayerHandIndex hand)
@@ -260,39 +262,16 @@ __declspec(naked) void player_movement::pm_crash_land_stub_sp()
 	}
 }
 
-bool player_movement::jump_get_step_height_stub_mp(game::native::playerState_s* ps, const float* origin, float* step_size)
-{
-	assert(ps->pm_flags & game::native::PMF_JUMPING);
-	assert(origin != nullptr);
-	assert(step_size != nullptr);
-
-	if (origin[2] >= (jump_height->current.value + ps->jumpOriginZ))
-	{
-		return false;
-	}
-
-	*step_size = jump_stepSize->current.value;
-
-	if (ps->jumpOriginZ + jump_height->current.value < origin[2] + *step_size)
-	{
-		*step_size = (ps->jumpOriginZ + jump_height->current.value) - origin[2];
-	}
-
-	return true;
-}
-
-// On SP, only a simple patch is required because jump_height is still implemented by the game
-__declspec(naked) void player_movement::jump_get_step_height_stub_sp()
+__declspec(naked) void player_movement::jump_get_step_height_stub()
 {
 	__asm
 	{
 		push eax
 		mov eax, player_movement::jump_stepSize
-		fadd dword ptr [eax + 0xC]
+		fld dword ptr [eax + 0xC]
 		pop eax
 
-		push 0x48C1FB
-		retn
+		jmp jump_get_step_height_addr
 	}
 }
 
@@ -306,6 +285,33 @@ __declspec(naked) void player_movement::jump_start_stub()
 		pop eax
 
 		jmp player_movement::jump_start_addr
+	}
+}
+
+void player_movement::pm_project_velocity_stub(const float* vel_in, const float* normal, float* vel_out)
+{
+	const auto length_squared_2d = vel_in[0] * vel_in[0] + vel_in[1] * vel_in[1];
+
+	if (std::fabsf(normal[2]) < 0.001f || length_squared_2d == 0.0f)
+	{
+		vel_out[0] = vel_in[0];
+		vel_out[1] = vel_in[1];
+		vel_out[2] = vel_in[2];
+		return;
+	}
+
+	auto new_z = vel_in[0] * normal[0] + vel_in[1] * normal[1];
+	new_z = -new_z / normal[2];
+
+	const auto length_scale = std::sqrtf((vel_in[2] * vel_in[2] + length_squared_2d) /
+		(new_z * new_z + length_squared_2d));
+
+	if (player_movement::pm_bouncesAllAngles->current.enabled == true
+		|| (length_scale < 1.f || new_z < 0.f || vel_in[2] > 0.f))
+	{
+		vel_out[0] = vel_in[0] * length_scale;
+		vel_out[1] = vel_in[1] * length_scale;
+		vel_out[2] = new_z * length_scale;
 	}
 }
 
@@ -409,11 +415,14 @@ void player_movement::patch_mp()
 
 	utils::hook(0x422BE0, &player_movement::pm_crash_land_stub_mp, HOOK_CALL).install()->quick(); // PM_GroundTrace
 
-	utils::hook(0x424B2B, &player_movement::jump_get_step_height_stub_mp, HOOK_CALL).install()->quick(); // PM_StepSlideMove
+	utils::hook(0x41613F, &player_movement::jump_get_step_height_stub, HOOK_JUMP).install()->quick(); // PM_StepSlideMove
+	utils::hook::nop(0x416144, 1); // Nop skipped opcode
 
 	// Modify the hardcoded value of the spread with the value of jump_spreadAdd
 	utils::hook(0x4166F0, &player_movement::jump_start_stub, HOOK_JUMP).install()->quick();
 	utils::hook::nop(0x4166F5, 1); // Nop skipped opcode
+
+	utils::hook(0x424E0A, &player_movement::pm_project_velocity_stub, HOOK_CALL).install()->quick(); // PM_StepSlideMove
 }
 
 void player_movement::patch_sp()
@@ -448,12 +457,14 @@ void player_movement::patch_sp()
 
 	utils::hook(0x6442DF, &player_movement::pm_crash_land_stub_sp, HOOK_CALL).install()->quick(); // PM_GroundTrace
 
-	utils::hook(0x48C1F5, &player_movement::jump_get_step_height_stub_sp, HOOK_JUMP).install()->quick(); // PM_StepSlideMove
-	utils::hook::nop(0x48C1FA, 1); // Nop skipped opcode
+	utils::hook(0x48C1DC, &player_movement::jump_get_step_height_stub, HOOK_JUMP).install()->quick(); // PM_StepSlideMove
+	utils::hook::nop(0x48C1E1, 1); // Nop skipped opcode
 
 	// Modify the hardcoded value of the spread with the value of jump_spreadAdd
 	utils::hook(0x63E90A, &player_movement::jump_start_stub, HOOK_JUMP).install()->quick();
 	utils::hook::nop(0x63E90F, 1); // Nop skipped opcode
+
+	utils::hook(0x43D9D1, &player_movement::pm_project_velocity_stub, HOOK_CALL).install()->quick(); // PM_StepSlideMove
 }
 
 void player_movement::post_load()
@@ -470,9 +481,12 @@ void player_movement::post_load()
 	player_movement::dont_bounce_addr = SELECT_VALUE(0x43D933, 0x424D6C, 0x0);
 	player_movement::push_off_ladder_addr = SELECT_VALUE(0x63EA4C, 0x41686C, 0x0);
 	player_movement::jump_start_addr = SELECT_VALUE(0x63E910, 0x4166F6, 0x0);
+	player_movement::jump_get_step_height_addr = SELECT_VALUE(0x48C1E2, 0x416145, 0x0);
 
 	player_movement::pm_bounces = game::native::Dvar_RegisterBool("pm_bounces", false,
 		game::native::dvar_flags::DVAR_CODINFO, "CoD4 Bounces");
+	player_movement::pm_bouncesAllAngles = game::native::Dvar_RegisterBool("pm_bouncesAllAngles", false,
+		game::native::dvar_flags::DVAR_CODINFO, "Force bounces from all angles");
 	player_movement::pm_playerCollision = game::native::Dvar_RegisterBool("pm_playerCollision",
 		true, game::native::DVAR_CODINFO, "Push intersecting players away from each other");
 	player_movement::pm_elevators = game::native::Dvar_RegisterBool("pm_elevators",

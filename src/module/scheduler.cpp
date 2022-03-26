@@ -1,8 +1,10 @@
 #include <std_include.hpp>
-#include "scheduler.hpp"
-#include "utils/string.hpp"
+#include <loader/module_loader.hpp>
+#include <utils/string.hpp>
+#include <utils/hook.hpp>
+
 #include "game/game.hpp"
-#include "utils/hook.hpp"
+#include "scheduler.hpp"
 
 std::mutex scheduler::mutex_;
 std::queue<std::pair<std::string, int>> scheduler::errors_;

@@ -1,10 +1,12 @@
 #include <std_include.hpp>
-#include "loader/module_loader.hpp"
-#include "game/game.hpp"
-#include "utils/nt.hpp"
+#include <loader/module_loader.hpp>
+#include <utils/nt.hpp>
+#include <utils/string.hpp>
+
 #include "steam/steam.hpp"
 #include "steam/interface.hpp"
-#include "utils/string.hpp"
+
+#include "game/game.hpp"
 #include "scheduler.hpp"
 
 class steam_proxy final : public module
