@@ -93,12 +93,12 @@ game::native::gentity_s* test_clients::sv_add_test_client()
 
 void test_clients::spawn()
 {
-	auto* ent = test_clients::sv_add_test_client();
+	const auto* ent = test_clients::sv_add_test_client();
 
-	if (ent == nullptr)
-		return;
-
-	game::native::Scr_AddEntityNum(ent->s.number, 0);
+	if (ent != nullptr)
+	{
+		game::native::Scr_AddEntityNum(ent->s.number, 0);
+	}
 }
 
 void test_clients::scr_shutdown_system_mp_stub(unsigned char sys)
@@ -178,6 +178,9 @@ void test_clients::patch_mp()
 	utils::hook(0x50C147, &test_clients::scr_shutdown_system_mp_stub, HOOK_CALL).install()->quick(); // G_ShutdownGame
 	utils::hook(0x57BBF9, &test_clients::reset_reliable_mp, HOOK_CALL).install()->quick(); // SV_SendMessageToClient
 	utils::hook(0x576DCC, &test_clients::check_timeouts_stub_mp, HOOK_JUMP).install()->quick(); // SV_CheckTimeouts
+
+	// Replace nullsubbed gsc func "GScr_AddTestClient" with our spawn
+	utils::hook::set<void(*)()>(0x8AC8DC, test_clients::spawn);
 }
 
 REGISTER_MODULE(test_clients);
