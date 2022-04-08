@@ -49,6 +49,10 @@ private:
 	{
 		// Skip call to queryserverinfo handler in SV_ConnectionlessPacket
 		utils::hook::nop(0x4FE051, 5);
+
+		// Disable callvote/vote exploit
+		utils::hook::nop(0x47EB9D, 5);
+		utils::hook::nop(0x47EBC9, 5);
 	}
 
 	static __declspec(noreturn) void long_jump_stub(jmp_buf buf, const int value) noexcept(false)
