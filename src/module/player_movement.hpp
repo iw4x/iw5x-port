@@ -19,6 +19,8 @@ private:
 	static const game::native::dvar_t* pm_playerCollision;
 	static const game::native::dvar_t* pm_rocketJump;
 	static const game::native::dvar_t* pm_elevators;
+	static const game::native::dvar_t* bg_gravity;
+	static const game::native::dvar_t* g_speed;
 
 	static DWORD bounce_addr;
 	static DWORD dont_bounce_addr;
@@ -76,6 +78,10 @@ private:
 	static void jump_start_stub();
 
 	static void pm_project_velocity_stub(const float* vel_in, const float* normal, float* vel_out);
+
+	// On SP these are already implemented
+	static void bg_gravity_stub();
+	static void g_speed_stub();
 
 	static void patch_mp();
 	static void patch_sp();
