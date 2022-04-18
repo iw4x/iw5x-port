@@ -18,6 +18,8 @@ const game::native::dvar_t* player_movement::pm_playerEjection;
 const game::native::dvar_t* player_movement::pm_playerCollision;
 const game::native::dvar_t* player_movement::pm_rocketJump;
 const game::native::dvar_t* player_movement::pm_elevators;
+const game::native::dvar_t* player_movement::bg_gravity;
+const game::native::dvar_t* player_movement::g_speed;
 
 DWORD player_movement::bounce_addr;
 DWORD player_movement::dont_bounce_addr;
@@ -315,6 +317,41 @@ void player_movement::pm_project_velocity_stub(const float* vel_in, const float*
 	}
 }
 
+__declspec(naked) void player_movement::bg_gravity_stub()
+{
+	__asm
+	{
+		push eax
+
+		mov eax, player_movement::bg_gravity
+		// Quick and widely available extension since 1999
+		cvttss2si eax, dword ptr [eax + 0xC]
+		mov dword ptr [ebp + 0x58], eax // ps.gravity
+
+		pop eax
+
+		push 0x4F9BBA
+		retn
+	}
+}
+
+__declspec(naked) void player_movement::g_speed_stub()
+{
+	__asm
+	{
+		push eax
+
+		mov eax, player_movement::g_speed
+		mov eax, dword ptr [eax + 0xC]
+		mov dword ptr [ebp + 0x5C], eax // ps.speed
+
+		pop eax
+
+		push 0x4F93E4
+		retn
+	}
+}
+
 const game::native::dvar_t* player_movement::dvar_register_player_sustain_ammo(const char* dvar_name,
 		bool value, unsigned __int16 /*flags*/, const char* description)
 {
@@ -375,6 +412,11 @@ void player_movement::patch_mp()
 		true, game::native::DVAR_CODINFO, "Push intersecting players away from each other");
 	player_movement::pm_rocketJump = game::native::Dvar_RegisterBool("pm_rocketJump",
 		false, game::native::DVAR_CODINFO, "CoD4 rocket jumps");
+	// Name is correct, SP registers this dvar in BG_RegisterDvars but still names it just "g_gravity"
+	player_movement::bg_gravity = game::native::Dvar_RegisterFloat("g_gravity", 800.0f,
+		1.0f, std::numeric_limits<float>::max(), game::native::DVAR_CODINFO, "Gravity in inches per second per second");
+	player_movement::g_speed = game::native::Dvar_RegisterInt("g_speed", 190,
+		std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), game::native::DVAR_CODINFO, "Player speed");
 
 	// Un-Cheat the dvars
 	utils::hook(0x418D9C, &player_movement::dvar_register_player_sustain_ammo, HOOK_CALL).install()->quick();
@@ -423,6 +465,12 @@ void player_movement::patch_mp()
 	utils::hook::nop(0x4166F5, 1); // Nop skipped opcode
 
 	utils::hook(0x424E0A, &player_movement::pm_project_velocity_stub, HOOK_CALL).install()->quick(); // PM_StepSlideMove
+
+	utils::hook(0x4F9BB3, &player_movement::bg_gravity_stub, HOOK_JUMP).install()->quick(); // ClientEndFrame
+	utils::hook::nop(0x4F9BB8, 2); // Nop skipped opcode
+
+	utils::hook(0x4F93D7, &player_movement::g_speed_stub, HOOK_JUMP).install()->quick(); // ClientThink_real
+	utils::hook::nop(0x4F93DC, 2); // Nop skipped opcode
 }
 
 void player_movement::patch_sp()
