@@ -99,9 +99,9 @@ void scheduler::r_end_frame_stub()
 	execute(pipeline::renderer);
 }
 
-void scheduler::server_frame_stub()
+void scheduler::g_glass_update_stub()
 {
-	reinterpret_cast<void(*)()>(SELECT_VALUE(0x0, 0x576F00, 0x4FE7D0))();
+	reinterpret_cast<void(*)()>(SELECT_VALUE(0x4E3730, 0x505BB0, 0x481EA0))();
 	execute(pipeline::server);
 }
 
@@ -165,11 +165,8 @@ void scheduler::post_load()
 		utils::hook(SELECT_VALUE(0x57F7F8, 0x4978E2, 0x0), r_end_frame_stub, HOOK_CALL).install()->quick();
 	}
 
-	if (!game::is_sp())
-	{
-		// Hook SV_PostFrame. SV_RunFrame is inlined. No server thread on SP
-		utils::hook(SELECT_VALUE(0x0, 0x5774B3, 0x4FEFE1), server_frame_stub, HOOK_CALL).install()->quick();
-	}
+	// Hook a function inside G_RunFrame. Fixes TLS issues
+	utils::hook(SELECT_VALUE(0x52EFBC, 0x50CEC6, 0x48B277), g_glass_update_stub, HOOK_CALL).install()->quick();
 }
 
 void scheduler::pre_destroy()

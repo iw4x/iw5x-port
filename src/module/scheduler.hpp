@@ -35,6 +35,6 @@ private:
 	static void execute(const pipeline type);
 
 	static void r_end_frame_stub();
-	static void server_frame_stub();
+	static void g_glass_update_stub();
 	static void main_frame_stub();
 };
