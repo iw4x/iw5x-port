@@ -1,27 +1,40 @@
 #pragma once
-#include "utils/concurrent_list.hpp"
 
 class scheduler final : public module
 {
 public:
-	static void on_frame(const std::function<void()>& callback);
-	static void once(const std::function<void()>& callback);
+	enum pipeline
+	{
+		// Asynchronuous pipeline, disconnected from the game
+		async = 0,
 
-	static void error(const std::string& message, int level);
+		// The game's rendering pipeline
+		renderer,
 
+		// The game's server thread
+		server,
+
+		// The game's main thread
+		main,
+
+		count,
+	};
+
+	void post_start() override;
 	void post_load() override;
 	void pre_destroy() override;
 
+	static void schedule(const std::function<bool()>& callback, pipeline type = pipeline::async,
+		std::chrono::milliseconds delay = 0ms);
+	static void loop(const std::function<void()>& callback, pipeline type = pipeline::async,
+		std::chrono::milliseconds delay = 0ms);
+	static void once(const std::function<void()>& callback, pipeline type = pipeline::async,
+		std::chrono::milliseconds delay = 0ms);
+
 private:
-	static std::mutex mutex_;
-	static std::queue<std::pair<std::string, int>> errors_;
-	static utils::concurrent_list<std::function<void()>> callbacks_;
-	static utils::concurrent_list<std::function<void()>> single_callbacks_;
+	static void execute(const pipeline type);
 
-	static void frame_stub();
-
-	static void execute();
-	static void execute_safe();
-	static void execute_error();
-	static bool get_next_error(const char** error_message, int* error_level);
+	static void r_end_frame_stub();
+	static void g_glass_update_stub();
+	static void main_frame_stub();
 };

@@ -77,5 +77,7 @@ namespace utils::string
 	std::string to_lower(std::string text);
 	std::string to_upper(std::string text);
 
+	std::wstring convert(const std::string& str);
+
 	std::string dump_hex(const std::string& data, const std::string& separator = " ");
 }

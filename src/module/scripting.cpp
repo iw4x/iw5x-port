@@ -48,7 +48,7 @@ private:
 	{
 		const auto script_dir = "open-iw5/scripts/"s;
 
-		if(!utils::io::directory_exists(script_dir))
+		if (!utils::io::directory_exists(script_dir))
 		{
 			return;
 		}
@@ -115,7 +115,10 @@ private:
 		printf("%s\n", e.what());
 		printf("**************************************\n\n");
 
-		scheduler::error("Script execution error\n(see console for actual details)\n", 5);
+		scheduler::once([]
+		{
+			game::native::Com_Error(game::native::errorParm_t::ERR_SCRIPT, "Script execution error\n(see console for actual details)\n");
+		}, scheduler::pipeline::main);
 	}
 
 	static void start_execution_stub()

@@ -1,10 +1,12 @@
 #include <std_include.hpp>
 #include <loader/module_loader.hpp>
 #include <utils/hook.hpp>
+#include <utils/string.hpp>
 
 #include "game/game.hpp"
 #include "test_clients.hpp"
 #include "command.hpp"
+#include "scheduler.hpp"
 
 bool test_clients::can_add()
 {
@@ -91,13 +93,42 @@ game::native::gentity_s* test_clients::sv_add_test_client()
 	return client->gentity;
 }
 
-void test_clients::spawn()
+void test_clients::gscr_add_test_client()
 {
 	const auto* ent = test_clients::sv_add_test_client();
 
 	if (ent != nullptr)
 	{
 		game::native::Scr_AddEntityNum(ent->s.number, 0);
+	}
+}
+
+void test_clients::spawn(const int count)
+{
+	for (int i = 0; i < count; ++i)
+	{
+		scheduler::once([]()
+		{
+			auto* ent = sv_add_test_client();
+			if (ent == nullptr) return;
+
+			game::native::Scr_AddEntityNum(ent->s.number, 0);
+			scheduler::once([ent]()
+			{
+				game::native::Scr_AddString("autoassign");
+				game::native::Scr_AddString("team_marinesopfor");
+				game::native::Scr_Notify(ent, static_cast<std::uint16_t>(game::native::SL_GetString("menuresponse", 0)), 2);
+
+				scheduler::once([ent]()
+				{
+					game::native::Scr_AddString(utils::string::va("class%i", std::rand() % 5));
+					game::native::Scr_AddString("changeclass");
+					game::native::Scr_Notify(ent, static_cast<std::uint16_t>(game::native::SL_GetString("menuresponse", 0)), 2);
+				}, scheduler::pipeline::server, 2s);
+
+			}, scheduler::pipeline::server, 1s);
+
+		}, scheduler::pipeline::server, 2s * (i + 1));
 	}
 }
 
@@ -158,11 +189,15 @@ void test_clients::post_load()
 	if (game::is_mp()) this->patch_mp();
 	else return; // No sp/dedi bots for now :(
 
-	command::add("spawnBot", []()
+	command::add("spawnBot", [](const command::params& params)
 	{
-		// Because I am unable to expand the scheduler at the moment
-		// we only get one bot at the time
-		test_clients::spawn();
+		if (params.size() < 2)
+		{
+			return;
+		}
+
+		const auto count = std::atoi(params.get(1));
+		test_clients::spawn(count);
 	});
 }
 
@@ -180,7 +215,7 @@ void test_clients::patch_mp()
 	utils::hook(0x576DCC, &test_clients::check_timeouts_stub_mp, HOOK_JUMP).install()->quick(); // SV_CheckTimeouts
 
 	// Replace nullsubbed gsc func "GScr_AddTestClient" with our spawn
-	utils::hook::set<void(*)()>(0x8AC8DC, test_clients::spawn);
+	utils::hook::set<void(*)()>(0x8AC8DC, test_clients::gscr_add_test_client);
 }
 
 REGISTER_MODULE(test_clients);

@@ -21,7 +21,8 @@ public:
 
 	void post_start() override
 	{
-		scheduler::on_frame(std::bind(&console::log_messages, this));
+		scheduler::loop(std::bind(&console::log_messages, this), scheduler::pipeline::main);
+
 		this->console_runner_ = std::thread(std::bind(&console::runner, this));
 	}
 

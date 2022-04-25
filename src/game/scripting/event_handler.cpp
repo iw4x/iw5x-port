@@ -1,4 +1,5 @@
 #include <std_include.hpp>
+
 #include "context.hpp"
 
 namespace game::scripting
@@ -13,10 +14,10 @@ namespace game::scripting
 		          "_event_listener_handle");
 
 		chai->add(chaiscript::fun(
-			          [](event_listener_handle& lhs, const event_listener_handle& rhs) -> event_listener_handle&
-			          {
-				          return lhs = rhs;
-			          }), "=");
+			[](event_listener_handle& lhs, const event_listener_handle& rhs) -> event_listener_handle&
+			{
+				return lhs = rhs;
+			}), "=");
 
 		chai->add(chaiscript::fun([this](const event_listener_handle& handle)
 		{
@@ -45,77 +46,112 @@ namespace game::scripting
 	}
 
 	void event_handler::dispatch_to_specific_listeners(event* event,
-	                                                   const std::vector<chaiscript::Boxed_Value>& arguments)
+		const std::vector<chaiscript::Boxed_Value>& arguments)
 	{
-		for (auto listener : this->event_listeners_)
+		this->event_listeners_.access([&](task_list& tasks)
 		{
-			if (listener->event == event->name && listener->entity_id == event->entity_id)
+			for (auto listener = tasks.begin(); listener != tasks.end();)
 			{
-				if (listener->is_volatile)
+				if (listener->event == event->name && listener->entity_id == event->entity_id)
 				{
-					this->event_listeners_.remove(listener);
+					if (listener->is_volatile)
+					{
+						listener = tasks.erase(listener);
+						continue;
+					}
+
+					listener->callback(arguments);
 				}
 
-				listener->callback(arguments);
+				++listener;
 			}
-		}
+		});
 	}
 
 	void event_handler::dispatch_to_generic_listeners(event* event,
-	                                                  const std::vector<chaiscript::Boxed_Value>& arguments)
+		const std::vector<chaiscript::Boxed_Value>& arguments)
 	{
-		for (auto listener : this->generic_event_listeners_)
+		this->generic_event_listeners_.access([&](generic_task_list& tasks)
 		{
-			if (listener->event == event->name)
+			for (auto listener = tasks.begin(); listener != tasks.end();)
 			{
-				if (listener->is_volatile)
+				if (listener->event == event->name)
 				{
-					this->generic_event_listeners_.remove(listener);
+					if (listener->is_volatile)
+					{
+						listener = tasks.erase(listener);
+						continue;
+					}
+
+					listener->callback(entity(this->context_, event->entity_id), arguments);
 				}
 
-				listener->callback(entity(this->context_, event->entity_id), arguments);
+				++listener;
 			}
-		}
+		});
 	}
 
 	event_listener_handle event_handler::add_event_listener(event_listener listener)
 	{
 		listener.id = ++this->current_listener_id_;
-		this->event_listeners_.add(listener);
+		this->event_listeners_.access([listener](task_list& tasks)
+		{
+			tasks.emplace_back(std::move(listener));
+		});
 		return {listener.id};
 	}
 
 	event_listener_handle event_handler::add_event_listener(generic_event_listener listener)
 	{
 		listener.id = ++this->current_listener_id_;
-		this->generic_event_listeners_.add(listener);
+		this->generic_event_listeners_.access([listener](generic_task_list& tasks)
+		{
+			tasks.emplace_back(std::move(listener));
+		});
 		return {listener.id};
 	}
 
 	void event_handler::clear()
 	{
-		this->event_listeners_.clear();
-		this->generic_event_listeners_.clear();
+		this->event_listeners_.access([](task_list& tasks)
+		{
+			tasks.clear();
+		});
+
+		this->generic_event_listeners_.access([](generic_task_list& tasks)
+		{
+			tasks.clear();
+		});
 	}
 
 	void event_handler::remove(const event_listener_handle& handle)
 	{
-		for (const auto task : this->event_listeners_)
+		this->event_listeners_.access([handle](task_list& tasks)
 		{
-			if (task->id == handle.id)
+			for (auto i = tasks.begin(); i != tasks.end();)
 			{
-				this->event_listeners_.remove(task);
-				return;
-			}
-		}
+				if (i->id == handle.id)
+				{
+					i = tasks.erase(i);
+					return;
+				}
 
-		for (const auto task : this->generic_event_listeners_)
-		{
-			if (task->id == handle.id)
-			{
-				this->generic_event_listeners_.remove(task);
-				return;
+				++i;
 			}
-		}
+		});
+
+		this->generic_event_listeners_.access([handle](generic_task_list& tasks)
+		{
+			for (auto i = tasks.begin(); i != tasks.end();)
+			{
+				if (i->id == handle.id)
+				{
+					i = tasks.erase(i);
+					return;
+				}
+
+				++i;
+			}
+		});
 	}
 }

@@ -36,6 +36,19 @@ namespace utils::string
 		return text;
 	}
 
+	std::wstring convert(const std::string& str)
+	{
+		std::wstring result;
+		result.reserve(str.size());
+
+		for (const auto& chr : str)
+		{
+			result.push_back(static_cast<wchar_t>(chr));
+		}
+
+		return result;
+	}
+
 	std::string dump_hex(const std::string& data, const std::string& separator)
 	{
 		std::string result;

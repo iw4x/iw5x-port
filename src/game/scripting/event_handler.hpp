@@ -1,5 +1,5 @@
 #pragma once
-#include "utils/concurrent_list.hpp"
+#include <utils/concurrency.hpp>
 #include "entity.hpp"
 #include "event.hpp"
 
@@ -46,8 +46,11 @@ namespace game::scripting
 		context* context_;
 		std::atomic_int64_t current_listener_id_ = 0;
 
-		utils::concurrent_list<event_listener> event_listeners_;
-		utils::concurrent_list<generic_event_listener> generic_event_listeners_;
+		using task_list = std::vector<event_listener>;
+		utils::concurrency::container<task_list> event_listeners_;
+
+		using generic_task_list = std::vector<generic_event_listener>;
+		utils::concurrency::container<generic_task_list> generic_event_listeners_;
 
 		void dispatch_to_specific_listeners(event* event, const std::vector<chaiscript::Boxed_Value>& arguments);
 		void dispatch_to_generic_listeners(event* event, const std::vector<chaiscript::Boxed_Value>& arguments);

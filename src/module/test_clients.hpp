@@ -10,7 +10,8 @@ private:
 
 	static bool can_add();
 	static game::native::gentity_s* sv_add_test_client();
-	static void spawn();
+	static void gscr_add_test_client();
+	static void spawn(int count);
 
 	static void scr_shutdown_system_mp_stub(unsigned char sys);
 

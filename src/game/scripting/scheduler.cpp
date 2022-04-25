@@ -1,4 +1,5 @@
 #include <std_include.hpp>
+
 #include "context.hpp"
 
 namespace game::scripting
@@ -17,16 +18,16 @@ namespace game::scripting
 		}), "=");
 
 		chai->add(chaiscript::fun(
-			          [this](const std::function<void()>& callback, const long long milliseconds) -> task_handle
-			          {
-				          return this->add(callback, milliseconds, true);
-			          }), "setTimeout");
+			[this](const std::function<void()>& callback, const long long milliseconds) -> task_handle
+			{
+				return this->add(callback, milliseconds, true);
+			}), "setTimeout");
 
 		chai->add(chaiscript::fun(
-			          [this](const std::function<void()>& callback, const long long milliseconds) -> task_handle
-			          {
-				          return this->add(callback, milliseconds, false);
-			          }), "setInterval");
+			[this](const std::function<void()>& callback, const long long milliseconds) -> task_handle
+			{
+				return this->add(callback, milliseconds, false);
+			}), "setInterval");
 
 		const auto clear = [this](const task_handle& handle)
 		{
@@ -40,25 +41,40 @@ namespace game::scripting
 
 	void scheduler::run_frame()
 	{
-		for (auto task : this->tasks_)
+		this->tasks_.access([&](task_list& tasks)
 		{
-			const auto now = std::chrono::steady_clock::now();
-			if ((now - task->last_execution) > task->delay)
+			for (auto i = tasks.begin(); i != tasks.end();)
 			{
-				task->last_execution = now;
-				if (task->is_volatile)
+				const auto now = std::chrono::steady_clock::now();
+				const auto diff = now - i->last_execution;
+
+				if (diff < i->delay)
 				{
-					this->tasks_.remove(task);
+					++i;
+					continue;
 				}
 
-				task->callback();
+				i->last_execution = now;
+
+				if (i->is_volatile)
+				{
+					i = tasks.erase(i);
+				}
+				else
+				{
+					i->callback();
+					++i;
+				}
 			}
-		}
+		});
 	}
 
 	void scheduler::clear()
 	{
-		this->tasks_.clear();
+		this->tasks_.access([&](task_list& tasks)
+		{
+			tasks.clear();
+		});
 	}
 
 	task_handle scheduler::add(const std::function<void()>& callback, const long long milliseconds,
@@ -77,20 +93,28 @@ namespace game::scripting
 		task.last_execution = std::chrono::steady_clock::now();
 		task.id = ++this->current_task_id_;
 
-		this->tasks_.add(task);
+		this->tasks_.access([&task](task_list& tasks)
+		{
+			tasks.emplace_back(std::move(task));
+		});
 
 		return {task.id};
 	}
 
 	void scheduler::remove(const task_handle& handle)
 	{
-		for (auto task : this->tasks_)
+		this->tasks_.access([&](task_list& tasks)
 		{
-			if (task->id == handle.id)
+			for (auto i = tasks.begin(); i != tasks.end();)
 			{
-				this->tasks_.remove(task);
-				break;
+				if (i->id == handle.id)
+				{
+					i = tasks.erase(i);
+					break;
+				}
+
+				++i;
 			}
-		}
+		});
 	}
 }
