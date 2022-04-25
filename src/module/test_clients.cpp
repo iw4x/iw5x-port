@@ -121,7 +121,7 @@ void test_clients::spawn(const int count)
 
 				scheduler::once([ent]()
 				{
-					game::native::Scr_AddString(utils::string::va("class%u", std::rand() % 5));
+					game::native::Scr_AddString(utils::string::va("class%i", std::rand() % 5));
 					game::native::Scr_AddString("changeclass");
 					game::native::Scr_Notify(ent, static_cast<std::uint16_t>(game::native::SL_GetString("menuresponse", 0)), 2);
 				}, scheduler::pipeline::server, 2s);
