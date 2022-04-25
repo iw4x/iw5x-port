@@ -1,5 +1,5 @@
 #pragma once
-#include "utils/concurrent_list.hpp"
+#include <utils/concurrency.hpp>
 
 namespace game::scripting
 {
@@ -8,7 +8,7 @@ namespace game::scripting
 	class task_handle
 	{
 	public:
-		unsigned long long id = 0;
+		std::uint64_t id = 0;
 	};
 
 	class task final : public task_handle
@@ -31,7 +31,8 @@ namespace game::scripting
 	private:
 		context* context_;
 
-		utils::concurrent_list<task> tasks_;
+		using task_list = std::vector<task>;
+		utils::concurrency::container<task_list> tasks_;
 		std::atomic_int64_t current_task_id_ = 0;
 
 		task_handle add(const std::function<void()>& callback, long long milliseconds, bool is_volatile);

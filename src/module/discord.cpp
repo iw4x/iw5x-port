@@ -24,7 +24,7 @@ public:
 
 		Discord_Initialize("531526691319971880", &handlers, 1, nullptr);
 
-		scheduler::on_frame(Discord_RunCallbacks);
+		scheduler::loop(Discord_RunCallbacks, scheduler::pipeline::main);
 	}
 
 	void pre_destroy() override

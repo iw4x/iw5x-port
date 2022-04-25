@@ -17,7 +17,7 @@ namespace game
 		typedef void (*Cmd_RemoveCommand_t)(const char* cmdName);
 		extern Cmd_RemoveCommand_t Cmd_RemoveCommand;
 
-		typedef void (*Com_Error_t)(int code, const char* fmt, ...);
+		typedef void (*Com_Error_t)(errorParm_t code, const char* fmt, ...);
 		extern Com_Error_t Com_Error;
 
 		typedef void (*DB_LoadXAssets_t)(XZoneInfo* zoneInfo, unsigned int zoneCount, int sync);
