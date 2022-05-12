@@ -17,8 +17,6 @@ namespace game
 
 		Dvar_RegisterInt_t Dvar_RegisterInt;
 
-		Dvar_RegisterFloat_t Dvar_RegisterFloat;
-
 		Dvar_SetIntByName_t Dvar_SetIntByName;
 
 		Dvar_SetFromStringByName_t Dvar_SetFromStringByName;
@@ -246,11 +244,64 @@ namespace game
 			{
 				return dvar_find_malleable_var(dvarName);
 			}
-			else
+
+			return reinterpret_cast<dvar_t*(*)(const char*)>
+				(SELECT_VALUE(0x539550, 0x5BDCC0, 0x0))(dvarName);
+		}
+
+		constexpr auto Dvar_RegisterVariant_Addr = 0x531F70;
+		__declspec(naked) const dvar_t* Dvar_RegisterVariant(const char* dvarName, unsigned char type,
+			unsigned __int16 flags, DvarValue value, DvarLimits domain, const char* description)
+		{
+			__asm
 			{
-				return reinterpret_cast<dvar_t*(*)(const char*)>
-					(SELECT_VALUE(0x539550, 0x5BDCC0, 0x0))(dvarName);
+				push eax
+				pushad
+
+				mov edi, [esp + 0x24 + 0x28] // description
+				mov eax, [esp + 0x24 + 0x4] // dvarName
+
+				push [esp + 0x24 + 0x24] // domain
+				push [esp + 0x24 + 0x24] // domain
+
+				push [esp + 0x24 + 0x24] // value
+				push [esp + 0x24 + 0x24] // value
+				push [esp + 0x24 + 0x24] // value
+				push [esp + 0x24 + 0x24] // value
+
+				push [esp + 0x24 + 0x24] // flags
+				push [esp + 0x24 + 0x24] // type
+
+				call Dvar_RegisterVariant_Addr
+				add esp, 0x20
+
+				mov [esp + 0x20], eax // result
+				popad
+				pop eax
+
+				retn
 			}
+		}
+
+		const dvar_t* Dvar_RegisterFloat(const char* dvarName, float value,
+			float min, float max, unsigned __int16 flags, const char* description)
+		{
+			if (!is_dedi())
+			{
+				return reinterpret_cast<const dvar_t*(*)(const char*, float, float, float, unsigned __int16, const char*)>
+					(SELECT_VALUE(0x4F9CC0, 0x5BEA80, 0x0))(dvarName, value, min, max, flags, description);
+			}
+
+			DvarLimits domain;
+			DvarValue dvar_value;
+
+			domain.value.min = min;
+			domain.value.max = max;
+
+			dvar_value.value = value;
+
+			return Dvar_RegisterVariant(dvarName, dvar_type::DVAR_TYPE_FLOAT,
+				flags, dvar_value, domain, description);
 		}
 
 		const float* Scr_AllocVector(const float* v)
@@ -631,8 +682,6 @@ namespace game
 		native::Dvar_RegisterBool = native::Dvar_RegisterBool_t(SELECT_VALUE(0x4914D0, 0x5BE9F0, 0x0));
 
 		native::Dvar_RegisterInt = native::Dvar_RegisterInt_t(SELECT_VALUE(0x48CD40, 0x5BEA40, 0x0));
-
-		native::Dvar_RegisterFloat = native::Dvar_RegisterFloat_t(SELECT_VALUE(0x4F9CC0, 0x5BEA80, 0x0));
 
 		native::Dvar_SetIntByName = native::Dvar_SetIntByName_t(SELECT_VALUE(0x5396B0, 0x5BF560, 0x0));
 

@@ -547,13 +547,14 @@ namespace game
 
 		enum dvar_flags : std::uint16_t
 		{
-			DVAR_ARCHIVE = 0x1,
-			DVAR_CHEAT = 0x4,
-			DVAR_CODINFO = 0x8,
-			DVAR_SCRIPTINFO = 0x10,
-			DVAR_SERVERINFO = 0x400,
-			DVAR_WRITEPROTECTED = 0x800,
-			DVAR_READONLY = 0x2000,
+			DVAR_ARCHIVE = 1 << 0,
+			DVAR_CHEAT = 1 << 2,
+			DVAR_CODINFO = 1 << 3,
+			DVAR_SCRIPTINFO = 1 << 4,
+			DVAR_SERVERINFO = 1 << 10,
+			DVAR_WRITEPROTECTED = 1 << 11,
+			DVAR_READONLY = 1 << 13,
+			DVAR_AUTOEXEC = 1 << 15,
 		}; // Incomplete
 
 		enum dvar_type : std::int8_t
@@ -580,6 +581,8 @@ namespace game
 			const char* string;
 			char color[4];
 		};
+
+		static_assert(sizeof(DvarValue) == 0x10);
 
 		struct enum_limit
 		{
