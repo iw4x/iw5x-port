@@ -81,6 +81,8 @@ namespace game
 
 		Com_Quit_f_t Com_Quit_f;
 
+		player_die_t player_die;
+
 		decltype(longjmp)* _longjmp;
 
 		CmdArgs* sv_cmd_args;
@@ -700,6 +702,8 @@ namespace game
 			SELECT_VALUE(0x4D6960, 0x5462B0, 0x4CC360));
 
 		native::Com_Quit_f = native::Com_Quit_f_t(SELECT_VALUE(0x4F48B0, 0x5556B0, 0x4D95B0));
+
+		native::player_die = native::player_die_t(SELECT_VALUE(0x0, 0x503460, 0x47F4D0));
 
 		native::_longjmp = reinterpret_cast<decltype(longjmp)*>(SELECT_VALUE(0x73AC20, 0x7363BC, 0x655558));
 

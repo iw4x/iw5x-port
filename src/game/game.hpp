@@ -133,6 +133,9 @@ namespace game
 		typedef void (*Com_Quit_f_t)();
 		extern Com_Quit_f_t Com_Quit_f;
 
+		typedef void (*player_die_t)(gentity_s* self, const gentity_s* inflictor, gentity_s* attacker, int damage, int meansOfDeath, const Weapon* iWeapon, bool isAlternate, const float* vDir, const hitLocation_t hitLoc, int psTimeOffset);
+		extern player_die_t player_die;
+
 		extern decltype(longjmp)* _longjmp;
 
 		constexpr auto CMD_MAX_NESTING = 8;

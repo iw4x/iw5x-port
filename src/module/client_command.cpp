@@ -4,6 +4,7 @@
 
 #include "game/game.hpp"
 #include "command.hpp"
+#include "scheduler.hpp"
 
 class client_command final : public module
 {
@@ -127,12 +128,27 @@ private:
 				angles[1] = std::strtof(params.get(4), nullptr); // Yaw
 			}
 
-			if (params.size() == 6u)
+			if (params.size() == 6)
 			{
 				angles[0] = std::strtof(params.get(5), nullptr); // Pitch
 			}
 
 			game::native::TeleportPlayer(ent, origin, angles);
+		});
+
+		command::add_sv("kill", [](game::native::gentity_s* ent, [[maybe_unused]] const command::params_sv& params)
+		{
+			assert(ent->client->sess.connected != game::native::CON_DISCONNECTED);
+
+			if (ent->client->sess.sessionState != game::native::SESS_STATE_PLAYING || !cheats_ok(ent))
+				return;
+
+			scheduler::once([ent]
+			{
+				ent->flags &= ~(game::native::entityFlag::FL_GODMODE | game::native::entityFlag::FL_DEMI_GODMODE);
+				ent->health = 0;
+				game::native::player_die(ent, ent, ent, 100000, 12, nullptr, false, nullptr, game::native::hitLocation_t::HITLOC_NONE, 0);
+			}, scheduler::pipeline::server);
 		});
 	}
 };
