@@ -6,19 +6,26 @@ public:
 	void post_load() override;
 
 private:
+	// Player dvars
 	static const game::native::dvar_t* player_sustainAmmo;
+	static const game::native::dvar_t* player_lastStandCrawlSpeedScale;
+	static const game::native::dvar_t* player_duckedSpeedScale;
+	static const game::native::dvar_t* player_proneSpeedScale;
+	// Jump dvars
 	static const game::native::dvar_t* jump_slowdownEnable;
 	static const game::native::dvar_t* jump_ladderPushVel;
 	static const game::native::dvar_t* jump_enableFallDamage;
 	static const game::native::dvar_t* jump_height;
 	static const game::native::dvar_t* jump_stepSize;
 	static const game::native::dvar_t* jump_spreadAdd;
+	// Pm dvars
 	static const game::native::dvar_t* pm_bounces;
 	static const game::native::dvar_t* pm_bouncesAllAngles;
 	static const game::native::dvar_t* pm_playerEjection;
 	static const game::native::dvar_t* pm_playerCollision;
 	static const game::native::dvar_t* pm_rocketJump;
 	static const game::native::dvar_t* pm_elevators;
+	// Misc dvars
 	static const game::native::dvar_t* bg_gravity;
 	static const game::native::dvar_t* g_speed;
 
@@ -83,6 +90,11 @@ private:
 	static void bg_gravity_stub();
 	static void g_speed_stub();
 
+	static void pm_cmd_scale_crawl_speed_stub();
+	static void pm_cmd_scale_ducked_speed_stub();
+	static void pm_cmd_scale_prone_speed_stub();
+
+	static void register_common_dvars();
 	static void patch_mp();
 	static void patch_sp();
 };

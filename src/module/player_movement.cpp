@@ -6,6 +6,9 @@
 #include "player_movement.hpp"
 
 const game::native::dvar_t* player_movement::player_sustainAmmo;
+const game::native::dvar_t* player_movement::player_lastStandCrawlSpeedScale;
+const game::native::dvar_t* player_movement::player_duckedSpeedScale;
+const game::native::dvar_t* player_movement::player_proneSpeedScale;
 const game::native::dvar_t* player_movement::jump_slowdownEnable;
 const game::native::dvar_t* player_movement::jump_ladderPushVel;
 const game::native::dvar_t* player_movement::jump_enableFallDamage;
@@ -30,7 +33,7 @@ DWORD player_movement::jump_get_step_height_addr;
 void player_movement::pm_weapon_use_ammo(game::native::playerState_s* ps, const game::native::Weapon weapon,
 	bool is_alternate, int amount, game::native::PlayerHandIndex hand)
 {
-	if (!player_movement::player_sustainAmmo->current.enabled)
+	if (!player_sustainAmmo->current.enabled)
 	{
 		game::native::PM_WeaponUseAmmo(ps, weapon, is_alternate, amount, hand);
 	}
@@ -41,7 +44,7 @@ __declspec(naked) void player_movement::pm_step_slide_move_stub()
 	__asm
 	{
 		push eax
-		mov eax, player_movement::pm_bounces
+		mov eax, pm_bounces
 		cmp byte ptr [eax + 0xC], 1
 		pop eax
 
@@ -62,7 +65,7 @@ __declspec(naked) void player_movement::pm_step_slide_move_stub()
 
 int player_movement::stuck_in_client_stub(game::native::gentity_s* self)
 {
-	if (player_movement::pm_playerEjection->current.enabled)
+	if (pm_playerEjection->current.enabled)
 	{
 		return reinterpret_cast<int(*)(game::native::gentity_s*)>(0x4F8930)(self);
 	}
@@ -74,7 +77,7 @@ void player_movement::cm_transformed_capsule_trace_stub(game::native::trace_t* r
 	const float* end, const game::native::Bounds* bounds, const game::native::Bounds* capsule, int contents,
 	const float* origin, const float* angles)
 {
-	if (player_movement::pm_playerCollision->current.enabled)
+	if (pm_playerCollision->current.enabled)
 	{
 		game::native::CM_TransformedCapsuleTrace(results, start, end,
 			bounds, capsule, contents, origin, angles);
@@ -88,7 +91,7 @@ game::native::gentity_s* player_movement::weapon_rocket_launcher_fire_stub(game:
 	auto* result = game::native::Weapon_RocketLauncher_Fire(ent, weapon, spread, wp,
 		gun_vel, fire_parms, magic_bullet);
 
-	if (ent->client != nullptr && player_movement::pm_rocketJump->current.enabled)
+	if (ent->client != nullptr && pm_rocketJump->current.enabled)
 	{
 		ent->client->ps.velocity[0] += (0 - wp->forward[0]) * 64.0f;
 		ent->client->ps.velocity[1] += (0 - wp->forward[1]) * 64.0f;
@@ -103,7 +106,7 @@ void player_movement::pm_player_trace_stub(game::native::pmove_t* pm, game::nati
 {
 	game::native::PM_playerTrace(pm, results, start, end, bounds, pass_entity_num, content_mask);
 
-	if (player_movement::pm_elevators->current.enabled)
+	if (pm_elevators->current.enabled)
 	{
 		results->startsolid = false;
 	}
@@ -114,7 +117,7 @@ void player_movement::pm_trace_stub(const game::native::pmove_t* pm, game::nativ
 {
 	game::native::PM_trace(pm, results, start, end, bounds, pass_entity_num, content_mask);
 
-	if (player_movement::pm_elevators->current.enabled)
+	if (pm_elevators->current.enabled)
 	{
 		results->allsolid = false;
 	}
@@ -125,7 +128,7 @@ __declspec(naked) void player_movement::jump_push_off_ladder_stub()
 	__asm
 	{
 		push eax
-		mov eax, player_movement::jump_ladderPushVel
+		mov eax, jump_ladderPushVel
 		fld dword ptr [eax + 0xC]
 		pop eax
 
@@ -138,7 +141,7 @@ __declspec(naked) void player_movement::jump_check_stub()
 	__asm
 	{
 		push eax
-		mov eax, player_movement::jump_height
+		mov eax, jump_height
 		fld dword ptr [eax + 0xC]
 		pop eax
 
@@ -178,7 +181,7 @@ void player_movement::jump_apply_slowdown_stub(game::native::playerState_s* ps)
 	}
 
 	if ((ps->pm_flags & game::native::PMF_DIVING) == 0
-		&& player_movement::jump_slowdownEnable->current.enabled)
+		&& jump_slowdownEnable->current.enabled)
 	{
 		game::native::VectorScale(ps->velocity, scale, ps->velocity);
 	}
@@ -189,7 +192,7 @@ float player_movement::jump_get_land_factor(game::native::playerState_s* ps)
 	assert(ps->pm_flags & game::native::PMF_JUMPING);
 	assert(ps->pm_time <= game::native::JUMP_LAND_SLOWDOWN_TIME);
 
-	if (!player_movement::jump_slowdownEnable->current.enabled
+	if (!jump_slowdownEnable->current.enabled
 		|| (ps->pm_flags & game::native::PMF_DIVING) != 0)
 	{
 		return 1.0f;
@@ -197,7 +200,7 @@ float player_movement::jump_get_land_factor(game::native::playerState_s* ps)
 
 	if (ps->pm_time < 1700)
 	{
-		return (ps->pm_time * 1.5f * 0.000588f) + 1.0f;
+		return (static_cast<float>(ps->pm_time) * 1.5f * 0.000588f) + 1.0f;
 	}
 
 	return 2.5f;
@@ -210,7 +213,7 @@ __declspec(naked) void player_movement::jump_get_land_factor_stub()
 		pushad
 
 		push eax // ps
-		call player_movement::jump_get_land_factor
+		call jump_get_land_factor
 		add esp, 4
 
 		popad
@@ -225,7 +228,7 @@ __declspec(naked) void player_movement::pm_crash_land_stub_mp()
 	__asm
 	{
 		push eax
-		mov eax, player_movement::jump_enableFallDamage
+		mov eax, jump_enableFallDamage
 		cmp byte ptr [eax + 0xC], 0
 		pop eax
 
@@ -247,7 +250,7 @@ __declspec(naked) void player_movement::pm_crash_land_stub_sp()
 	__asm
 	{
 		push eax
-		mov eax, player_movement::jump_enableFallDamage
+		mov eax, jump_enableFallDamage
 		cmp byte ptr [eax + 0xC], 0
 		pop eax
 
@@ -269,7 +272,7 @@ __declspec(naked) void player_movement::jump_get_step_height_stub()
 	__asm
 	{
 		push eax
-		mov eax, player_movement::jump_stepSize
+		mov eax, jump_stepSize
 		fld dword ptr [eax + 0xC]
 		pop eax
 
@@ -282,11 +285,11 @@ __declspec(naked) void player_movement::jump_start_stub()
 	__asm
 	{
 		push eax
-		mov eax, player_movement::jump_spreadAdd
+		mov eax, jump_spreadAdd
 		fadd dword ptr [eax + 0xC]
 		pop eax
 
-		jmp player_movement::jump_start_addr
+		jmp jump_start_addr
 	}
 }
 
@@ -308,7 +311,7 @@ void player_movement::pm_project_velocity_stub(const float* vel_in, const float*
 	const auto length_scale = std::sqrtf((vel_in[2] * vel_in[2] + length_squared_2d) /
 		(new_z * new_z + length_squared_2d));
 
-	if (player_movement::pm_bouncesAllAngles->current.enabled == true
+	if (pm_bouncesAllAngles->current.enabled == true
 		|| (length_scale < 1.f || new_z < 0.f || vel_in[2] > 0.f))
 	{
 		vel_out[0] = vel_in[0] * length_scale;
@@ -323,7 +326,7 @@ __declspec(naked) void player_movement::bg_gravity_stub()
 	{
 		push eax
 
-		mov eax, player_movement::bg_gravity
+		mov eax, bg_gravity
 		// Quick and widely available extension since 1999
 		cvttss2si eax, dword ptr [eax + 0xC]
 		mov dword ptr [ebp + 0x58], eax // ps.gravity
@@ -341,7 +344,7 @@ __declspec(naked) void player_movement::g_speed_stub()
 	{
 		push eax
 
-		mov eax, player_movement::g_speed
+		mov eax, g_speed
 		mov eax, dword ptr [eax + 0xC]
 		mov dword ptr [ebp + 0x5C], eax // ps.speed
 
@@ -352,167 +355,245 @@ __declspec(naked) void player_movement::g_speed_stub()
 	}
 }
 
+__declspec(naked) void player_movement::pm_cmd_scale_crawl_speed_stub()
+{
+	__asm
+	{
+		push eax
+		mov eax, player_lastStandCrawlSpeedScale
+		fld dword ptr [eax + 0xC]
+		pop eax
+
+		// Game's code
+		pop ecx
+		ret
+	}
+}
+
+__declspec(naked) void player_movement::pm_cmd_scale_ducked_speed_stub()
+{
+	__asm
+	{
+		push eax
+		mov eax, player_duckedSpeedScale
+		fld dword ptr [eax + 0xC]
+		pop eax
+
+		// Game's code
+		pop ecx
+		ret
+	}
+}
+
+__declspec(naked) void player_movement::pm_cmd_scale_prone_speed_stub()
+{
+	__asm
+	{
+		push eax
+		mov eax, player_proneSpeedScale
+		fld dword ptr [eax + 0xC]
+		pop eax
+
+		// Game's code
+		pop ecx
+		ret
+	}
+}
+
 const game::native::dvar_t* player_movement::dvar_register_player_sustain_ammo(const char* dvar_name,
 		bool value, unsigned __int16 /*flags*/, const char* description)
 {
-	player_movement::player_sustainAmmo = game::native::Dvar_RegisterBool(dvar_name,
+	player_sustainAmmo = game::native::Dvar_RegisterBool(dvar_name,
 		value, game::native::DVAR_CODINFO, description);
 
-	return player_movement::player_sustainAmmo;
+	return player_sustainAmmo;
 }
 
 const game::native::dvar_t* player_movement::dvar_register_jump_ladder_push_vel(const char* dvar_name,
 	float value, float min, float max, unsigned __int16 /*flags*/, const char* description)
 {
-	player_movement::jump_ladderPushVel = game::native::Dvar_RegisterFloat(dvar_name,
+	jump_ladderPushVel = game::native::Dvar_RegisterFloat(dvar_name,
 		value, min, max, game::native::DVAR_CODINFO, description);
 
-	return player_movement::jump_ladderPushVel;
+	return jump_ladderPushVel;
 }
 
 const game::native::dvar_t* player_movement::dvar_register_jump_step_size(const char* dvar_name,
 	float value, float min, float max, unsigned __int16 /*flags*/, const char* description)
 {
-	player_movement::jump_stepSize = game::native::Dvar_RegisterFloat(dvar_name,
+	jump_stepSize = game::native::Dvar_RegisterFloat(dvar_name,
 		value, min, max, game::native::DVAR_CODINFO, description);
 
-	return player_movement::jump_stepSize;
+	return jump_stepSize;
 }
 
 const game::native::dvar_t* player_movement::dvar_register_jump_spread_add(const char* dvar_name,
 	float value, float min, float max, unsigned __int16 /*flags*/, const char* description)
 {
-	player_movement::jump_spreadAdd = game::native::Dvar_RegisterFloat(dvar_name,
+	jump_spreadAdd = game::native::Dvar_RegisterFloat(dvar_name,
 		value, min, max, game::native::DVAR_CODINFO, description);
 
-	return player_movement::jump_spreadAdd;
+	return jump_spreadAdd;
 }
 
 const game::native::dvar_t* player_movement::dvar_register_jump_slowdown_enable(const char* dvar_name,
 	bool value, unsigned __int16 /*flags*/, const char* description)
 {
-	player_movement::jump_slowdownEnable = game::native::Dvar_RegisterBool(dvar_name,
+	jump_slowdownEnable = game::native::Dvar_RegisterBool(dvar_name,
 		value, game::native::DVAR_CODINFO, description);
 
-	return player_movement::jump_slowdownEnable;
+	return jump_slowdownEnable;
 }
 
 const game::native::dvar_t* player_movement::dvar_register_jump_height(const char* dvar_name,
 	float value, float min, float max, unsigned __int16 /*flags*/, const char* description)
 {
-	player_movement::jump_height = game::native::Dvar_RegisterFloat(dvar_name,
+	jump_height = game::native::Dvar_RegisterFloat(dvar_name,
 		value, min, max, game::native::DVAR_CODINFO, description);
 
-	return player_movement::jump_height;
+	return jump_height;
 }
 
 void player_movement::patch_mp()
 {
-	player_movement::pm_playerEjection = game::native::Dvar_RegisterBool("pm_playerEjection",
+	pm_playerEjection = game::native::Dvar_RegisterBool("pm_playerEjection",
 		true, game::native::DVAR_CODINFO, "Push intersecting players away from each other");
-	player_movement::pm_rocketJump = game::native::Dvar_RegisterBool("pm_rocketJump",
+	pm_rocketJump = game::native::Dvar_RegisterBool("pm_rocketJump",
 		false, game::native::DVAR_CODINFO, "CoD4 rocket jumps");
 	// Name is correct, SP registers this dvar in BG_RegisterDvars but still names it just "g_gravity"
-	player_movement::bg_gravity = game::native::Dvar_RegisterFloat("g_gravity", 800.0f,
+	bg_gravity = game::native::Dvar_RegisterFloat("g_gravity", 800.0f,
 		1.0f, std::numeric_limits<float>::max(), game::native::DVAR_CODINFO, "Gravity in inches per second per second");
-	player_movement::g_speed = game::native::Dvar_RegisterInt("g_speed", 190,
+	g_speed = game::native::Dvar_RegisterInt("g_speed", 190,
 		std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), game::native::DVAR_CODINFO, "Player speed");
 
 	// Un-Cheat the dvars
-	utils::hook(0x418D9C, &player_movement::dvar_register_player_sustain_ammo, HOOK_CALL).install()->quick();
-	utils::hook(0x4160A7, &player_movement::dvar_register_jump_ladder_push_vel, HOOK_CALL).install()->quick();
-	utils::hook(0x41602B, &player_movement::dvar_register_jump_height, HOOK_CALL).install()->quick();
-	utils::hook(0x416074, &player_movement::dvar_register_jump_slowdown_enable, HOOK_CALL).install()->quick();
-	utils::hook(0x41605E, &player_movement::dvar_register_jump_step_size, HOOK_CALL).install()->quick();
-	utils::hook(0x4160DA, &player_movement::dvar_register_jump_spread_add, HOOK_CALL).install()->quick();
+	utils::hook(0x418D9C, dvar_register_player_sustain_ammo, HOOK_CALL).install()->quick();
+	utils::hook(0x4160A7, dvar_register_jump_ladder_push_vel, HOOK_CALL).install()->quick();
+	utils::hook(0x41602B, dvar_register_jump_height, HOOK_CALL).install()->quick();
+	utils::hook(0x416074, dvar_register_jump_slowdown_enable, HOOK_CALL).install()->quick();
+	utils::hook(0x41605E, dvar_register_jump_step_size, HOOK_CALL).install()->quick();
+	utils::hook(0x4160DA, dvar_register_jump_spread_add, HOOK_CALL).install()->quick();
 
-	utils::hook(0x42B5DA, &player_movement::pm_weapon_use_ammo, HOOK_CALL).install()->quick();
-	utils::hook(0x42B2BD, &player_movement::pm_weapon_use_ammo, HOOK_CALL).install()->quick();
-	utils::hook(0x42AE95, &player_movement::pm_weapon_use_ammo, HOOK_CALL).install()->quick();
+	utils::hook(0x42B5DA, pm_weapon_use_ammo, HOOK_CALL).install()->quick();
+	utils::hook(0x42B2BD, pm_weapon_use_ammo, HOOK_CALL).install()->quick();
+	utils::hook(0x42AE95, pm_weapon_use_ammo, HOOK_CALL).install()->quick();
 
-	utils::hook(0x424D51, &player_movement::pm_step_slide_move_stub, HOOK_JUMP).install()->quick();
+	utils::hook(0x424D51, pm_step_slide_move_stub, HOOK_JUMP).install()->quick();
 
-	utils::hook(0x4F9EFB, &player_movement::stuck_in_client_stub, HOOK_CALL).install()->quick(); // ClientEndFrame
-	utils::hook(0x57CF45, &player_movement::cm_transformed_capsule_trace_stub, HOOK_CALL).install()->quick(); // SV_ClipMoveToEntity
-	utils::hook(0x482C1B, &player_movement::cm_transformed_capsule_trace_stub, HOOK_CALL).install()->quick(); // CG_ClipMoveToEntity
+	utils::hook(0x4F9EFB, stuck_in_client_stub, HOOK_CALL).install()->quick(); // ClientEndFrame
+	utils::hook(0x57CF45, cm_transformed_capsule_trace_stub, HOOK_CALL).install()->quick(); // SV_ClipMoveToEntity
+	utils::hook(0x482C1B, cm_transformed_capsule_trace_stub, HOOK_CALL).install()->quick(); // CG_ClipMoveToEntity
 
-	utils::hook(0x530CCB, &player_movement::weapon_rocket_launcher_fire_stub, HOOK_CALL).install()->quick(); // FireWeapon
+	utils::hook(0x530CCB, weapon_rocket_launcher_fire_stub, HOOK_CALL).install()->quick(); // FireWeapon
 
-	utils::hook(0x422861, &player_movement::pm_player_trace_stub, HOOK_CALL).install()->quick(); // PM_JitterPoint
-	utils::hook(0x4228B5, &player_movement::pm_player_trace_stub, HOOK_CALL).install()->quick(); // PM_JitterPoint
+	utils::hook(0x422861, pm_player_trace_stub, HOOK_CALL).install()->quick(); // PM_JitterPoint
+	utils::hook(0x4228B5, pm_player_trace_stub, HOOK_CALL).install()->quick(); // PM_JitterPoint
 
-	utils::hook(0x41F995, &player_movement::pm_trace_stub, HOOK_CALL).install()->quick(); // PM_CheckDuck
-	utils::hook(0x41F8D8, &player_movement::pm_trace_stub, HOOK_CALL).install()->quick(); // PM_CheckDuck
-	utils::hook(0x41F941, &player_movement::pm_trace_stub, HOOK_CALL).install()->quick(); // PM_CheckDuck
+	utils::hook(0x41F995, pm_trace_stub, HOOK_CALL).install()->quick(); // PM_CheckDuck
+	utils::hook(0x41F8D8, pm_trace_stub, HOOK_CALL).install()->quick(); // PM_CheckDuck
+	utils::hook(0x41F941, pm_trace_stub, HOOK_CALL).install()->quick(); // PM_CheckDuck
 
-	utils::hook(0x416866, &player_movement::jump_push_off_ladder_stub, HOOK_JUMP).install()->quick(); // Jump_Check
+	utils::hook(0x416866, jump_push_off_ladder_stub, HOOK_JUMP).install()->quick(); // Jump_Check
 	utils::hook::nop(0x41686B, 1); // Nop skipped opcode
 
 	// Modify third argument of Jump_Start with the value of jump_height dvar
-	utils::hook(0x416969, &player_movement::jump_check_stub, HOOK_JUMP).install()->quick(); // Jump_Check
+	utils::hook(0x416969, jump_check_stub, HOOK_JUMP).install()->quick(); // Jump_Check
 	utils::hook::nop(0x41696E, 1); // Nop skipped opcode
 
-	utils::hook(0x4225CA, &player_movement::jump_apply_slowdown_stub, HOOK_CALL).install()->quick(); // PM_WalkMove
-	utils::hook(0x41669B, &player_movement::jump_get_land_factor_stub, HOOK_CALL).install()->quick(); // Jump_Start
+	utils::hook(0x4225CA, jump_apply_slowdown_stub, HOOK_CALL).install()->quick(); // PM_WalkMove
+	utils::hook(0x41669B, jump_get_land_factor_stub, HOOK_CALL).install()->quick(); // Jump_Start
 
-	utils::hook(0x422BE0, &player_movement::pm_crash_land_stub_mp, HOOK_CALL).install()->quick(); // PM_GroundTrace
+	utils::hook(0x422BE0, pm_crash_land_stub_mp, HOOK_CALL).install()->quick(); // PM_GroundTrace
 
-	utils::hook(0x41613F, &player_movement::jump_get_step_height_stub, HOOK_JUMP).install()->quick(); // PM_StepSlideMove
+	utils::hook(0x41613F, jump_get_step_height_stub, HOOK_JUMP).install()->quick(); // PM_StepSlideMove
 	utils::hook::nop(0x416144, 1); // Nop skipped opcode
 
 	// Modify the hardcoded value of the spread with the value of jump_spreadAdd
-	utils::hook(0x4166F0, &player_movement::jump_start_stub, HOOK_JUMP).install()->quick();
+	utils::hook(0x4166F0, jump_start_stub, HOOK_JUMP).install()->quick();
 	utils::hook::nop(0x4166F5, 1); // Nop skipped opcode
 
-	utils::hook(0x424E0A, &player_movement::pm_project_velocity_stub, HOOK_CALL).install()->quick(); // PM_StepSlideMove
+	utils::hook(0x424E0A, pm_project_velocity_stub, HOOK_CALL).install()->quick(); // PM_StepSlideMove
 
-	utils::hook(0x4F9BB3, &player_movement::bg_gravity_stub, HOOK_JUMP).install()->quick(); // ClientEndFrame
+	utils::hook(0x4F9BB3, bg_gravity_stub, HOOK_JUMP).install()->quick(); // ClientEndFrame
 	utils::hook::nop(0x4F9BB8, 2); // Nop skipped opcode
 
-	utils::hook(0x4F93D7, &player_movement::g_speed_stub, HOOK_JUMP).install()->quick(); // ClientThink_real
+	utils::hook(0x4F93D7, g_speed_stub, HOOK_JUMP).install()->quick(); // ClientThink_real
 	utils::hook::nop(0x4F93DC, 2); // Nop skipped opcode
+
+	utils::hook(0x4220E5, pm_cmd_scale_crawl_speed_stub, HOOK_JUMP).install()->quick(); // PM_CmdScaleForStance
+	utils::hook(0x422104, pm_cmd_scale_ducked_speed_stub, HOOK_JUMP).install()->quick(); // PM_CmdScaleForStance
+	utils::hook(0x42210E, pm_cmd_scale_prone_speed_stub, HOOK_JUMP).install()->quick(); // PM_CmdScaleForStance
 }
 
 void player_movement::patch_sp()
 {
-	player_movement::player_sustainAmmo = game::native::Dvar_RegisterBool("player_sustainAmmo",
+	player_sustainAmmo = game::native::Dvar_RegisterBool("player_sustainAmmo",
 		false, game::native::DVAR_CODINFO, "Firing weapon will not decrease clip ammo");
-	player_movement::jump_ladderPushVel = game::native::Dvar_RegisterFloat("jump_ladderPushVel",
+	jump_ladderPushVel = game::native::Dvar_RegisterFloat("jump_ladderPushVel",
 		128.0f, 0.0f, 1024.0f, game::native::DVAR_CODINFO, "The velocity of a jump off of a ladder");
-	player_movement::jump_stepSize = game::native::Dvar_RegisterFloat("jump_stepSize",
+	jump_stepSize = game::native::Dvar_RegisterFloat("jump_stepSize",
 		18.0f, 0.0f, 64.0f, game::native::DVAR_CODINFO, "The maximum step up to the top of a jump arc");
-	player_movement::jump_spreadAdd = game::native::Dvar_RegisterFloat("jump_spreadAdd",
+	jump_spreadAdd = game::native::Dvar_RegisterFloat("jump_spreadAdd",
 		64.0f, 0.0f, 512.0f, game::native::DVAR_CODINFO, "The amount of spread scale to add as a side effect of jumping");
 
-	utils::hook(0x648C3A, &player_movement::pm_weapon_use_ammo, HOOK_CALL).install()->quick();
-	utils::hook(0x64891D, &player_movement::pm_weapon_use_ammo, HOOK_CALL).install()->quick();
-	utils::hook(0x6484E2, &player_movement::pm_weapon_use_ammo, HOOK_CALL).install()->quick();
+	utils::hook(0x648C3A, pm_weapon_use_ammo, HOOK_CALL).install()->quick();
+	utils::hook(0x64891D, pm_weapon_use_ammo, HOOK_CALL).install()->quick();
+	utils::hook(0x6484E2, pm_weapon_use_ammo, HOOK_CALL).install()->quick();
 
-	utils::hook(0x43D918, &player_movement::pm_step_slide_move_stub, HOOK_JUMP).install()->quick();
+	utils::hook(0x43D918, pm_step_slide_move_stub, HOOK_JUMP).install()->quick();
 
-	utils::hook(0x41F9A6, &player_movement::cm_transformed_capsule_trace_stub, HOOK_CALL).install()->quick(); // SV_ClipMoveToEntity
-	utils::hook(0x57B14F, &player_movement::cm_transformed_capsule_trace_stub, HOOK_CALL).install()->quick(); // CG_ClipMoveToEntity
+	utils::hook(0x41F9A6, cm_transformed_capsule_trace_stub, HOOK_CALL).install()->quick(); // SV_ClipMoveToEntity
+	utils::hook(0x57B14F, cm_transformed_capsule_trace_stub, HOOK_CALL).install()->quick(); // CG_ClipMoveToEntity
 
-	utils::hook(0x643F84, &player_movement::pm_player_trace_stub, HOOK_CALL).install()->quick(); // PM_JitterPoint
-	utils::hook(0x643FDB, &player_movement::pm_player_trace_stub, HOOK_CALL).install()->quick(); // PM_JitterPoint
+	utils::hook(0x643F84, pm_player_trace_stub, HOOK_CALL).install()->quick(); // PM_JitterPoint
+	utils::hook(0x643FDB, pm_player_trace_stub, HOOK_CALL).install()->quick(); // PM_JitterPoint
 
-	utils::hook(0x64181A, &player_movement::pm_trace_stub, HOOK_CALL).install()->quick(); // PM_CheckDuck
-	utils::hook(0x641701, &player_movement::pm_trace_stub, HOOK_CALL).install()->quick(); // PM_CheckDuck
-	utils::hook(0x6417A9, &player_movement::pm_trace_stub, HOOK_CALL).install()->quick(); // PM_CheckDuck
+	utils::hook(0x64181A, pm_trace_stub, HOOK_CALL).install()->quick(); // PM_CheckDuck
+	utils::hook(0x641701, pm_trace_stub, HOOK_CALL).install()->quick(); // PM_CheckDuck
+	utils::hook(0x6417A9, pm_trace_stub, HOOK_CALL).install()->quick(); // PM_CheckDuck
 
-	utils::hook(0x63EA46, player_movement::jump_push_off_ladder_stub, HOOK_JUMP).install()->quick(); // Jump_Check
+	utils::hook(0x63EA46, jump_push_off_ladder_stub, HOOK_JUMP).install()->quick(); // Jump_Check
 	utils::hook::nop(0x63EA4B, 1); // Nop skipped opcode
 
-	utils::hook(0x6442DF, &player_movement::pm_crash_land_stub_sp, HOOK_CALL).install()->quick(); // PM_GroundTrace
+	utils::hook(0x6442DF, pm_crash_land_stub_sp, HOOK_CALL).install()->quick(); // PM_GroundTrace
 
-	utils::hook(0x48C1DC, &player_movement::jump_get_step_height_stub, HOOK_JUMP).install()->quick(); // PM_StepSlideMove
+	utils::hook(0x48C1DC, jump_get_step_height_stub, HOOK_JUMP).install()->quick(); // PM_StepSlideMove
 	utils::hook::nop(0x48C1E1, 1); // Nop skipped opcode
 
 	// Modify the hardcoded value of the spread with the value of jump_spreadAdd
-	utils::hook(0x63E90A, &player_movement::jump_start_stub, HOOK_JUMP).install()->quick();
+	utils::hook(0x63E90A, jump_start_stub, HOOK_JUMP).install()->quick();
 	utils::hook::nop(0x63E90F, 1); // Nop skipped opcode
 
-	utils::hook(0x43D9D1, &player_movement::pm_project_velocity_stub, HOOK_CALL).install()->quick(); // PM_StepSlideMove
+	utils::hook(0x43D9D1, pm_project_velocity_stub, HOOK_CALL).install()->quick(); // PM_StepSlideMove
+
+	utils::hook(0x64384F, pm_cmd_scale_crawl_speed_stub, HOOK_JUMP).install()->quick(); // PM_CmdScaleForStance
+	utils::hook(0x643859, pm_cmd_scale_ducked_speed_stub, HOOK_JUMP).install()->quick(); // PM_CmdScaleForStance
+	utils::hook(0x643863, pm_cmd_scale_prone_speed_stub, HOOK_JUMP).install()->quick(); // PM_CmdScaleForStance
+}
+
+void player_movement::register_common_dvars()
+{
+	// Pm dvars
+	pm_bounces = game::native::Dvar_RegisterBool("pm_bounces", false,
+		game::native::DVAR_CODINFO, "CoD4 Bounces");
+	pm_bouncesAllAngles = game::native::Dvar_RegisterBool("pm_bouncesAllAngles", false,
+		game::native::DVAR_CODINFO, "Force bounces from all angles");
+	pm_playerCollision = game::native::Dvar_RegisterBool("pm_playerCollision",
+		true, game::native::DVAR_CODINFO, "Push intersecting players away from each other");
+	pm_elevators = game::native::Dvar_RegisterBool("pm_elevators",
+		false, game::native::DVAR_CODINFO, "CoD4 Elevators");
+
+	// Jump dvars
+	jump_enableFallDamage = game::native::Dvar_RegisterBool("jump_enableFallDamage",
+		true, game::native::DVAR_CODINFO, "Enable fall damage");
+
+	// Player dvars
+	player_lastStandCrawlSpeedScale = game::native::Dvar_RegisterFloat("player_lastStandCrawlSpeedScale", 0.2f,
+		0.0f, 5.0f, game::native::DVAR_CODINFO, "The scale applied to the player speed when crawling in last stand");
+	player_duckedSpeedScale = game::native::Dvar_RegisterFloat("player_duckedSpeedScale", 0.65f,
+		0.0f, 5.0f, game::native::DVAR_CODINFO, "The scale applied to the player speed when ducking");
+	player_proneSpeedScale = game::native::Dvar_RegisterFloat("player_proneSpeedScale", 0.15f,
+		0.0f, 5.0f, game::native::DVAR_CODINFO, "The scale applied to the player speed when ducking");
 }
 
 void player_movement::post_load()
@@ -525,22 +606,13 @@ void player_movement::post_load()
 		return;
 	}
 
-	player_movement::bounce_addr = SELECT_VALUE(0x43D91F, 0x424D58, 0x0);
-	player_movement::dont_bounce_addr = SELECT_VALUE(0x43D933, 0x424D6C, 0x0);
-	player_movement::push_off_ladder_addr = SELECT_VALUE(0x63EA4C, 0x41686C, 0x0);
-	player_movement::jump_start_addr = SELECT_VALUE(0x63E910, 0x4166F6, 0x0);
-	player_movement::jump_get_step_height_addr = SELECT_VALUE(0x48C1E2, 0x416145, 0x0);
+	bounce_addr = SELECT_VALUE(0x43D91F, 0x424D58, 0x0);
+	dont_bounce_addr = SELECT_VALUE(0x43D933, 0x424D6C, 0x0);
+	push_off_ladder_addr = SELECT_VALUE(0x63EA4C, 0x41686C, 0x0);
+	jump_start_addr = SELECT_VALUE(0x63E910, 0x4166F6, 0x0);
+	jump_get_step_height_addr = SELECT_VALUE(0x48C1E2, 0x416145, 0x0);
 
-	player_movement::pm_bounces = game::native::Dvar_RegisterBool("pm_bounces", false,
-		game::native::dvar_flags::DVAR_CODINFO, "CoD4 Bounces");
-	player_movement::pm_bouncesAllAngles = game::native::Dvar_RegisterBool("pm_bouncesAllAngles", false,
-		game::native::dvar_flags::DVAR_CODINFO, "Force bounces from all angles");
-	player_movement::pm_playerCollision = game::native::Dvar_RegisterBool("pm_playerCollision",
-		true, game::native::DVAR_CODINFO, "Push intersecting players away from each other");
-	player_movement::pm_elevators = game::native::Dvar_RegisterBool("pm_elevators",
-		false, game::native::DVAR_CODINFO, "CoD4 Elevators");
-	player_movement::jump_enableFallDamage = game::native::Dvar_RegisterBool("jump_enableFallDamage",
-		true, game::native::dvar_flags::DVAR_CODINFO, "Enable fall damage");
+	this->register_common_dvars();
 
 	if (game::is_mp()) this->patch_mp();
 	else if (game::is_sp()) this->patch_sp();
