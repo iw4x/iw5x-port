@@ -57,6 +57,8 @@ namespace game
 
 		SV_SendServerCommand_t SV_SendServerCommand;
 
+		Sys_IsServerThread_t Sys_IsServerThread;
+
 		XUIDToString_t XUIDToString;
 
 		SEH_LocalizeTextMessage_t SEH_LocalizeTextMessage;
@@ -105,6 +107,8 @@ namespace game
 		int* svs_clientCount;
 
 		gentity_s* g_entities;
+
+		DeferredQueue* deferredQueue;
 
 		namespace mp
 		{
@@ -726,6 +730,8 @@ namespace game
 
 		native::SV_SendServerCommand = native::SV_SendServerCommand_t(SELECT_VALUE(0x4F6990, 0x575DE0, 0x4FD5A0));
 
+		native::Sys_IsServerThread = native::Sys_IsServerThread_t(SELECT_VALUE(0x4CC5A0, 0x55F9A0, 0x0));
+
 		native::XUIDToString = native::XUIDToString_t(SELECT_VALUE(0x4FAA30, 0x55CC20, 0x0));
 
 		native::SEH_LocalizeTextMessage = native::SEH_LocalizeTextMessage_t(
@@ -785,5 +791,7 @@ namespace game
 
 		native::g_entities = reinterpret_cast<native::gentity_s*>(SELECT_VALUE(0, 0x1A66E28, 0x191B900));
 		native::sp::g_entities = reinterpret_cast<native::sp::gentity_s*>(0x1197AD8);
+
+		native::deferredQueue = reinterpret_cast<native::DeferredQueue*>(SELECT_VALUE(0x0, 0x1D55438, 0x0));
 	}
 }

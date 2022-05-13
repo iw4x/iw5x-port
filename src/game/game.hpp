@@ -91,6 +91,9 @@ namespace game
 		typedef void (*SV_SendServerCommand_t)(dedi::client_t* cl, svscmd_type type, const char* fmt, ...);
 		extern SV_SendServerCommand_t SV_SendServerCommand;
 
+		typedef bool (*Sys_IsServerThread_t)();
+		extern Sys_IsServerThread_t Sys_IsServerThread;
+
 		typedef void (*XUIDToString_t)(const unsigned __int64* xuid, char* str);
 		extern XUIDToString_t XUIDToString;
 
@@ -159,6 +162,8 @@ namespace game
 		constexpr auto MAX_GENTITIES = 2048u;
 		constexpr auto ENTITYNUM_NONE = MAX_GENTITIES - 1u;
 		extern gentity_s* g_entities;
+
+		extern DeferredQueue* deferredQueue;
 
 		// PM Global Definitions & Functions
 		constexpr auto JUMP_LAND_SLOWDOWN_TIME = 1800;

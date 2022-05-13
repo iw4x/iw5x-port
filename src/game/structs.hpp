@@ -548,6 +548,7 @@ namespace game
 		enum dvar_flags : std::uint16_t
 		{
 			DVAR_ARCHIVE = 1 << 0,
+			DVAR_LATCH = 1 << 1,
 			DVAR_CHEAT = 1 << 2,
 			DVAR_CODINFO = 1 << 3,
 			DVAR_SCRIPTINFO = 1 << 4,
@@ -1030,6 +1031,24 @@ namespace game
 		};
 
 		static_assert(sizeof(netadr_s) == 24);
+
+		struct DeferredMsg
+		{
+			netadr_s addr;
+			unsigned char data[1262];
+			int datalen;
+		};
+
+		static_assert(sizeof(DeferredMsg) == 0x50C);
+
+		struct DeferredQueue
+		{
+			DeferredMsg msgs[16];
+			volatile long get;
+			volatile long send;
+		};
+
+		static_assert(sizeof(DeferredQueue) == 0x50C8);
 
 		struct netProfileInfo_t // Unused
 		{
