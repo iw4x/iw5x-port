@@ -255,10 +255,11 @@ namespace game
 				(SELECT_VALUE(0x539550, 0x5BDCC0, 0x0))(dvarName);
 		}
 
-		constexpr auto Dvar_RegisterVariant_Addr = 0x531F70;
 		__declspec(naked) const dvar_t* Dvar_RegisterVariant(const char* dvarName, unsigned char type,
 			unsigned __int16 flags, DvarValue value, DvarLimits domain, const char* description)
 		{
+			static DWORD func = 0x531F70;
+
 			__asm
 			{
 				push eax
@@ -278,7 +279,7 @@ namespace game
 				push [esp + 0x24 + 0x24] // flags
 				push [esp + 0x24 + 0x24] // type
 
-				call Dvar_RegisterVariant_Addr
+				call func
 				add esp, 0x20
 
 				mov [esp + 0x20], eax // result
