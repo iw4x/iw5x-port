@@ -184,6 +184,9 @@ namespace game
 
 		namespace sp
 		{
+			typedef bool (*IsServerRunning_t)();
+			extern IsServerRunning_t IsServerRunning;
+
 			extern sp::gentity_s* g_entities;
 		}
 

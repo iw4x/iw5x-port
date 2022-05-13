@@ -235,7 +235,7 @@ void command::add_sp_commands()
 {
 	add("noclip", []()
 	{
-		if (!game::native::Dvar_FindVar("sv_running")->current.enabled)
+		if (!game::native::sp::IsServerRunning())
 			return;
 
 		const auto* ent = &game::native::sp::g_entities[0];
@@ -253,7 +253,7 @@ void command::add_sp_commands()
 
 	add("ufo", []()
 	{
-		if (!game::native::Dvar_FindVar("sv_running")->current.enabled)
+		if (!game::native::sp::IsServerRunning())
 			return;
 
 		const auto* ent = &game::native::sp::g_entities[0];
@@ -271,7 +271,7 @@ void command::add_sp_commands()
 
 	add("god", []()
 	{
-		if (!game::native::Dvar_FindVar("sv_running")->current.enabled)
+		if (!game::native::sp::IsServerRunning())
 			return;
 
 		auto* ent = &game::native::sp::g_entities[0];
@@ -289,7 +289,7 @@ void command::add_sp_commands()
 
 	add("demigod", []()
 	{
-		if (!game::native::Dvar_FindVar("sv_running")->current.enabled)
+		if (!game::native::sp::IsServerRunning())
 			return;
 
 		auto* ent = &game::native::sp::g_entities[0];
@@ -307,7 +307,7 @@ void command::add_sp_commands()
 
 	add("notarget", []()
 	{
-		if (!game::native::Dvar_FindVar("sv_running")->current.enabled)
+		if (!game::native::sp::IsServerRunning())
 			return;
 
 		auto* ent = &game::native::sp::g_entities[0];

@@ -122,6 +122,8 @@ namespace game
 
 		namespace sp
 		{
+			sp::IsServerRunning_t IsServerRunning;
+
 			sp::gentity_s* g_entities;
 		}
 
@@ -731,6 +733,8 @@ namespace game
 		native::SV_SendServerCommand = native::SV_SendServerCommand_t(SELECT_VALUE(0x4F6990, 0x575DE0, 0x4FD5A0));
 
 		native::Sys_IsServerThread = native::Sys_IsServerThread_t(SELECT_VALUE(0x4CC5A0, 0x55F9A0, 0x0));
+
+		native::sp::IsServerRunning = native::sp::IsServerRunning_t(0x45D310);
 
 		native::XUIDToString = native::XUIDToString_t(SELECT_VALUE(0x4FAA30, 0x55CC20, 0x0));
 
