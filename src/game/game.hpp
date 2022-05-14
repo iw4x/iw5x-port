@@ -31,10 +31,6 @@ namespace game
 			int min, int max, unsigned __int16 flags, const char* description);
 		extern Dvar_RegisterInt_t Dvar_RegisterInt;
 
-		typedef const dvar_t* (*Dvar_RegisterFloat_t)(const char* dvarName, float value,
-			float min, float max, unsigned __int16 flags, const char* description);
-		extern Dvar_RegisterFloat_t Dvar_RegisterFloat;
-
 		typedef void (*Dvar_SetIntByName_t)(const char* dvarName, int value);
 		extern Dvar_SetIntByName_t Dvar_SetIntByName;
 
@@ -95,6 +91,9 @@ namespace game
 		typedef void (*SV_SendServerCommand_t)(dedi::client_t* cl, svscmd_type type, const char* fmt, ...);
 		extern SV_SendServerCommand_t SV_SendServerCommand;
 
+		typedef bool (*Sys_IsServerThread_t)();
+		extern Sys_IsServerThread_t Sys_IsServerThread;
+
 		typedef void (*XUIDToString_t)(const unsigned __int64* xuid, char* str);
 		extern XUIDToString_t XUIDToString;
 
@@ -104,8 +103,8 @@ namespace game
 		typedef void (*PM_WeaponUseAmmo_t)(playerState_s* ps, const Weapon weapon, bool isAlternate, int amount, PlayerHandIndex hand);
 		extern PM_WeaponUseAmmo_t PM_WeaponUseAmmo;
 
-		typedef void (*CM_TransformedCapsuleTrace_t)(game::native::trace_t* results, const float* start, const float* end,
-			const game::native::Bounds* bounds, const game::native::Bounds* capsule, int contents,
+		typedef void (*CM_TransformedCapsuleTrace_t)(trace_t* results, const float* start, const float* end,
+			const Bounds* bounds, const Bounds* capsule, int contents,
 			const float* origin, const float* angles);
 		extern CM_TransformedCapsuleTrace_t CM_TransformedCapsuleTrace;
 
@@ -132,6 +131,9 @@ namespace game
 
 		typedef void (*Com_Quit_f_t)();
 		extern Com_Quit_f_t Com_Quit_f;
+
+		typedef void (*player_die_t)(gentity_s* self, const gentity_s* inflictor, gentity_s* attacker, int damage, int meansOfDeath, const Weapon* iWeapon, bool isAlternate, const float* vDir, const hitLocation_t hitLoc, int psTimeOffset);
+		extern player_die_t player_die;
 
 		extern decltype(longjmp)* _longjmp;
 
@@ -161,6 +163,8 @@ namespace game
 		constexpr auto ENTITYNUM_NONE = MAX_GENTITIES - 1u;
 		extern gentity_s* g_entities;
 
+		extern DeferredQueue* deferredQueue;
+
 		// PM Global Definitions & Functions
 		constexpr auto JUMP_LAND_SLOWDOWN_TIME = 1800;
 
@@ -180,6 +184,9 @@ namespace game
 
 		namespace sp
 		{
+			typedef bool (*IsServerRunning_t)();
+			extern IsServerRunning_t IsServerRunning;
+
 			extern sp::gentity_s* g_entities;
 		}
 
@@ -194,6 +201,8 @@ namespace game
 		void* MT_Alloc(int numBytes, int type);
 
 		dvar_t* Dvar_FindVar(const char* dvarName);
+		const dvar_t* Dvar_RegisterVariant(const char* dvarName, unsigned char type, unsigned __int16 flags, DvarValue value, DvarLimits domain, const char* description);
+		const dvar_t* Dvar_RegisterFloat(const char* dvarName, float value, float min, float max, unsigned __int16 flags, const char* description);
 
 		const float* Scr_AllocVector(const float* v);
 		void Scr_ClearOutParams();

@@ -34,3 +34,6 @@
 	path = deps/zstd
 	url = https://github.com/facebook/zstd.git
 	branch = dev
+[submodule "deps/minhook"]
+	path = deps/minhook
+	url = https://github.com/TsudaKageyu/minhook.git

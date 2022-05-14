@@ -18,12 +18,12 @@
 
 #define WIN32_LEAN_AND_MEAN
 
-#include <windows.h>
-#include <mshtml.h>
-#include <mshtmhst.h>
+#include <Windows.h>
+#include <MsHTML.h>
+#include <MsHtmHst.h>
 #include <ExDisp.h>
 #include <WinSock2.h>
-#include <Ws2tcpip.h>
+#include <WS2tcpip.h>
 #include <corecrt_io.h>
 #include <fcntl.h>
 #include <shellapi.h>

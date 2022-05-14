@@ -547,13 +547,15 @@ namespace game
 
 		enum dvar_flags : std::uint16_t
 		{
-			DVAR_ARCHIVE = 0x1,
-			DVAR_CHEAT = 0x4,
-			DVAR_CODINFO = 0x8,
-			DVAR_SCRIPTINFO = 0x10,
-			DVAR_SERVERINFO = 0x400,
-			DVAR_WRITEPROTECTED = 0x800,
-			DVAR_READONLY = 0x2000,
+			DVAR_ARCHIVE = 1 << 0,
+			DVAR_LATCH = 1 << 1,
+			DVAR_CHEAT = 1 << 2,
+			DVAR_CODINFO = 1 << 3,
+			DVAR_SCRIPTINFO = 1 << 4,
+			DVAR_SERVERINFO = 1 << 10,
+			DVAR_WRITEPROTECTED = 1 << 11,
+			DVAR_READONLY = 1 << 13,
+			DVAR_AUTOEXEC = 1 << 15,
 		}; // Incomplete
 
 		enum dvar_type : std::int8_t
@@ -580,6 +582,8 @@ namespace game
 			const char* string;
 			char color[4];
 		};
+
+		static_assert(sizeof(DvarValue) == 0x10);
 
 		struct enum_limit
 		{
@@ -736,6 +740,32 @@ namespace game
 
 		static_assert(sizeof(weaponParms) == 0x4C);
 
+		enum hitLocation_t
+		{
+			HITLOC_NONE = 0x0,
+			HITLOC_HELMET = 0x1,
+			HITLOC_HEAD = 0x2,
+			HITLOC_NECK = 0x3,
+			HITLOC_TORSO_UPR = 0x4,
+			HITLOC_TORSO_LWR = 0x5,
+			HITLOC_R_ARM_UPR = 0x6,
+			HITLOC_L_ARM_UPR = 0x7,
+			HITLOC_R_ARM_LWR = 0x8,
+			HITLOC_L_ARM_LWR = 0x9,
+			HITLOC_R_HAND = 0xA,
+			HITLOC_L_HAND = 0xB,
+			HITLOC_R_LEG_UPR = 0xC,
+			HITLOC_L_LEG_UPR = 0xD,
+			HITLOC_R_LEG_LWR = 0xE,
+			HITLOC_L_LEG_LWR = 0xF,
+			HITLOC_R_FOOT = 0x10,
+			HITLOC_L_FOOT = 0x11,
+			HITLOC_GUN = 0x12,
+			HITLOC_SHIELD = 0x13,
+
+			HITLOC_NUM = 0x14,
+		};
+
 		enum ViewLockTypes
 		{
 			PLAYERVIEWLOCK_NONE = 0x0,
@@ -800,10 +830,10 @@ namespace game
 			unsigned char __pad0[0x470];
 			unsigned int perks[0x2];
 			unsigned int perkSlots[0x9];
-			unsigned char __pad1[0x2DE8];
+			unsigned char __pad1[0x2DF4];
 		};
 
-		static_assert(sizeof(playerState_s) == 0x3300);
+		static_assert(sizeof(playerState_s) == 0x330C);
 
 		struct pmove_t
 		{
@@ -831,12 +861,46 @@ namespace game
 
 		static_assert(sizeof(pmove_t) == 0x138);
 
+		enum sessionState_t
+		{
+			SESS_STATE_PLAYING = 0x0,
+			SESS_STATE_DEAD = 0x1,
+			SESS_STATE_SPECTATOR = 0x2,
+			SESS_STATE_INTERMISSION = 0x3,
+		};
+
+		enum clientConnected_t
+		{
+			CON_DISCONNECTED = 0x0,
+			CON_CONNECTING = 0x1,
+			CON_CONNECTED = 0x2,
+		};
+
+		struct clientSession_t
+		{
+			sessionState_t sessionState;
+			int forceSpectatorClient;
+			int killCamEntity;
+			int killCamLookAtEntity;
+			int status_icon;
+			int archiveTime;
+			int score;
+			int deaths;
+			int kills;
+			int assists;
+			unsigned __int16 scriptPersId;
+			clientConnected_t connected;
+			unsigned char __pad0[0x290];
+		};
+
+		static_assert(sizeof(clientSession_t) == 0x2C0);
+
 		struct gclient_s
 		{
 			playerState_s ps;
-			unsigned char __pad0[0x2CC];
+			clientSession_t sess;
 			int flags;
-			unsigned char __pad1[0x3B0];
+			unsigned char __pad0[0x3B0];
 		};
 
 		static_assert(sizeof(gclient_s) == 0x3980);
@@ -967,6 +1031,24 @@ namespace game
 		};
 
 		static_assert(sizeof(netadr_s) == 24);
+
+		struct DeferredMsg
+		{
+			netadr_s addr;
+			unsigned char data[1262];
+			int datalen;
+		};
+
+		static_assert(sizeof(DeferredMsg) == 0x50C);
+
+		struct DeferredQueue
+		{
+			DeferredMsg msgs[16];
+			volatile long get;
+			volatile long send;
+		};
+
+		static_assert(sizeof(DeferredQueue) == 0x50C8);
 
 		struct netProfileInfo_t // Unused
 		{

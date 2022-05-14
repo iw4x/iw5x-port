@@ -17,8 +17,6 @@ namespace game
 
 		Dvar_RegisterInt_t Dvar_RegisterInt;
 
-		Dvar_RegisterFloat_t Dvar_RegisterFloat;
-
 		Dvar_SetIntByName_t Dvar_SetIntByName;
 
 		Dvar_SetFromStringByName_t Dvar_SetFromStringByName;
@@ -59,6 +57,8 @@ namespace game
 
 		SV_SendServerCommand_t SV_SendServerCommand;
 
+		Sys_IsServerThread_t Sys_IsServerThread;
+
 		XUIDToString_t XUIDToString;
 
 		SEH_LocalizeTextMessage_t SEH_LocalizeTextMessage;
@@ -80,6 +80,8 @@ namespace game
 		Cmd_ExecuteSingleCommand_t Cmd_ExecuteSingleCommand;
 
 		Com_Quit_f_t Com_Quit_f;
+
+		player_die_t player_die;
 
 		decltype(longjmp)* _longjmp;
 
@@ -106,6 +108,8 @@ namespace game
 
 		gentity_s* g_entities;
 
+		DeferredQueue* deferredQueue;
+
 		namespace mp
 		{
 			client_t* svs_clients;
@@ -118,6 +122,8 @@ namespace game
 
 		namespace sp
 		{
+			sp::IsServerRunning_t IsServerRunning;
+
 			sp::gentity_s* g_entities;
 		}
 
@@ -244,11 +250,65 @@ namespace game
 			{
 				return dvar_find_malleable_var(dvarName);
 			}
-			else
+
+			return reinterpret_cast<dvar_t*(*)(const char*)>
+				(SELECT_VALUE(0x539550, 0x5BDCC0, 0x0))(dvarName);
+		}
+
+		__declspec(naked) const dvar_t* Dvar_RegisterVariant(const char* dvarName, unsigned char type,
+			unsigned __int16 flags, DvarValue value, DvarLimits domain, const char* description)
+		{
+			static DWORD func = 0x531F70;
+
+			__asm
 			{
-				return reinterpret_cast<dvar_t*(*)(const char*)>
-					(SELECT_VALUE(0x539550, 0x5BDCC0, 0x0))(dvarName);
+				push eax
+				pushad
+
+				mov edi, [esp + 0x24 + 0x28] // description
+				mov eax, [esp + 0x24 + 0x4] // dvarName
+
+				push [esp + 0x24 + 0x24] // domain
+				push [esp + 0x24 + 0x24] // domain
+
+				push [esp + 0x24 + 0x24] // value
+				push [esp + 0x24 + 0x24] // value
+				push [esp + 0x24 + 0x24] // value
+				push [esp + 0x24 + 0x24] // value
+
+				push [esp + 0x24 + 0x24] // flags
+				push [esp + 0x24 + 0x24] // type
+
+				call func
+				add esp, 0x20
+
+				mov [esp + 0x20], eax // result
+				popad
+				pop eax
+
+				retn
 			}
+		}
+
+		const dvar_t* Dvar_RegisterFloat(const char* dvarName, float value,
+			float min, float max, unsigned __int16 flags, const char* description)
+		{
+			if (!is_dedi())
+			{
+				return reinterpret_cast<const dvar_t*(*)(const char*, float, float, float, unsigned __int16, const char*)>
+					(SELECT_VALUE(0x4F9CC0, 0x5BEA80, 0x0))(dvarName, value, min, max, flags, description);
+			}
+
+			DvarLimits domain;
+			DvarValue dvar_value;
+
+			domain.value.min = min;
+			domain.value.max = max;
+
+			dvar_value.value = value;
+
+			return Dvar_RegisterVariant(dvarName, dvar_type::DVAR_TYPE_FLOAT,
+				flags, dvar_value, domain, description);
 		}
 
 		const float* Scr_AllocVector(const float* v)
@@ -630,8 +690,6 @@ namespace game
 
 		native::Dvar_RegisterInt = native::Dvar_RegisterInt_t(SELECT_VALUE(0x48CD40, 0x5BEA40, 0x0));
 
-		native::Dvar_RegisterFloat = native::Dvar_RegisterFloat_t(SELECT_VALUE(0x4F9CC0, 0x5BEA80, 0x0));
-
 		native::Dvar_SetIntByName = native::Dvar_SetIntByName_t(SELECT_VALUE(0x5396B0, 0x5BF560, 0x0));
 
 		native::Dvar_SetFromStringByName = native::Dvar_SetFromStringByName_t(
@@ -675,6 +733,10 @@ namespace game
 
 		native::SV_SendServerCommand = native::SV_SendServerCommand_t(SELECT_VALUE(0x4F6990, 0x575DE0, 0x4FD5A0));
 
+		native::Sys_IsServerThread = native::Sys_IsServerThread_t(SELECT_VALUE(0x4CC5A0, 0x55F9A0, 0x0));
+
+		native::sp::IsServerRunning = native::sp::IsServerRunning_t(0x45D310);
+
 		native::XUIDToString = native::XUIDToString_t(SELECT_VALUE(0x4FAA30, 0x55CC20, 0x0));
 
 		native::SEH_LocalizeTextMessage = native::SEH_LocalizeTextMessage_t(
@@ -700,6 +762,8 @@ namespace game
 			SELECT_VALUE(0x4D6960, 0x5462B0, 0x4CC360));
 
 		native::Com_Quit_f = native::Com_Quit_f_t(SELECT_VALUE(0x4F48B0, 0x5556B0, 0x4D95B0));
+
+		native::player_die = native::player_die_t(SELECT_VALUE(0x0, 0x503460, 0x47F4D0));
 
 		native::_longjmp = reinterpret_cast<decltype(longjmp)*>(SELECT_VALUE(0x73AC20, 0x7363BC, 0x655558));
 
@@ -732,5 +796,7 @@ namespace game
 
 		native::g_entities = reinterpret_cast<native::gentity_s*>(SELECT_VALUE(0, 0x1A66E28, 0x191B900));
 		native::sp::g_entities = reinterpret_cast<native::sp::gentity_s*>(0x1197AD8);
+
+		native::deferredQueue = reinterpret_cast<native::DeferredQueue*>(SELECT_VALUE(0x0, 0x1D55438, 0x0));
 	}
 }
