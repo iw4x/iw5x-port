@@ -55,11 +55,17 @@ namespace game
 		typedef void (*Scr_AddEntityNum_t)(int entnum, unsigned int classnum);
 		extern Scr_AddEntityNum_t Scr_AddEntityNum;
 
-		typedef void (*Scr_Notify_t)(gentity_s* ent, unsigned __int16 stringValue, unsigned int paramcount);
+		typedef void (*Scr_Notify_t)(gentity_s* ent, scr_string_t, unsigned int paramcount);
 		extern Scr_Notify_t Scr_Notify;
+
+		typedef void (*Scr_NotifyLevel_t)(unsigned int stringValue, unsigned int paramcount);
+		extern Scr_NotifyLevel_t Scr_NotifyLevel;
 
 		typedef void (*Sys_ShowConsole_t)();
 		extern Sys_ShowConsole_t Sys_ShowConsole;
+
+		typedef void (*Sys_Error_t)(const char* error, ...);
+		extern Sys_Error_t Sys_Error;
 
 		typedef void (*VM_Notify_t)(unsigned int notifyListOwnerId, unsigned int stringValue, VariableValue* top);
 		extern VM_Notify_t VM_Notify;
@@ -145,6 +151,7 @@ namespace game
 		extern char** scrMemTreePub;
 		extern char* scrMemTreeGlob;
 
+		extern scrVarPub_t* scr_VarPub;
 		extern scrVmPub_t* scr_VmPub;
 
 		extern scr_call_t* scr_instanceFunctions;
@@ -201,7 +208,6 @@ namespace game
 		void* MT_Alloc(int numBytes, int type);
 
 		dvar_t* Dvar_FindVar(const char* dvarName);
-		const dvar_t* Dvar_RegisterVariant(const char* dvarName, unsigned char type, unsigned __int16 flags, DvarValue value, DvarLimits domain, const char* description);
 		const dvar_t* Dvar_RegisterFloat(const char* dvarName, float value, float min, float max, unsigned __int16 flags, const char* description);
 
 		const float* Scr_AllocVector(const float* v);
@@ -211,6 +217,7 @@ namespace game
 		void Scr_NotifyId(unsigned int id, unsigned int stringValue, unsigned int paramcount);
 		int Scr_SetObjectField(unsigned int classnum, int entnum, int offset);
 		void Scr_AddString(const char* value);
+		void Scr_AddInt(int value);
 
 		const char* SL_ConvertToString(unsigned int stringValue);
 		unsigned int SL_GetString(const char* str, unsigned int user);

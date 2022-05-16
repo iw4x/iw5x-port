@@ -463,14 +463,18 @@ namespace game
 
 		typedef void (__cdecl * scr_call_t)(int entref);
 
+		typedef unsigned __int16 scr_string_t;
+
 		enum scriptType_e
 		{
 			SCRIPT_NONE = 0,
 			SCRIPT_OBJECT = 1,
 			SCRIPT_STRING = 2,
+			SCRIPT_ISTRING = 2,
 			SCRIPT_VECTOR = 4,
 			SCRIPT_FLOAT = 5,
 			SCRIPT_INTEGER = 6,
+			SCRIPT_CODEPOS = 7,
 			SCRIPT_END = 8,
 			// Custom
 		};
@@ -521,7 +525,7 @@ namespace game
 		struct scrVmPub_t
 		{
 			unsigned int* localVars;
-			VariableValue* maxstack;
+			VariableValue* maxStack;
 			int function_count;
 			function_frame_t* function_frame;
 			VariableValue* top;
@@ -536,6 +540,52 @@ namespace game
 			function_frame_t function_frame_start[32];
 			VariableValue stack[2048];
 		};
+
+		struct HunkUser
+		{
+			HunkUser* current;
+			HunkUser* next;
+			int maxSize;
+			int end;
+			int pos;
+			const char* name;
+			bool fixed;
+			int type;
+			unsigned char buf[1];
+		};
+
+		static_assert(sizeof(HunkUser) == 0x24);
+
+		struct scrVarPub_t
+		{
+			const char* fieldBuffer;
+			bool evaluate;
+			unsigned int time;
+			unsigned int timeArrayId;
+			unsigned int pauseArrayId;
+			unsigned int notifyArrayId;
+			unsigned int objectStackId;
+			unsigned int levelId;
+			unsigned int gameId;
+			unsigned int animId;
+			unsigned int freeEntList;
+			unsigned int tempVariable;
+			unsigned int numScriptValues[2];
+			bool bInited;
+			bool abort;
+			unsigned __int16 savecount;
+			unsigned __int16 savecountMark;
+			unsigned int entId;
+			unsigned int entFieldName;
+			unsigned int checksum;
+			HunkUser* programHunkUser;
+			HunkUser* canonicalStringHunkUser;
+			const char* programBuffer;
+			unsigned __int16 saveIdMap[36864];
+			unsigned __int16 saveIdMapRev[36864];
+		};
+
+		static_assert(sizeof(scrVarPub_t) == 0x24058);
 
 		struct scr_classStruct_t
 		{
@@ -974,7 +1024,7 @@ namespace game
 			int maxHealth;
 			int damage;
 			int count;
-			unsigned char __pad2[0xc8];
+			unsigned char __pad2[0xC8];
 		};
 
 		static_assert(sizeof(gentity_s) == 0x274);

@@ -61,7 +61,7 @@ game::native::gentity_s* test_clients::sv_add_test_client()
 	game::native::SV_Cmd_EndTokenizedString();
 
 	// Find the bot
-	auto idx = 1;
+	int idx;
 	for (idx = 0; idx < *game::native::svs_clientCount; idx++)
 	{
 		if (game::native::mp::svs_clients[idx].header.state == game::native::clientState_t::CS_FREE)
@@ -135,7 +135,7 @@ void test_clients::spawn(const int count)
 void test_clients::scr_shutdown_system_mp_stub(unsigned char sys)
 {
 	game::native::SV_DropAllBots();
-	reinterpret_cast<void (*)(unsigned char)>(0x569E30)(sys);
+	reinterpret_cast<void(*)(unsigned char)>(0x569E30)(sys);
 }
 
 __declspec(naked) void test_clients::reset_reliable_mp()
