@@ -8,10 +8,10 @@ namespace game::scripting
 		this->in_param_count_ = native::scr_VmPub->inparamcount;
 		this->out_param_count_ = native::scr_VmPub->outparamcount;
 		this->top_ = native::scr_VmPub->top;
-		this->max_stack_ = native::scr_VmPub->maxstack;
+		this->max_stack_ = native::scr_VmPub->maxStack;
 
 		native::scr_VmPub->top = this->stack_;
-		native::scr_VmPub->maxstack = &this->stack_[ARRAYSIZE(this->stack_) - 1];
+		native::scr_VmPub->maxStack = &this->stack_[ARRAYSIZE(this->stack_) - 1];
 		native::scr_VmPub->inparamcount = 0;
 		native::scr_VmPub->outparamcount = 0;
 	}
@@ -22,6 +22,6 @@ namespace game::scripting
 		native::scr_VmPub->inparamcount = this->in_param_count_;
 		native::scr_VmPub->outparamcount = this->out_param_count_;
 		native::scr_VmPub->top = this->top_;
-		native::scr_VmPub->maxstack = this->max_stack_;
+		native::scr_VmPub->maxStack = this->max_stack_;
 	}
 }

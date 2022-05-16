@@ -34,8 +34,11 @@ namespace game
 		Scr_AddEntityNum_t Scr_AddEntityNum;
 
 		Scr_Notify_t Scr_Notify;
+		Scr_NotifyLevel_t Scr_NotifyLevel;
 
 		Sys_ShowConsole_t Sys_ShowConsole;
+
+		Sys_Error_t Sys_Error;
 
 		VM_Notify_t VM_Notify;
 
@@ -92,6 +95,7 @@ namespace game
 		char** scrMemTreePub;
 		char* scrMemTreeGlob;
 
+		scrVarPub_t* scr_VarPub;
 		scrVmPub_t* scr_VmPub;
 
 		scr_call_t* scr_instanceFunctions;
@@ -255,7 +259,7 @@ namespace game
 				(SELECT_VALUE(0x539550, 0x5BDCC0, 0x0))(dvarName);
 		}
 
-		__declspec(naked) const dvar_t* Dvar_RegisterVariant(const char* dvarName, unsigned char type,
+		__declspec(naked) const dvar_t* dvar_register_variant_dedicated(const char* dvar_name, unsigned char type,
 			unsigned __int16 flags, DvarValue value, DvarLimits domain, const char* description)
 		{
 			static DWORD func = 0x531F70;
@@ -307,8 +311,21 @@ namespace game
 
 			dvar_value.value = value;
 
-			return Dvar_RegisterVariant(dvarName, dvar_type::DVAR_TYPE_FLOAT,
+			return dvar_register_variant_dedicated(dvarName, dvar_type::DVAR_TYPE_FLOAT,
 				flags, dvar_value, domain, description);
+		}
+
+		void IncInParam()
+		{
+			Scr_ClearOutParams();
+
+			if (scr_VmPub->top == scr_VmPub->maxStack)
+			{
+				Sys_Error("Internal script stack overflow");
+			}
+
+			scr_VmPub->top++;
+			scr_VmPub->inparamcount++;
 		}
 
 		const float* Scr_AllocVector(const float* v)
@@ -396,16 +413,16 @@ namespace game
 		{
 			if (is_mp())
 			{
-				return scr_notify_id_multiplayer(id, stringValue, paramcount);
+				scr_notify_id_multiplayer(id, stringValue, paramcount);
 			}
 			else if (is_sp())
 			{
-				return scr_notify_id_singleplayer(id, stringValue, paramcount);
+				scr_notify_id_singleplayer(id, stringValue, paramcount);
 			}
 			else
 			{
-				return reinterpret_cast<void(*)(unsigned int, unsigned int, unsigned int)>(0x4EFAA0)(
-					id, stringValue, paramcount);
+				reinterpret_cast<void(*)(unsigned int, unsigned int, unsigned int)>(0x4EFAA0)
+					(id, stringValue, paramcount);
 			}
 		}
 
@@ -437,7 +454,7 @@ namespace game
 			}
 		}
 
-		__declspec(naked) void scr_add_string_dedi(const char* value)
+		__declspec(naked) void scr_add_string_dedicated(const char* value)
 		{
 			static DWORD func = 0x4F1010;
 
@@ -453,13 +470,21 @@ namespace game
 		{
 			if (is_dedi())
 			{
-				scr_add_string_dedi(value);
+				scr_add_string_dedicated(value);
 			}
-			else if (is_mp())
+			else
 			{
 				reinterpret_cast<void(*)(const char*)>
-					(0x56AC00)(value);
+					(SELECT_VALUE(0x4A5600, 0x56AC00, 0x0))(value);
 			}
+		}
+
+		void Scr_AddInt(int value)
+		{
+			IncInParam();
+
+			scr_VmPub->top->type = SCRIPT_INTEGER;
+			scr_VmPub->top->u.intValue = value;
 		}
 
 		const char* SL_ConvertToString(const unsigned int stringValue)
@@ -472,7 +497,7 @@ namespace game
 
 		unsigned int SL_GetString(const char* str, const unsigned int user)
 		{
-			return SL_GetStringOfSize(str, user, strlen(str) + 1, 7);
+			return SL_GetStringOfSize(str, user, std::strlen(str) + 1, 7);
 		}
 
 		__declspec(naked) void sv_send_client_game_state_mp(mp::client_t* /*client*/)
@@ -544,7 +569,7 @@ namespace game
 			}
 		}
 
-		__declspec(naked) void client_command_dedi(int client_num)
+		__declspec(naked) void client_command_dedicated(int client_num)
 		{
 			static DWORD func = 0x47EA40;
 
@@ -560,7 +585,7 @@ namespace game
 		{
 			if (is_dedi())
 			{
-				client_command_dedi(clientNum);
+				client_command_dedicated(clientNum);
 			}
 			else if (is_mp())
 			{
@@ -578,7 +603,7 @@ namespace game
 			addr->type = type;
 		}
 
-		__declspec(naked) void cbuf_add_text_dedi(LocalClientNum_t local_client_num, const char* text)
+		__declspec(naked) void cbuf_add_text_dedicated(LocalClientNum_t local_client_num, const char* text)
 		{
 			static DWORD func = 0x4CB5D0;
 
@@ -596,7 +621,7 @@ namespace game
 		{
 			if (is_dedi())
 			{
-				cbuf_add_text_dedi(localClientNum, text);
+				cbuf_add_text_dedicated(localClientNum, text);
 			}
 			else
 			{
@@ -605,7 +630,7 @@ namespace game
 			}
 		}
 
-		__declspec(naked) void teleport_player_dedi(gentity_s* player, float* origin, float* angles)
+		__declspec(naked) void teleport_player_dedicated(gentity_s* player, float* origin, float* angles)
 		{
 			static DWORD func = 0x48B840;
 
@@ -624,7 +649,7 @@ namespace game
 		{
 			if (is_dedi())
 			{
-				teleport_player_dedi(player, origin, angles);
+				teleport_player_dedicated(player, origin, angles);
 			}
 			else if (is_mp())
 			{
@@ -708,8 +733,11 @@ namespace game
 		native::Scr_AddEntityNum = native::Scr_AddEntityNum_t(SELECT_VALUE(0x0, 0x56ABC0, 0x4EA2F0));
 
 		native::Scr_Notify = native::Scr_Notify_t(SELECT_VALUE(0x4895B0, 0x52B190, 0x0));
+		native::Scr_NotifyLevel = native::Scr_NotifyLevel_t(SELECT_VALUE(0x445E10, 0x56B6B0, 0x0));
 
 		native::Sys_ShowConsole = native::Sys_ShowConsole_t(SELECT_VALUE(0x470AF0, 0x5CF590, 0));
+
+		native::Sys_Error = native::Sys_Error_t(SELECT_VALUE(0x490D90, 0x5CC3B0, 0x539590));
 
 		native::VM_Notify = native::VM_Notify_t(SELECT_VALUE(0x610200, 0x569720, 0x4EF450));
 
@@ -774,6 +802,7 @@ namespace game
 		native::scrMemTreePub = reinterpret_cast<char**>(SELECT_VALUE(0x196FB00, 0x1E32000, 0x1C152A4));
 		native::scrMemTreeGlob = reinterpret_cast<char*>(SELECT_VALUE(0x186DA00, 0x1D6FF00, 0x1C16600));
 
+		native::scr_VarPub = reinterpret_cast<native::scrVarPub_t*>(SELECT_VALUE(0x0, 0x208E188, 0x1CD8720));
 		native::scr_VmPub = reinterpret_cast<native::scrVmPub_t*>(SELECT_VALUE(0x1BF2580, 0x20B4A80, 0x1F5B080));
 
 		native::scr_instanceFunctions = reinterpret_cast<native::scr_call_t*>(SELECT_VALUE(0x184CDB0, 0x1D4F258,

@@ -14,19 +14,19 @@ namespace game::scripting
 			const std::string string = native::SL_ConvertToString(value.u.stringValue);
 			return chaiscript::var(string);
 		}
-		else if (value.type == native::SCRIPT_FLOAT)
+		if (value.type == native::SCRIPT_FLOAT)
 		{
 			return chaiscript::var(value.u.floatValue);
 		}
-		else if (value.type == native::SCRIPT_INTEGER)
+		if (value.type == native::SCRIPT_INTEGER)
 		{
 			return chaiscript::var(value.u.intValue);
 		}
-		else if (value.type == native::SCRIPT_OBJECT)
+		if (value.type == native::SCRIPT_OBJECT)
 		{
 			return chaiscript::var(entity(this->context_, value.u.entityId));
 		}
-		else if (value.type == native::SCRIPT_VECTOR)
+		if (value.type == native::SCRIPT_VECTOR)
 		{
 			std::vector<chaiscript::Boxed_Value> values;
 			values.push_back(chaiscript::var(value.u.vectorValue[0]));
@@ -46,7 +46,7 @@ namespace game::scripting
 			native::Scr_ClearOutParams();
 		}
 
-		if (native::scr_VmPub->top == native::scr_VmPub->maxstack)
+		if (native::scr_VmPub->top == native::scr_VmPub->maxStack)
 		{
 			throw std::runtime_error("Internal script stack overflow");
 		}
@@ -74,6 +74,12 @@ namespace game::scripting
 			const auto real_value = this->context_->get_chai()->boxed_cast<int>(value);
 			value_ptr->type = native::SCRIPT_INTEGER;
 			value_ptr->u.intValue = real_value;
+		}
+		else if (value.get_type_info() == typeid(unsigned int))
+		{
+			const auto real_value = this->context_->get_chai()->boxed_cast<unsigned int>(value);
+			value_ptr->type = native::SCRIPT_INTEGER;
+			value_ptr->u.intValue = static_cast<int>(real_value);
 		}
 		else if (value.get_type_info() == typeid(bool))
 		{
