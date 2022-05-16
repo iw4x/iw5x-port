@@ -55,7 +55,7 @@ namespace game
 		typedef void (*Scr_AddEntityNum_t)(int entnum, unsigned int classnum);
 		extern Scr_AddEntityNum_t Scr_AddEntityNum;
 
-		typedef void (*Scr_Notify_t)(gentity_s* ent, unsigned int stringValue, unsigned int paramcount);
+		typedef void (*Scr_Notify_t)(gentity_s* ent, scr_string_t, unsigned int paramcount);
 		extern Scr_Notify_t Scr_Notify;
 
 		typedef void (*Scr_NotifyLevel_t)(unsigned int stringValue, unsigned int paramcount);

@@ -463,6 +463,8 @@ namespace game
 
 		typedef void (__cdecl * scr_call_t)(int entref);
 
+		typedef unsigned __int16 scr_string_t;
+
 		enum scriptType_e
 		{
 			SCRIPT_NONE = 0,
