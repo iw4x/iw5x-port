@@ -14,13 +14,9 @@ namespace game
 		DB_LoadXAssets_t DB_LoadXAssets;
 
 		Dvar_RegisterBool_t Dvar_RegisterBool;
-
 		Dvar_RegisterInt_t Dvar_RegisterInt;
-
 		Dvar_RegisterString_t Dvar_RegisterString;
-
 		Dvar_SetIntByName_t Dvar_SetIntByName;
-
 		Dvar_SetFromStringByName_t Dvar_SetFromStringByName;
 
 		G_RunFrame_t G_RunFrame;
