@@ -233,7 +233,7 @@ __declspec(naked) void command::client_command_dedi_stub()
 // Between ufo/noclip functions and their mp counterpart is that I reversed the 'CG' type
 void command::add_sp_commands()
 {
-	add("noclip", []()
+	add("noclip", []
 	{
 		if (!game::native::sp::IsServerRunning())
 			return;
@@ -251,7 +251,7 @@ void command::add_sp_commands()
 		printf("%s\n", game::native::SEH_LocalizeTextMessage(msg, "noclip print", game::native::LOCMSG_SAFE));
 	});
 
-	add("ufo", []()
+	add("ufo", []
 	{
 		if (!game::native::sp::IsServerRunning())
 			return;
@@ -269,7 +269,7 @@ void command::add_sp_commands()
 		printf("%s\n", game::native::SEH_LocalizeTextMessage(msg, "ufo print", game::native::LOCMSG_SAFE));
 	});
 
-	add("god", []()
+	add("god", []
 	{
 		if (!game::native::sp::IsServerRunning())
 			return;
@@ -287,7 +287,7 @@ void command::add_sp_commands()
 		printf("%s\n", game::native::SEH_LocalizeTextMessage(msg, "god print", game::native::LOCMSG_SAFE));
 	});
 
-	add("demigod", []()
+	add("demigod", []
 	{
 		if (!game::native::sp::IsServerRunning())
 			return;
@@ -305,7 +305,7 @@ void command::add_sp_commands()
 		printf("%s\n", game::native::SEH_LocalizeTextMessage(msg, "demigod print", game::native::LOCMSG_SAFE));
 	});
 
-	add("notarget", []()
+	add("notarget", []
 	{
 		if (!game::native::sp::IsServerRunning())
 			return;

@@ -758,18 +758,18 @@ namespace game
 
 		struct Weapon_s
 		{
-			unsigned int padding : 8;
-			unsigned int scopeVariation : 3;
-			unsigned int weaponOthers : 4;
-			unsigned int weaponUnderBarrels : 2;
-			unsigned int weaponScopes : 3;
 			unsigned int weaponIdx : 8;
 			unsigned int weaponVariation : 4;
+			unsigned int weaponScopes : 3;
+			unsigned int weaponUnderBarrels : 2;
+			unsigned int weaponOthers : 4;
+			unsigned int scopeVariation : 3;
+			unsigned int padding : 8;
 		};
 
 		union Weapon
 		{
-			Weapon_s _s_0;
+			Weapon_s __s0;
 			unsigned int data;
 		};
 
@@ -1183,11 +1183,70 @@ namespace game
 
 		namespace sp
 		{
+			struct usercmd_s
+			{
+				int serverTime;
+				int buttons;
+				int angles[3];
+				Weapon weapon;
+				Weapon offHand;
+				char forwardmove;
+				char rightmove;
+				unsigned char upmove;
+				unsigned char downmove;
+				char pitchmove;
+				char yawmove;
+				float gunPitch;
+				float gunYaw;
+				float gunXOfs;
+				float gunYOfs;
+				float gunZOfs;
+				short meleeChargeYaw;
+				unsigned char meleeChargeDist;
+				char selectedLoc[2];
+				unsigned char selectedLocAngle;
+				char remoteControlAngles[2];
+			};
+
+			static_assert(sizeof(usercmd_s) == 0x40);
+
+			struct clientPersistent_t
+			{
+				usercmd_s cmd;
+				usercmd_s oldcmd;
+				int maxHealth;
+				float moveSpeedScaleMultiplier;
+				int motionTrackerEnabled;
+				char playerName[0x20];
+			};
+
+			static_assert(sizeof(clientPersistent_t) == 0xAC);
+
+			struct playerState_s
+			{
+				int commandTime;
+				int pm_type;
+				int pm_time;
+				int pm_flags;
+				int otherFlags;
+				int linkFlags;
+				int bobCycle;
+				float origin[3];
+				float velocity[3];
+				unsigned char __pad0[0xAD24];
+			};
+
+			static_assert(sizeof(playerState_s) == 0xAD58);
+
 			struct gclient_s
 			{
-				unsigned char __pad0[0xAE04];
+				playerState_s ps;
+				clientPersistent_t pers;
 				int flags;
-			}; // Warning, incorrect size
+				unsigned char __pad1[0x2BC];
+			};
+
+			static_assert(sizeof(gclient_s) == 0xB0C4);
 
 			struct entityState_s
 			{

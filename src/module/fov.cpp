@@ -28,7 +28,7 @@ public:
 private:
 	static void set_server_command_dvar_stub(const char* dvar, const char* value)
 	{
-		if (strcmp(dvar, "cg_fov") != 0 || strcmp(value, "65") != 0)
+		if (strcmp(dvar, "cg_fov") != 0)
 		{
 			game::native::Dvar_SetFromStringByName(dvar, value);
 		}

@@ -164,6 +164,18 @@ namespace utils
 			return set<T>(reinterpret_cast<void*>(place), value);
 		}
 
+		template <typename T, typename... Args>
+		static T invoke(size_t func, Args ... args)
+		{
+			return reinterpret_cast<T(*)(Args ...)>(func)(args...);
+		}
+
+		template <typename T, typename... Args>
+		static T invoke(void* func, Args ... args)
+		{
+			return static_cast<T(*)(Args ...)>(func)(args...);
+		}
+
 	private:
 		bool initialized_;
 		bool installed_;
