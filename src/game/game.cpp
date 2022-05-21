@@ -14,14 +14,13 @@ namespace game
 		DB_LoadXAssets_t DB_LoadXAssets;
 
 		Dvar_RegisterBool_t Dvar_RegisterBool;
-
 		Dvar_RegisterInt_t Dvar_RegisterInt;
-
+		Dvar_RegisterString_t Dvar_RegisterString;
 		Dvar_SetIntByName_t Dvar_SetIntByName;
-
 		Dvar_SetFromStringByName_t Dvar_SetFromStringByName;
 
 		G_RunFrame_t G_RunFrame;
+		G_GetWeaponForName_t G_GetWeaponForName;
 
 		MSG_ReadData_t MSG_ReadData;
 
@@ -35,6 +34,8 @@ namespace game
 
 		Scr_Notify_t Scr_Notify;
 		Scr_NotifyLevel_t Scr_NotifyLevel;
+		Scr_GetNumParam_t Scr_GetNumParam;
+		Scr_GetString_t Scr_GetString;
 
 		Sys_ShowConsole_t Sys_ShowConsole;
 
@@ -69,8 +70,6 @@ namespace game
 		PM_WeaponUseAmmo_t PM_WeaponUseAmmo;
 
 		CM_TransformedCapsuleTrace_t CM_TransformedCapsuleTrace;
-
-		Weapon_RocketLauncher_Fire_t Weapon_RocketLauncher_Fire;
 
 		PM_playerTrace_t PM_playerTrace;
 
@@ -126,9 +125,11 @@ namespace game
 
 		namespace sp
 		{
-			sp::IsServerRunning_t IsServerRunning;
+			IsServerRunning_t IsServerRunning;
 
-			sp::gentity_s* g_entities;
+			gentity_s* g_entities;
+
+			gclient_s* g_clients;
 		}
 
 		void AddRefToValue(VariableValue* value)
@@ -712,8 +713,8 @@ namespace game
 		native::DB_LoadXAssets = native::DB_LoadXAssets_t(SELECT_VALUE(0x48A8E0, 0x4CD020, 0x44F770));
 
 		native::Dvar_RegisterBool = native::Dvar_RegisterBool_t(SELECT_VALUE(0x4914D0, 0x5BE9F0, 0x0));
-
 		native::Dvar_RegisterInt = native::Dvar_RegisterInt_t(SELECT_VALUE(0x48CD40, 0x5BEA40, 0x0));
+		native::Dvar_RegisterString = native::Dvar_RegisterString_t(SELECT_VALUE(0x5197F0, 0x5BEC90, 0x0));
 
 		native::Dvar_SetIntByName = native::Dvar_SetIntByName_t(SELECT_VALUE(0x5396B0, 0x5BF560, 0x0));
 
@@ -721,6 +722,7 @@ namespace game
 			SELECT_VALUE(0x4DD090, 0x5BF740, 0x518DF0));
 
 		native::G_RunFrame = native::G_RunFrame_t(SELECT_VALUE(0x52EAA0, 0x50CB70, 0x48AD60));
+		native::G_GetWeaponForName = native::G_GetWeaponForName_t(SELECT_VALUE(0x495E40, 0x531070, 0x0));
 
 		native::MSG_ReadData = native::MSG_ReadData_t(SELECT_VALUE(0, 0x5592A0, 0));
 
@@ -734,6 +736,8 @@ namespace game
 
 		native::Scr_Notify = native::Scr_Notify_t(SELECT_VALUE(0x4895B0, 0x52B190, 0x0));
 		native::Scr_NotifyLevel = native::Scr_NotifyLevel_t(SELECT_VALUE(0x445E10, 0x56B6B0, 0x0));
+		native::Scr_GetNumParam = native::Scr_GetNumParam_t(SELECT_VALUE(0x4C6FE0, 0x56AA10, 0x0));
+		native::Scr_GetString = native::Scr_GetString_t(SELECT_VALUE(0x497530, 0x56A3D0, 0x0));
 
 		native::Sys_ShowConsole = native::Sys_ShowConsole_t(SELECT_VALUE(0x470AF0, 0x5CF590, 0));
 
@@ -774,9 +778,6 @@ namespace game
 
 		native::CM_TransformedCapsuleTrace = native::CM_TransformedCapsuleTrace_t(
 			SELECT_VALUE(0x4F9B80, 0x541340, 0x0));
-
-		native::Weapon_RocketLauncher_Fire = native::Weapon_RocketLauncher_Fire_t(
-			SELECT_VALUE(0x48C920, 0x5305D0, 0x0));
 
 		native::PM_playerTrace = native::PM_playerTrace_t(SELECT_VALUE(0x4CE600, 0x421F00, 0x0));
 
@@ -825,6 +826,8 @@ namespace game
 
 		native::g_entities = reinterpret_cast<native::gentity_s*>(SELECT_VALUE(0, 0x1A66E28, 0x191B900));
 		native::sp::g_entities = reinterpret_cast<native::sp::gentity_s*>(0x1197AD8);
+
+		native::sp::g_clients = reinterpret_cast<native::sp::gclient_s*>(0x1381D48);
 
 		native::deferredQueue = reinterpret_cast<native::DeferredQueue*>(SELECT_VALUE(0x0, 0x1D55438, 0x0));
 	}

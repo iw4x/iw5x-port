@@ -67,7 +67,7 @@ int player_movement::stuck_in_client_stub(game::native::gentity_s* self)
 {
 	if (pm_playerEjection->current.enabled)
 	{
-		return reinterpret_cast<int(*)(game::native::gentity_s*)>(0x4F8930)(self);
+		return utils::hook::invoke<int>(0x4F8930, self);
 	}
 
 	return 0;
@@ -84,18 +84,35 @@ void player_movement::cm_transformed_capsule_trace_stub(game::native::trace_t* r
 	}
 }
 
-game::native::gentity_s* player_movement::weapon_rocket_launcher_fire_stub(game::native::gentity_s* ent,
+game::native::gentity_s* player_movement::weapon_rocket_launcher_fire_mp_stub(game::native::gentity_s* ent,
 	const game::native::Weapon weapon, float spread, game::native::weaponParms* wp, const float* gun_vel,
 	game::native::missileFireParms* fire_parms, game::native::missileFireParms* magic_bullet)
 {
-	auto* result = game::native::Weapon_RocketLauncher_Fire(ent, weapon, spread, wp,
+	auto* result = utils::hook::invoke<game::native::gentity_s*>(0x5305D0, ent, weapon, spread, wp,
 		gun_vel, fire_parms, magic_bullet);
 
 	if (ent->client != nullptr && pm_rocketJump->current.enabled)
 	{
-		ent->client->ps.velocity[0] += (0 - wp->forward[0]) * 64.0f;
-		ent->client->ps.velocity[1] += (0 - wp->forward[1]) * 64.0f;
-		ent->client->ps.velocity[2] += (0 - wp->forward[2]) * 64.0f;
+		ent->client->ps.velocity[0] += (0.0f - wp->forward[0]) * 64.0f;
+		ent->client->ps.velocity[1] += (0.0f - wp->forward[1]) * 64.0f;
+		ent->client->ps.velocity[2] += (0.0f - wp->forward[2]) * 64.0f;
+	}
+
+	return result;
+}
+
+game::native::sp::gentity_s* player_movement::weapon_rocket_launcher_fire_sp_stub(game::native::sp::gentity_s* ent,
+	const game::native::Weapon weapon, float spread, game::native::weaponParms* wp, const float* gun_vel,
+	game::native::missileFireParms* fire_parms, game::native::missileFireParms* magic_bullet)
+{
+	auto* result = utils::hook::invoke<game::native::sp::gentity_s*>(0x48C920, ent, weapon, spread, wp,
+		gun_vel, fire_parms, magic_bullet);
+
+	if (ent->client != nullptr && pm_rocketJump->current.enabled)
+	{
+		ent->client->ps.velocity[0] += (0.0f - wp->forward[0]) * 64.0f;
+		ent->client->ps.velocity[1] += (0.0f - wp->forward[1]) * 64.0f;
+		ent->client->ps.velocity[2] += (0.0f - wp->forward[2]) * 64.0f;
 	}
 
 	return result;
@@ -458,8 +475,6 @@ void player_movement::patch_mp()
 {
 	pm_playerEjection = game::native::Dvar_RegisterBool("pm_playerEjection",
 		true, game::native::DVAR_CODINFO, "Push intersecting players away from each other");
-	pm_rocketJump = game::native::Dvar_RegisterBool("pm_rocketJump",
-		false, game::native::DVAR_CODINFO, "CoD4 rocket jumps");
 	// Name is correct, SP registers this dvar in BG_RegisterDvars but still names it just "g_gravity"
 	bg_gravity = game::native::Dvar_RegisterFloat("g_gravity", 800.0f,
 		1.0f, std::numeric_limits<float>::max(), game::native::DVAR_CODINFO, "Gravity in inches per second per second");
@@ -484,7 +499,7 @@ void player_movement::patch_mp()
 	utils::hook(0x57CF45, cm_transformed_capsule_trace_stub, HOOK_CALL).install()->quick(); // SV_ClipMoveToEntity
 	utils::hook(0x482C1B, cm_transformed_capsule_trace_stub, HOOK_CALL).install()->quick(); // CG_ClipMoveToEntity
 
-	utils::hook(0x530CCB, weapon_rocket_launcher_fire_stub, HOOK_CALL).install()->quick(); // FireWeapon
+	utils::hook(0x530CCB, weapon_rocket_launcher_fire_mp_stub, HOOK_CALL).install()->quick(); // FireWeapon
 
 	utils::hook(0x422861, pm_player_trace_stub, HOOK_CALL).install()->quick(); // PM_JitterPoint
 	utils::hook(0x4228B5, pm_player_trace_stub, HOOK_CALL).install()->quick(); // PM_JitterPoint
@@ -545,6 +560,8 @@ void player_movement::patch_sp()
 	utils::hook(0x41F9A6, cm_transformed_capsule_trace_stub, HOOK_CALL).install()->quick(); // SV_ClipMoveToEntity
 	utils::hook(0x57B14F, cm_transformed_capsule_trace_stub, HOOK_CALL).install()->quick(); // CG_ClipMoveToEntity
 
+	utils::hook(0x45E606, weapon_rocket_launcher_fire_sp_stub, HOOK_CALL).install()->quick(); // FireWeapon
+
 	utils::hook(0x643F84, pm_player_trace_stub, HOOK_CALL).install()->quick(); // PM_JitterPoint
 	utils::hook(0x643FDB, pm_player_trace_stub, HOOK_CALL).install()->quick(); // PM_JitterPoint
 
@@ -582,6 +599,8 @@ void player_movement::register_common_dvars()
 		true, game::native::DVAR_CODINFO, "Push intersecting players away from each other");
 	pm_elevators = game::native::Dvar_RegisterBool("pm_elevators",
 		false, game::native::DVAR_CODINFO, "CoD4 Elevators");
+	pm_rocketJump = game::native::Dvar_RegisterBool("pm_rocketJump",
+		false, game::native::DVAR_CODINFO, "CoD4 rocket jumps");
 
 	// Jump dvars
 	jump_enableFallDamage = game::native::Dvar_RegisterBool("jump_enableFallDamage",

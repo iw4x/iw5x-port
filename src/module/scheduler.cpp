@@ -95,19 +95,19 @@ void scheduler::execute(const pipeline type)
 
 void scheduler::r_end_frame_stub()
 {
-	reinterpret_cast<void(*)()>(SELECT_VALUE(0x4193D0, 0x67F840, 0x0))();
+	utils::hook::invoke<void>(SELECT_VALUE(0x4193D0, 0x67F840, 0x0));
 	execute(pipeline::renderer);
 }
 
 void scheduler::g_glass_update_stub()
 {
-	reinterpret_cast<void(*)()>(SELECT_VALUE(0x4E3730, 0x505BB0, 0x481EA0))();
+	utils::hook::invoke<void>(SELECT_VALUE(0x4E3730, 0x505BB0, 0x481EA0));
 	execute(pipeline::server);
 }
 
 void scheduler::main_frame_stub()
 {
-	reinterpret_cast<void(*)()>(SELECT_VALUE(0x458600, 0x556470, 0x4DB070))();
+	utils::hook::invoke<void>(SELECT_VALUE(0x458600, 0x556470, 0x4DB070));
 	execute(pipeline::main);
 }
 

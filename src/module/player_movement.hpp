@@ -58,7 +58,11 @@ private:
 		const float* end, const game::native::Bounds* bounds, const game::native::Bounds* capsule,
 		int contents, const float* origin, const float* angles);
 
-	static game::native::gentity_s* weapon_rocket_launcher_fire_stub(game::native::gentity_s* ent,
+	static game::native::gentity_s* weapon_rocket_launcher_fire_mp_stub(game::native::gentity_s* ent,
+		const game::native::Weapon weapon, float spread, game::native::weaponParms* wp,
+		const float* gun_vel, game::native::missileFireParms* fire_parms, game::native::missileFireParms* magic_bullet);
+
+	static game::native::sp::gentity_s* weapon_rocket_launcher_fire_sp_stub(game::native::sp::gentity_s* ent,
 		const game::native::Weapon weapon, float spread, game::native::weaponParms* wp,
 		const float* gun_vel, game::native::missileFireParms* fire_parms, game::native::missileFireParms* magic_bullet);
 
