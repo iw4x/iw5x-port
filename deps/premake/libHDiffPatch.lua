@@ -14,6 +14,7 @@ function libHDiffPatch.includes()
 	includedirs {
 		path.join(libHDiffPatch.source, "HDiff"),
 		path.join(libHDiffPatch.source, "HPatch"),
+		path.join(libHDiffPatch.source, "HPatchLite"),
 	}
 end
 
@@ -30,6 +31,9 @@ function libHDiffPatch.project()
 
 			path.join(libHDiffPatch.source, "HPatch/**.h"),
 			path.join(libHDiffPatch.source, "HPatch/**.c"),
+
+			path.join(libHDiffPatch.source, "HPatchLite/**.h"),
+			path.join(libHDiffPatch.source, "HPatchLite/**.c"),
 		}
 
 		warnings "Off"
