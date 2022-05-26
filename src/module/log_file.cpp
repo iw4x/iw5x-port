@@ -10,7 +10,7 @@
 const game::native::dvar_t* log_file::g_log;
 const game::native::dvar_t* log_file::g_logSync;
 
-FILE* log_file::log_fsh = nullptr;
+FILE* log_file::game_log_fsh = nullptr;
 
 void log_file::g_log_printf(const char* fmt, ...)
 {
@@ -22,7 +22,7 @@ void log_file::g_log_printf(const char* fmt, ...)
 	vsnprintf_s(buf, _TRUNCATE, fmt, va);
 	va_end(va);
 
-	if (log_fsh == nullptr)
+	if (game_log_fsh == nullptr)
 	{
 		return;
 	}
@@ -33,8 +33,8 @@ void log_file::g_log_printf(const char* fmt, ...)
 		game::native::level->time / 1000 % 60 % 10,
 		buf);
 
-	fprintf(log_fsh, "%s", out);
-	fflush(log_fsh);
+	fprintf(game_log_fsh, "%s", out);
+	fflush(game_log_fsh);
 }
 
 void log_file::gscr_log_print()
@@ -74,9 +74,9 @@ void log_file::g_init_game_stub()
 	}
 	else
 	{
-		log_fsh = _fsopen(log, "a", _SH_DENYWR);
+		game_log_fsh = _fsopen(log, "a", _SH_DENYWR);
 
-		if (log_fsh == nullptr)
+		if (game_log_fsh == nullptr)
 		{
 			printf("WARNING: Couldn't open logfile: %s\n", log);
 		}
@@ -95,13 +95,13 @@ void log_file::g_shutdown_game_stub(int free_scripts)
 {
 	printf("==== ShutdownGame (%d) ====\n", free_scripts);
 
-	if (log_fsh != nullptr)
+	if (game_log_fsh != nullptr)
 	{
 		g_log_printf("ShutdownGame:\n");
 		g_log_printf("------------------------------------------------------------\n");
 
-		fclose(log_fsh);
-		log_fsh = nullptr;
+		fclose(game_log_fsh);
+		game_log_fsh = nullptr;
 	}
 
 	utils::hook::invoke<void>(0x50C100, free_scripts);
@@ -109,7 +109,7 @@ void log_file::g_shutdown_game_stub(int free_scripts)
 
 void log_file::exit_level_stub()
 {
-	printf("ExitLevel: executed\n");
+	g_log_printf("ExitLevel: executed\n");
 }
 
 void log_file::post_load()
