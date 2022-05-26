@@ -31,14 +31,24 @@ namespace game
 			int min, int max, unsigned __int16 flags, const char* description);
 		extern Dvar_RegisterInt_t Dvar_RegisterInt;
 
+		typedef const dvar_t* (*Dvar_RegisterString_t)(const char* dvarName, const char* value,
+			unsigned __int16 flags, const char* description);
+		extern Dvar_RegisterString_t Dvar_RegisterString;
+
 		typedef void (*Dvar_SetIntByName_t)(const char* dvarName, int value);
 		extern Dvar_SetIntByName_t Dvar_SetIntByName;
 
 		typedef void (*Dvar_SetFromStringByName_t)(const char* dvarName, const char* string);
 		extern Dvar_SetFromStringByName_t Dvar_SetFromStringByName;
 
+		typedef void (*Dvar_SetString_t)(const dvar_t* dvar, const char* value);
+		extern Dvar_SetString_t Dvar_SetString;
+
 		typedef int (*G_RunFrame_t)(int, int);
 		extern G_RunFrame_t G_RunFrame;
+
+		typedef Weapon (*G_GetWeaponForName_t)(const char* name);
+		extern G_GetWeaponForName_t G_GetWeaponForName;
 
 		typedef void (*MSG_ReadData_t)(msg_t* msg, void* data, int len);
 		extern MSG_ReadData_t MSG_ReadData;
@@ -61,11 +71,20 @@ namespace game
 		typedef void (*Scr_NotifyLevel_t)(unsigned int stringValue, unsigned int paramcount);
 		extern Scr_NotifyLevel_t Scr_NotifyLevel;
 
+		typedef unsigned int (*Scr_GetNumParam_t)();
+		extern Scr_GetNumParam_t Scr_GetNumParam;
+
+		typedef const char* (*Scr_GetString_t)(unsigned int index);
+		extern Scr_GetString_t Scr_GetString;
+
 		typedef void (*Sys_ShowConsole_t)();
 		extern Sys_ShowConsole_t Sys_ShowConsole;
 
 		typedef void (*Sys_Error_t)(const char* error, ...);
 		extern Sys_Error_t Sys_Error;
+
+		typedef bool (*Sys_IsServerThread_t)();
+		extern Sys_IsServerThread_t Sys_IsServerThread;
 
 		typedef void (*VM_Notify_t)(unsigned int notifyListOwnerId, unsigned int stringValue, VariableValue* top);
 		extern VM_Notify_t VM_Notify;
@@ -97,26 +116,19 @@ namespace game
 		typedef void (*SV_SendServerCommand_t)(dedi::client_t* cl, svscmd_type type, const char* fmt, ...);
 		extern SV_SendServerCommand_t SV_SendServerCommand;
 
-		typedef bool (*Sys_IsServerThread_t)();
-		extern Sys_IsServerThread_t Sys_IsServerThread;
-
 		typedef void (*XUIDToString_t)(const unsigned __int64* xuid, char* str);
 		extern XUIDToString_t XUIDToString;
 
 		typedef char* (*SEH_LocalizeTextMessage_t)(const char* pszInputBuffer, const char* pszMessageType, msgLocErrType_t errType);
 		extern SEH_LocalizeTextMessage_t SEH_LocalizeTextMessage;
 
-		typedef void (*PM_WeaponUseAmmo_t)(playerState_s* ps, const Weapon weapon, bool isAlternate, int amount, PlayerHandIndex hand);
-		extern PM_WeaponUseAmmo_t PM_WeaponUseAmmo;
-
 		typedef void (*CM_TransformedCapsuleTrace_t)(trace_t* results, const float* start, const float* end,
 			const Bounds* bounds, const Bounds* capsule, int contents,
 			const float* origin, const float* angles);
 		extern CM_TransformedCapsuleTrace_t CM_TransformedCapsuleTrace;
 
-		typedef gentity_s* (*Weapon_RocketLauncher_Fire_t)(gentity_s* ent, const Weapon weapon, float spread,
-			weaponParms* wp, const float* gunVel, missileFireParms* fireParms, missileFireParms* magicBullet);
-		extern Weapon_RocketLauncher_Fire_t Weapon_RocketLauncher_Fire;
+		typedef void (*PM_WeaponUseAmmo_t)(playerState_s* ps, const Weapon weapon, bool isAlternate, int amount, PlayerHandIndex hand);
+		extern PM_WeaponUseAmmo_t PM_WeaponUseAmmo;
 
 		typedef void (*PM_playerTrace_t)(pmove_t* pm, trace_t* results, const float* start, const float* end,
 			const Bounds* bounds, int passEntityNum, int contentMask);
@@ -170,6 +182,8 @@ namespace game
 		constexpr auto ENTITYNUM_NONE = MAX_GENTITIES - 1u;
 		extern gentity_s* g_entities;
 
+		extern level_locals_t* level;
+
 		extern DeferredQueue* deferredQueue;
 
 		// PM Global Definitions & Functions
@@ -181,6 +195,9 @@ namespace game
 
 		namespace mp
 		{
+			typedef char* (*SV_GetGuid_t)(int clientNum);
+			extern SV_GetGuid_t SV_GetGuid;
+
 			extern client_t* svs_clients;
 		}
 
@@ -194,7 +211,9 @@ namespace game
 			typedef bool (*IsServerRunning_t)();
 			extern IsServerRunning_t IsServerRunning;
 
-			extern sp::gentity_s* g_entities;
+			extern gentity_s* g_entities;
+
+			extern gclient_s* g_clients;
 		}
 
 		void AddRefToValue(VariableValue* value);

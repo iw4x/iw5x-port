@@ -400,7 +400,14 @@ namespace game
 			LOCAL_CLIENT_3 = 3,
 			LOCAL_CLIENT_LAST = 3,
 			LOCAL_CLIENT_COUNT = 4,
-			LOCAL_CLIENT_INVALID = -1,
+		};
+
+		enum fsMode_t
+		{
+			FS_READ,
+			FS_WRITE,
+			FS_APPEND,
+			FS_APPEND_SYNC,
 		};
 
 		enum msgLocErrType_t
@@ -597,6 +604,7 @@ namespace game
 
 		enum dvar_flags : std::uint16_t
 		{
+			DVAR_NONE = 0,
 			DVAR_ARCHIVE = 1 << 0,
 			DVAR_LATCH = 1 << 1,
 			DVAR_CHEAT = 1 << 2,
@@ -758,18 +766,18 @@ namespace game
 
 		struct Weapon_s
 		{
-			unsigned int padding : 8;
-			unsigned int scopeVariation : 3;
-			unsigned int weaponOthers : 4;
-			unsigned int weaponUnderBarrels : 2;
-			unsigned int weaponScopes : 3;
 			unsigned int weaponIdx : 8;
 			unsigned int weaponVariation : 4;
+			unsigned int weaponScopes : 3;
+			unsigned int weaponUnderBarrels : 2;
+			unsigned int weaponOthers : 4;
+			unsigned int scopeVariation : 3;
+			unsigned int padding : 8;
 		};
 
 		union Weapon
 		{
-			Weapon_s _s_0;
+			Weapon_s __s0;
 			unsigned int data;
 		};
 
@@ -1145,6 +1153,49 @@ namespace game
 
 		static_assert(sizeof(clientHeader_t) == 0x66C);
 
+		enum objectiveState_t
+		{
+			OBJST_EMPTY = 0x0,
+			OBJST_ACTIVE = 0x1,
+			OBJST_INVISIBLE = 0x2,
+			OBJST_DONE = 0x3,
+			OBJST_CURRENT = 0x4,
+			OBJST_FAILED = 0x5,
+			OBJST_NUMSTATES = 0x6,
+		};
+
+		struct objective_t
+		{
+			objectiveState_t state;
+			float origin[3];
+			int entNum;
+			int teamNum;
+			int clientNum;
+			int invertVisibilityByClientNum;
+			int icon;
+		};
+
+		static_assert(sizeof(objective_t) == 0x24);
+
+		struct level_locals_t
+		{
+			gclient_s* clients;
+			gentity_s* gentities;
+			int num_entities;
+			gentity_s* firstFreeEnt;
+			gentity_s* lastFreeEnt;
+			void* turrets;
+			int initializing;
+			int clientIsSpawning;
+			objective_t objectives[32];
+			int maxclients;
+			int framenum;
+			int time;
+			unsigned char __pad0[0x2BD4];
+		};
+
+		static_assert(sizeof(level_locals_t) == 0x3080);
+
 		namespace mp
 		{
 			struct client_t
@@ -1154,14 +1205,15 @@ namespace game
 				char userinfo[1024]; // 0x670
 				unsigned char __pad0[0x209B8];
 				gentity_s* gentity; // 0x21428
-				unsigned char __pad1[0x20886];
+				char name[16]; // 0x2142C
+				unsigned char __pad1[0x20876];
 				unsigned __int16 scriptId; // 0x41CB2
 				int bIsTestClient; // 0x41CB4
 				int serverId; // 0x41CB8
 				unsigned char __pad2[0x369DC];
 			};
 
-			static_assert(sizeof(mp::client_t) == 0x78698);
+			static_assert(sizeof(client_t) == 0x78698);
 		}
 
 		namespace dedi
@@ -1183,11 +1235,70 @@ namespace game
 
 		namespace sp
 		{
+			struct usercmd_s
+			{
+				int serverTime;
+				int buttons;
+				int angles[3];
+				Weapon weapon;
+				Weapon offHand;
+				char forwardmove;
+				char rightmove;
+				unsigned char upmove;
+				unsigned char downmove;
+				char pitchmove;
+				char yawmove;
+				float gunPitch;
+				float gunYaw;
+				float gunXOfs;
+				float gunYOfs;
+				float gunZOfs;
+				short meleeChargeYaw;
+				unsigned char meleeChargeDist;
+				char selectedLoc[2];
+				unsigned char selectedLocAngle;
+				char remoteControlAngles[2];
+			};
+
+			static_assert(sizeof(usercmd_s) == 0x40);
+
+			struct clientPersistent_t
+			{
+				usercmd_s cmd;
+				usercmd_s oldcmd;
+				int maxHealth;
+				float moveSpeedScaleMultiplier;
+				int motionTrackerEnabled;
+				char playerName[0x20];
+			};
+
+			static_assert(sizeof(clientPersistent_t) == 0xAC);
+
+			struct playerState_s
+			{
+				int commandTime;
+				int pm_type;
+				int pm_time;
+				int pm_flags;
+				int otherFlags;
+				int linkFlags;
+				int bobCycle;
+				float origin[3];
+				float velocity[3];
+				unsigned char __pad0[0xAD24];
+			};
+
+			static_assert(sizeof(playerState_s) == 0xAD58);
+
 			struct gclient_s
 			{
-				unsigned char __pad0[0xAE04];
+				playerState_s ps;
+				clientPersistent_t pers;
 				int flags;
-			}; // Warning, incorrect size
+				unsigned char __pad1[0x2BC];
+			};
+
+			static_assert(sizeof(gclient_s) == 0xB0C4);
 
 			struct entityState_s
 			{
@@ -1201,11 +1312,11 @@ namespace game
 
 			struct entityShared_t
 			{
-				unsigned __int8 isLinked;
-				unsigned __int8 modelType;
-				unsigned __int8 svFlags;
-				unsigned __int8 eventType;
-				unsigned __int8 isInUse;
+				unsigned char isLinked;
+				unsigned char modelType;
+				unsigned char svFlags;
+				unsigned char eventType;
+				unsigned char isInUse;
 				Bounds box;
 				int contents;
 				Bounds absBox;
@@ -1219,9 +1330,9 @@ namespace game
 
 			struct gentity_s
 			{
-				sp::entityState_s s;
-				sp::entityShared_t r;
-				sp::gclient_s* client; // 0x10C
+				entityState_s s;
+				entityShared_t r;
+				gclient_s* client; // 0x10C
 				unsigned char __pad0[0x2C];
 				int flags;
 				int clipmask;

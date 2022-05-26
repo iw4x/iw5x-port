@@ -135,7 +135,7 @@ void test_clients::spawn(const int count)
 void test_clients::scr_shutdown_system_mp_stub(unsigned char sys)
 {
 	game::native::SV_DropAllBots();
-	reinterpret_cast<void(*)(unsigned char)>(0x569E30)(sys);
+	utils::hook::invoke<void>(0x569E30, sys);
 }
 
 __declspec(naked) void test_clients::reset_reliable_mp()

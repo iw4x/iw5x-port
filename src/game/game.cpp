@@ -6,7 +6,6 @@ namespace game
 	namespace native
 	{
 		Cmd_AddCommand_t Cmd_AddCommand;
-
 		Cmd_RemoveCommand_t Cmd_RemoveCommand;
 
 		Com_Error_t Com_Error;
@@ -14,14 +13,15 @@ namespace game
 		DB_LoadXAssets_t DB_LoadXAssets;
 
 		Dvar_RegisterBool_t Dvar_RegisterBool;
-
 		Dvar_RegisterInt_t Dvar_RegisterInt;
+		Dvar_RegisterString_t Dvar_RegisterString;
 
 		Dvar_SetIntByName_t Dvar_SetIntByName;
-
 		Dvar_SetFromStringByName_t Dvar_SetFromStringByName;
+		Dvar_SetString_t Dvar_SetString;
 
 		G_RunFrame_t G_RunFrame;
+		G_GetWeaponForName_t G_GetWeaponForName;
 
 		MSG_ReadData_t MSG_ReadData;
 
@@ -32,48 +32,37 @@ namespace game
 		SL_GetStringOfSize_t SL_GetStringOfSize;
 
 		Scr_AddEntityNum_t Scr_AddEntityNum;
-
 		Scr_Notify_t Scr_Notify;
 		Scr_NotifyLevel_t Scr_NotifyLevel;
+		Scr_GetNumParam_t Scr_GetNumParam;
+		Scr_GetString_t Scr_GetString;
 
 		Sys_ShowConsole_t Sys_ShowConsole;
-
 		Sys_Error_t Sys_Error;
+		Sys_IsServerThread_t Sys_IsServerThread;
 
 		VM_Notify_t VM_Notify;
 
 		BG_NetDataChecksum_t BG_NetDataChecksum;
 
 		LiveStorage_GetPersistentDataDefVersion_t LiveStorage_GetPersistentDataDefVersion;
-
 		LiveStorage_GetPersistentDataDefFormatChecksum_t LiveStorage_GetPersistentDataDefFormatChecksum;
 
 		SV_DirectConnect_t SV_DirectConnect;
-
 		SV_ClientEnterWorld_t SV_ClientEnterWorld;
-
 		SV_Cmd_TokenizeString_t SV_Cmd_TokenizeString;
-
 		SV_Cmd_EndTokenizedString_t SV_Cmd_EndTokenizedString;
-
 		SV_GameSendServerCommand_t SV_GameSendServerCommand;
-
 		SV_SendServerCommand_t SV_SendServerCommand;
-
-		Sys_IsServerThread_t Sys_IsServerThread;
 
 		XUIDToString_t XUIDToString;
 
 		SEH_LocalizeTextMessage_t SEH_LocalizeTextMessage;
 
-		PM_WeaponUseAmmo_t PM_WeaponUseAmmo;
-
 		CM_TransformedCapsuleTrace_t CM_TransformedCapsuleTrace;
 
-		Weapon_RocketLauncher_Fire_t Weapon_RocketLauncher_Fire;
-
+		PM_WeaponUseAmmo_t PM_WeaponUseAmmo;
 		PM_playerTrace_t PM_playerTrace;
-
 		PM_trace_t PM_trace;
 
 		Jump_ClearState_t Jump_ClearState;
@@ -112,10 +101,14 @@ namespace game
 
 		gentity_s* g_entities;
 
+		level_locals_t* level;
+
 		DeferredQueue* deferredQueue;
 
 		namespace mp
 		{
+			SV_GetGuid_t SV_GetGuid;
+
 			client_t* svs_clients;
 		}
 
@@ -126,9 +119,11 @@ namespace game
 
 		namespace sp
 		{
-			sp::IsServerRunning_t IsServerRunning;
+			IsServerRunning_t IsServerRunning;
 
-			sp::gentity_s* g_entities;
+			gentity_s* g_entities;
+
+			gclient_s* g_clients;
 		}
 
 		void AddRefToValue(VariableValue* value)
@@ -704,7 +699,6 @@ namespace game
 		mode = _mode;
 
 		native::Cmd_AddCommand = native::Cmd_AddCommand_t(SELECT_VALUE(0x558820, 0x545DF0, 0));
-
 		native::Cmd_RemoveCommand = native::Cmd_RemoveCommand_t(SELECT_VALUE(0x443A30, 0x545E20, 0x4CC060));
 
 		native::Com_Error = native::Com_Error_t(SELECT_VALUE(0x425540, 0x555450, 0x4D93F0));
@@ -712,15 +706,16 @@ namespace game
 		native::DB_LoadXAssets = native::DB_LoadXAssets_t(SELECT_VALUE(0x48A8E0, 0x4CD020, 0x44F770));
 
 		native::Dvar_RegisterBool = native::Dvar_RegisterBool_t(SELECT_VALUE(0x4914D0, 0x5BE9F0, 0x0));
-
 		native::Dvar_RegisterInt = native::Dvar_RegisterInt_t(SELECT_VALUE(0x48CD40, 0x5BEA40, 0x0));
+		native::Dvar_RegisterString = native::Dvar_RegisterString_t(SELECT_VALUE(0x5197F0, 0x5BEC90, 0x0));
 
 		native::Dvar_SetIntByName = native::Dvar_SetIntByName_t(SELECT_VALUE(0x5396B0, 0x5BF560, 0x0));
-
 		native::Dvar_SetFromStringByName = native::Dvar_SetFromStringByName_t(
 			SELECT_VALUE(0x4DD090, 0x5BF740, 0x518DF0));
+		native::Dvar_SetString = native::Dvar_SetString_t(SELECT_VALUE(0x540570, 0x5BF3E0, 0x0));
 
 		native::G_RunFrame = native::G_RunFrame_t(SELECT_VALUE(0x52EAA0, 0x50CB70, 0x48AD60));
+		native::G_GetWeaponForName = native::G_GetWeaponForName_t(SELECT_VALUE(0x495E40, 0x531070, 0x0));
 
 		native::MSG_ReadData = native::MSG_ReadData_t(SELECT_VALUE(0, 0x5592A0, 0));
 
@@ -734,6 +729,8 @@ namespace game
 
 		native::Scr_Notify = native::Scr_Notify_t(SELECT_VALUE(0x4895B0, 0x52B190, 0x0));
 		native::Scr_NotifyLevel = native::Scr_NotifyLevel_t(SELECT_VALUE(0x445E10, 0x56B6B0, 0x0));
+		native::Scr_GetNumParam = native::Scr_GetNumParam_t(SELECT_VALUE(0x4C6FE0, 0x56AA10, 0x0));
+		native::Scr_GetString = native::Scr_GetString_t(SELECT_VALUE(0x497530, 0x56A3D0, 0x0));
 
 		native::Sys_ShowConsole = native::Sys_ShowConsole_t(SELECT_VALUE(0x470AF0, 0x5CF590, 0));
 
@@ -750,16 +747,12 @@ namespace game
 			SELECT_VALUE(0x0, 0x548D80, 0x4D03D0));
 
 		native::SV_DirectConnect = native::SV_DirectConnect_t(SELECT_VALUE(0x0, 0x572750, 0x4F74C0));
-
 		native::SV_ClientEnterWorld = native::SV_ClientEnterWorld_t(SELECT_VALUE(0x0, 0x571100, 0x0));
-
 		native::SV_Cmd_TokenizeString = native::SV_Cmd_TokenizeString_t(SELECT_VALUE(0x0, 0x545D40, 0x0));
-
 		native::SV_Cmd_EndTokenizedString = native::SV_Cmd_EndTokenizedString_t(SELECT_VALUE(0x0, 0x545D70, 0x0));
-
 		native::SV_GameSendServerCommand = native::SV_GameSendServerCommand_t(SELECT_VALUE(0x402130, 0x573220, 0x0));
-
 		native::SV_SendServerCommand = native::SV_SendServerCommand_t(SELECT_VALUE(0x4F6990, 0x575DE0, 0x4FD5A0));
+		native::mp::SV_GetGuid = native::mp::SV_GetGuid_t(0x573990);
 
 		native::Sys_IsServerThread = native::Sys_IsServerThread_t(SELECT_VALUE(0x4CC5A0, 0x55F9A0, 0x0));
 
@@ -770,16 +763,11 @@ namespace game
 		native::SEH_LocalizeTextMessage = native::SEH_LocalizeTextMessage_t(
 			SELECT_VALUE(0x41EA20, 0x57E240, 0x0));
 
-		native::PM_WeaponUseAmmo = native::PM_WeaponUseAmmo_t(SELECT_VALUE(0x463F80, 0x42E930, 0x0));
-
 		native::CM_TransformedCapsuleTrace = native::CM_TransformedCapsuleTrace_t(
 			SELECT_VALUE(0x4F9B80, 0x541340, 0x0));
 
-		native::Weapon_RocketLauncher_Fire = native::Weapon_RocketLauncher_Fire_t(
-			SELECT_VALUE(0x48C920, 0x5305D0, 0x0));
-
+		native::PM_WeaponUseAmmo = native::PM_WeaponUseAmmo_t(SELECT_VALUE(0x463F80, 0x42E930, 0x0));
 		native::PM_playerTrace = native::PM_playerTrace_t(SELECT_VALUE(0x4CE600, 0x421F00, 0x0));
-
 		native::PM_trace = native::PM_trace_t(SELECT_VALUE(0x544BF0, 0x41CEB0, 0x0));
 
 		native::Jump_ClearState = native::Jump_ClearState_t(SELECT_VALUE(0x514CE0, 0x4160F0, 0x0));
@@ -825,6 +813,10 @@ namespace game
 
 		native::g_entities = reinterpret_cast<native::gentity_s*>(SELECT_VALUE(0, 0x1A66E28, 0x191B900));
 		native::sp::g_entities = reinterpret_cast<native::sp::gentity_s*>(0x1197AD8);
+
+		native::sp::g_clients = reinterpret_cast<native::sp::gclient_s*>(0x1381D48);
+
+		native::level = reinterpret_cast<native::level_locals_t*>(SELECT_VALUE(0x0, 0x1C6D4D8, 0x1B21A20));
 
 		native::deferredQueue = reinterpret_cast<native::DeferredQueue*>(SELECT_VALUE(0x0, 0x1D55438, 0x0));
 	}
