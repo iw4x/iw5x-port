@@ -13,7 +13,7 @@ private:
 	static const game::native::dvar_t* g_log;
 	static const game::native::dvar_t* g_logSync;
 
-	static FILE* log_fsh;
+	static FILE* game_log_fsh;
 
 	static void gscr_log_print();
 
