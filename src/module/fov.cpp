@@ -12,7 +12,7 @@ public:
 		if (game::is_dedi()) return;
 
 		// Set dvar flag
-		utils::hook::set<BYTE>(SELECT_VALUE(0x4302C5, 0x455155, 0), 0x1 | (game::is_mp() ? 0x40 : 0));
+		utils::hook::set<BYTE>(SELECT_VALUE(0x4302C5, 0x455155, 0), game::native::DVAR_ARCHIVE | (game::is_mp() ? game::native::DVAR_SAVED : 0));
 
 		if (game::is_mp())
 		{
@@ -26,12 +26,16 @@ public:
 	}
 
 private:
-	static void set_server_command_dvar_stub(const char* dvar, const char* value)
+	static void set_server_command_dvar_stub(const char* dvar_name, const char* value)
 	{
-		if (strcmp(dvar, "cg_fov") != 0)
+		const auto* dvar = game::native::Dvar_FindVar(dvar_name);
+		if (dvar != nullptr && ((dvar->flags & game::native::DVAR_ARCHIVE) != 0))
 		{
-			game::native::Dvar_SetFromStringByName(dvar, value);
+			printf("Not allowing server to override archive dvar '%s'\n", dvar_name);
+			return;
 		}
+
+		game::native::Dvar_SetFromStringByName(dvar_name, value);
 	}
 };
 

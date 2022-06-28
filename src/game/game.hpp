@@ -186,6 +186,8 @@ namespace game
 
 		extern DeferredQueue* deferredQueue;
 
+		extern float* com_codeTimeScale;
+
 		// PM Global Definitions & Functions
 		constexpr auto JUMP_LAND_SLOWDOWN_TIME = 1800;
 

@@ -15,12 +15,12 @@ namespace demonware
 		buffer.read_bool(&more_data);
 		buffer.set_use_data_types(true);
 
-		uint32_t seed, title_id, ticket_size;
+		uint32_t seed, title_id;
 		buffer.read_uint32(&seed);
 		buffer.read_uint32(&title_id);
 
 		uint8_t ticket[1024];
-		buffer.read_bytes(std::min(ticket_size, static_cast<uint32_t>(sizeof(ticket))), ticket);
+		buffer.read_bytes(sizeof(ticket), ticket);
 
 		game::native::bdAuthTicket auth_ticket{};
 		std::memset(&auth_ticket, 0xA, sizeof auth_ticket);

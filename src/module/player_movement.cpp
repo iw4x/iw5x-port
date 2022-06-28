@@ -316,9 +316,7 @@ void player_movement::pm_project_velocity_stub(const float* vel_in, const float*
 
 	if (std::fabsf(normal[2]) < 0.001f || length_squared_2d == 0.0f)
 	{
-		vel_out[0] = vel_in[0];
-		vel_out[1] = vel_in[1];
-		vel_out[2] = vel_in[2];
+		std::memcpy(vel_out, vel_in, sizeof(std::float_t[3]));
 		return;
 	}
 
@@ -590,7 +588,7 @@ void player_movement::patch_sp()
 
 void player_movement::register_common_dvars()
 {
-	// Pm dvars
+	// pm dvars
 	pm_bounces = game::native::Dvar_RegisterBool("pm_bounces", false,
 		game::native::DVAR_CODINFO, "CoD4 Bounces");
 	pm_bouncesAllAngles = game::native::Dvar_RegisterBool("pm_bouncesAllAngles", false,

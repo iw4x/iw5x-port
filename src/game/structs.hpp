@@ -610,9 +610,10 @@ namespace game
 			DVAR_CHEAT = 1 << 2,
 			DVAR_CODINFO = 1 << 3,
 			DVAR_SCRIPTINFO = 1 << 4,
+			DVAR_SAVED = 1 << 6,
 			DVAR_SERVERINFO = 1 << 10,
-			DVAR_WRITEPROTECTED = 1 << 11,
-			DVAR_READONLY = 1 << 13,
+			DVAR_INIT = 1 << 11,
+			DVAR_ROM = 1 << 13,
 			DVAR_AUTOEXEC = 1 << 15,
 		}; // Incomplete
 
