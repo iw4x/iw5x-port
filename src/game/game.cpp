@@ -105,6 +105,8 @@ namespace game
 
 		DeferredQueue* deferredQueue;
 
+		float* com_codeTimeScale;
+
 		namespace mp
 		{
 			SV_GetGuid_t SV_GetGuid;
@@ -306,7 +308,7 @@ namespace game
 
 			dvar_value.value = value;
 
-			return dvar_register_variant_dedicated(dvarName, dvar_type::DVAR_TYPE_FLOAT,
+			return dvar_register_variant_dedicated(dvarName, DVAR_TYPE_FLOAT,
 				flags, dvar_value, domain, description);
 		}
 
@@ -819,5 +821,7 @@ namespace game
 		native::level = reinterpret_cast<native::level_locals_t*>(SELECT_VALUE(0x0, 0x1C6D4D8, 0x1B21A20));
 
 		native::deferredQueue = reinterpret_cast<native::DeferredQueue*>(SELECT_VALUE(0x0, 0x1D55438, 0x0));
+
+		native::com_codeTimeScale = reinterpret_cast<float*>(SELECT_VALUE(0x1769F1C, 0x1CEF554, 0x1B9CEC0));
 	}
 }

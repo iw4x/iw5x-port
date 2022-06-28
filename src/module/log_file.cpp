@@ -63,7 +63,7 @@ void log_file::gscr_log_print()
 void log_file::g_init_game_stub()
 {
 	printf("------- Game Initialization -------\n");
-	printf("gamename: %s", reinterpret_cast<const char*>(0x7FFC68));
+	printf("gamename: %s\n", reinterpret_cast<const char*>(0x7FFC68));
 	printf("gamedate: %s\n", __DATE__);
 
 	const auto* log = g_log->current.string;
