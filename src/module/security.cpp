@@ -15,6 +15,11 @@ public:
 
 			utils::hook(0x57680C, net_defer_packet_to_client, HOOK_CALL).install()->quick(); // SV_ConnectionlessPacket
 		}
+		else if (game::is_sp())
+		{
+			// Disable CL_ShellExecute_URL_f
+			utils::hook::nop(0x4298F6, 5);
+		}
 	}
 
 private:
