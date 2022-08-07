@@ -28,26 +28,26 @@ static unsigned int file_write(const void* ptr, unsigned int len, FILE* stream)
 static FILE* file_open_append_text(const char* filename)
 {
 	errno = 0;
-	auto* file = fopen(filename, "at");
+	auto* file = std::fopen(filename, "at");
 	if (file)
 	{
 		return file;
 	}
 
-	printf("Couldn't open file: %s %s\n", filename, strerror(errno));
+	printf("Couldn't open file: %s %s\n", filename, std::strerror(errno));
 	return nullptr;
 }
 
 static FILE* file_open_write_binary(const char* filename)
 {
 	errno = 0;
-	auto* file = fopen(filename, "wb");
+	auto* file = std::fopen(filename, "wb");
 	if (file)
 	{
 		return file;
 	}
 
-	printf("Couldn't open file: %s %s\n", filename, strerror(errno));
+	printf("Couldn't open file: %s %s\n", filename, std::strerror(errno));
 	return nullptr;
 }
 
