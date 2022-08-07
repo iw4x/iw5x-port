@@ -1197,6 +1197,112 @@ namespace game
 
 		static_assert(sizeof(level_locals_t) == 0x3080);
 
+		enum CriticalSection
+		{
+			CRITSECT_CONSOLE = 0x0,
+			CRITSECT_CBUF = 0x1F,
+			CRITSECT_COUNT = 0x27,
+		};
+
+		enum ScopedCriticalSectionType
+		{
+			SCOPED_CRITSECT_NORMAL = 0x0,
+			SCOPED_CRITSECT_DISABLED = 0x1,
+			SCOPED_CRITSECT_RELEASE = 0x2,
+			SCOPED_CRITSECT_TRY = 0x3,
+		};
+
+		struct fileInIwd_s
+		{
+			unsigned int pos;
+			char* name;
+			fileInIwd_s* next;
+		};
+
+		struct iwd_t
+		{
+			char iwdFilename[256];
+			char iwdBasename[256];
+			char iwdGamename[256];
+			char* handle;
+			int checksum;
+			int pure_checksum;
+			volatile int hasOpenFile;
+			int numfiles;
+			char referenced;
+			unsigned int hashSize;
+			fileInIwd_s** hashTable;
+			fileInIwd_s* buildBuffer;
+		};
+
+		struct directory_t
+		{
+			char path[256];
+			char gamedir[256];
+		};
+
+		struct searchpath_s
+		{
+			searchpath_s* next;
+			iwd_t* iwd;
+			directory_t* dir;
+			int bLocalized;
+			int ignore;
+			int ignorePureCheck;
+			int language;
+		};
+
+		enum
+		{
+			THREAD_CONTEXT_MAIN,
+			THREAD_CONTEXT_BACKEND,
+			THREAD_CONTEXT_WORKER0,
+			THREAD_CONTEXT_WORKER1,
+			THREAD_CONTEXT_SERVER,
+			THREAD_CONTEXT_CINEMATIC,
+			THREAD_CONTEXT_DATABASE,
+			THREAD_CONTEXT_STREAM,
+			THREAD_CONTEXT_STATS_WRITE,
+			THREAD_CONTEXT_MJPEG,
+			THREAD_CONTEXT_COUNT,
+		};
+
+		enum FsThread
+		{
+			FS_THREAD_MAIN = 0x0,
+			FS_THREAD_STREAM = 0x1,
+			FS_THREAD_DATABASE = 0x2,
+			FS_THREAD_BACKEND = 0x3,
+			FS_THREAD_SERVER = 0x4,
+			FS_THREAD_COUNT = 0x5,
+			FS_THREAD_INVALID = 0x6,
+		};
+
+		union qfile_gus
+		{
+			_iobuf* o;
+			char* z;
+		};
+
+		struct qfile_us
+		{
+			qfile_gus file;
+			int iwdIsClone;
+		};
+
+		struct fileHandleData_t
+		{
+			qfile_us handleFiles;
+			int handleSync;
+			int fileSize;
+			int zipFilePos;
+			iwd_t* zipFile;
+			int streamed;
+			char name[256];
+		};
+
+		static_assert(sizeof(fileHandleData_t) == 0x11C);
+
 		namespace mp
 		{
 			struct client_t

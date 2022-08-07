@@ -2,7 +2,9 @@
 #include <loader/module_loader.hpp>
 
 #include "game/game.hpp"
+
 #include "scheduler.hpp"
+#include "log_file.hpp"
 
 class console final : public module
 {
@@ -11,9 +13,9 @@ public:
 	{
 		ShowWindow(GetConsoleWindow(), SW_HIDE);
 
-		_pipe(this->handles_, 1024, _O_TEXT);
-		_dup2(this->handles_[1], 1);
-		_dup2(this->handles_[1], 2);
+		(void)_pipe(this->handles_, 1024, _O_TEXT);
+		(void)_dup2(this->handles_[1], 1);
+		(void)_dup2(this->handles_[1], 2);
 
 		//setvbuf(stdout, nullptr, _IONBF, 0);
 		//setvbuf(stderr, nullptr, _IONBF, 0);
@@ -89,6 +91,7 @@ private:
 	static void log_message(const std::string& message)
 	{
 		OutputDebugStringA(message.data());
+		log_file::info("%s", message.data());
 		game::native::Conbuf_AppendText(message.data());
 	}
 

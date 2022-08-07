@@ -3,23 +3,19 @@
 class log_file final : public module
 {
 public:
-	static_assert(offsetof(game::native::level_locals_t, time) == 0x4A8);
-
 	void post_load() override;
 
-	static void g_log_printf(const char* fmt, ...);
+	static void info(const char* fmt, ...);
 
 private:
-	static const game::native::dvar_t* g_log;
-	static const game::native::dvar_t* g_logSync;
+	static const char* log_file_name;
 
-	static FILE* game_log_fsh;
+	static int opening_qconsole;
+	static int com_console_log_open_failed;
 
-	static void gscr_log_print();
+	static const game::native::dvar_t* com_logfile;
 
-	static void g_init_game_stub();
+	static void com_open_log_file();
 
-	static void g_shutdown_game_stub(int free_scripts);
-
-	static void exit_level_stub();
+	static void com_log_print_message(const char* msg);
 };

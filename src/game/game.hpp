@@ -27,10 +27,6 @@ namespace game
 			unsigned __int16 flags, const char* description);
 		extern Dvar_RegisterBool_t Dvar_RegisterBool;
 
-		typedef const dvar_t* (*Dvar_RegisterInt_t)(const char* dvarName, int value,
-			int min, int max, unsigned __int16 flags, const char* description);
-		extern Dvar_RegisterInt_t Dvar_RegisterInt;
-
 		typedef const dvar_t* (*Dvar_RegisterString_t)(const char* dvarName, const char* value,
 			unsigned __int16 flags, const char* description);
 		extern Dvar_RegisterString_t Dvar_RegisterString;
@@ -83,8 +79,8 @@ namespace game
 		typedef void (*Sys_Error_t)(const char* error, ...);
 		extern Sys_Error_t Sys_Error;
 
-		typedef bool (*Sys_IsServerThread_t)();
-		extern Sys_IsServerThread_t Sys_IsServerThread;
+		typedef int (*Sys_Milliseconds_t)();
+		extern Sys_Milliseconds_t Sys_Milliseconds;
 
 		typedef void (*VM_Notify_t)(unsigned int notifyListOwnerId, unsigned int stringValue, VariableValue* top);
 		extern VM_Notify_t VM_Notify;
@@ -150,6 +146,9 @@ namespace game
 		typedef void (*Com_Quit_f_t)();
 		extern Com_Quit_f_t Com_Quit_f;
 
+		typedef void (*FS_Printf_t)(int h, const char* fmt, ...);
+		extern FS_Printf_t FS_Printf;
+
 		typedef void (*player_die_t)(gentity_s* self, const gentity_s* inflictor, gentity_s* attacker, int damage, int meansOfDeath, const Weapon* iWeapon, bool isAlternate, const float* vDir, const hitLocation_t hitLoc, int psTimeOffset);
 		extern player_die_t player_die;
 
@@ -187,6 +186,21 @@ namespace game
 		extern DeferredQueue* deferredQueue;
 
 		extern float* com_codeTimeScale;
+
+		extern RTL_CRITICAL_SECTION* s_criticalSection;
+
+		extern int* logfile;
+
+		extern searchpath_s** fs_searchpaths;
+		extern char* fs_gamedir;
+		extern fileHandleData_t* fsh;
+		extern int* com_fileAccessed;
+
+		extern unsigned int(*threadId)[THREAD_CONTEXT_COUNT];
+
+		extern int* initialized_0;
+		extern int* sys_timeBase;
+		extern unsigned __int64* sys_counterBase;
 
 		// PM Global Definitions & Functions
 		constexpr auto JUMP_LAND_SLOWDOWN_TIME = 1800;
@@ -230,6 +244,7 @@ namespace game
 
 		dvar_t* Dvar_FindVar(const char* dvarName);
 		const dvar_t* Dvar_RegisterFloat(const char* dvarName, float value, float min, float max, unsigned __int16 flags, const char* description);
+		const dvar_t* Dvar_RegisterInt(const char* dvarName, int value, int min, int max, unsigned __int16 flags, const char* description);
 
 		const float* Scr_AllocVector(const float* v);
 		void Scr_ClearOutParams();
@@ -259,6 +274,22 @@ namespace game
 		void TeleportPlayer(gentity_s* player, float* origin, float* angles);
 
 		void CG_GameMessage(LocalClientNum_t localClientNum, const char* msg, int flags = 0);
+
+		void Sys_EnterCriticalSection(CriticalSection critSect);
+		void Sys_LeaveCriticalSection(CriticalSection critSect);
+		bool Sys_TryEnterCriticalSection(CriticalSection critSect);
+		bool Sys_IsMainThread();
+		bool Sys_IsDatabaseThread();
+		bool Sys_IsStreamThread();
+		bool Sys_IsRenderThread();
+		bool Sys_IsServerThread();
+
+		void FS_FCloseFile(int h);
+		bool FS_Initialized();
+		void* FS_HandleForFile(FsThread thread);
+		int FS_FOpenFileReadForThread(const char* filename, int* file, FsThread thread);
+		int FS_CreatePath(char* OSPath);
+		void FS_CheckFileSystemStarted();
 	}
 
 	bool is_mp();
