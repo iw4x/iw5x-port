@@ -17,6 +17,7 @@
 #pragma warning(disable: 28020)
 
 #define WIN32_LEAN_AND_MEAN
+#define _CRT_SECURE_NO_WARNINGS
 
 #include <Windows.h>
 #include <MsHTML.h>

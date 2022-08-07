@@ -57,5 +57,5 @@ private:
 #define REGISTER_MODULE(name)                       \
 namespace                                           \
 {                                                   \
-	static module_loader::installer<name> $_##name; \
+	static module_loader::installer<name> __module; \
 }

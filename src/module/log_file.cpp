@@ -1,140 +1,94 @@
 #include <std_include.hpp>
 #include <loader/module_loader.hpp>
 
-#include <utils/hook.hpp>
-
 #include "game/game.hpp"
+#include "game/engine/scoped_critical_section.hpp"
+
 #include "log_file.hpp"
-#include "scheduler.hpp"
+#include "file_system.hpp"
 
-const game::native::dvar_t* log_file::g_log;
-const game::native::dvar_t* log_file::g_logSync;
+const char* log_file::log_file_name;
 
-FILE* log_file::game_log_fsh = nullptr;
+int log_file::opening_qconsole = 0;
+int log_file::com_console_log_open_failed = 0;
 
-void log_file::g_log_printf(const char* fmt, ...)
+const game::native::dvar_t* log_file::com_logfile;
+
+void log_file::com_open_log_file()
 {
-	char buf[1024] = {0};
-	char out[1024] = {0};
+	time_t aclock;
+	char time_buffer[32]{};
 
-	va_list va;
-	va_start(va, fmt);
-	vsnprintf_s(buf, _TRUNCATE, fmt, va);
-	va_end(va);
+	if (game::native::Sys_IsMainThread() && !opening_qconsole)
+	{
+		opening_qconsole = 1;
+		tm new_time{};
 
-	if (game_log_fsh == nullptr)
+		_time64(&aclock);
+		_localtime64_s(&new_time, &aclock);
+
+		file_system::open_file_by_mode(log_file_name, game::native::logfile, game::native::FS_APPEND_SYNC);
+
+		asctime_s(time_buffer, sizeof(time_buffer), &new_time);
+		info("logfile opened on %s\n", time_buffer);
+		opening_qconsole = 0;
+		com_console_log_open_failed = *game::native::logfile == 0;
+	}
+}
+
+void log_file::com_log_print_message(const std::string& msg)
+{
+	char print_buffer[0x40]{};
+
+	game::engine::scoped_critical_section crit_sect_lock(game::native::CRITSECT_CONSOLE, game::native::SCOPED_CRITSECT_NORMAL);
+
+	if (!game::native::FS_Initialized())
 	{
 		return;
 	}
 
-	_snprintf_s(out, _TRUNCATE, "%3i:%i%i %s",
-		game::native::level->time / 1000 / 60,
-		game::native::level->time / 1000 % 60 / 10,
-		game::native::level->time / 1000 % 60 % 10,
-		buf);
-
-	fprintf(game_log_fsh, "%s", out);
-	fflush(game_log_fsh);
-}
-
-void log_file::gscr_log_print()
-{
-	char buf[1024] = {0};
-	std::size_t out_chars = 0;
-
-	for (std::size_t i = 0; i < game::native::Scr_GetNumParam(); ++i)
+	if (!*game::native::logfile)
 	{
-		const auto* value = game::native::Scr_GetString(i);
-		const auto len = std::strlen(value);
-
-		out_chars += len;
-		if (out_chars >= sizeof(buf))
-		{
-			// Do not overflow the buffer
-			break;
-		}
-
-		strncat_s(buf, value, _TRUNCATE);
+		com_open_log_file();
 	}
 
-	g_log_printf("%s", buf);
-}
-
-void log_file::g_init_game_stub()
-{
-	printf("------- Game Initialization -------\n");
-	printf("gamename: %s\n", reinterpret_cast<const char*>(0x7FFC68));
-	printf("gamedate: %s\n", __DATE__);
-
-	const auto* log = g_log->current.string;
-
-	if (*log == '\0')
+	if (*game::native::logfile)
 	{
-		printf("Not logging to disk.\n");
-	}
-	else
-	{
-		game_log_fsh = _fsopen(log, "a", _SH_DENYWR);
-
-		if (game_log_fsh == nullptr)
+		static auto log_next_time_stamp = true;
+		if (log_next_time_stamp)
 		{
-			printf("WARNING: Couldn't open logfile: %s\n", log);
+			const auto len = sprintf_s(print_buffer, "[%10i] ", game::native::Sys_Milliseconds());
+			file_system::write(print_buffer, len, *game::native::logfile);
 		}
-		else
-		{
-			printf("Logging to disk: '%s'.\n", log);
-			g_log_printf("------------------------------------------------------------\n");
-			g_log_printf("InitGame\n");
-		}
-	}	
 
-	utils::hook::invoke<void>(0x5C2800);
-}
-
-void log_file::g_shutdown_game_stub(int free_scripts)
-{
-	printf("==== ShutdownGame (%d) ====\n", free_scripts);
-
-	if (game_log_fsh != nullptr)
-	{
-		g_log_printf("ShutdownGame:\n");
-		g_log_printf("------------------------------------------------------------\n");
-
-		fclose(game_log_fsh);
-		game_log_fsh = nullptr;
+		log_next_time_stamp = (msg.find('\n') != std::string::npos);
+		file_system::write(msg.data(), static_cast<int>(msg.size()), *game::native::logfile);
 	}
-
-	utils::hook::invoke<void>(0x50C100, free_scripts);
 }
 
-void log_file::exit_level_stub()
+void log_file::info(const char* fmt, ...)
 {
-	g_log_printf("ExitLevel: executed\n");
+	char msg[0x1000]{};
+	va_list argptr;
+
+	va_start(argptr, fmt);
+	vsnprintf_s(msg, _TRUNCATE, fmt, argptr);
+	va_end(argptr);
+
+	if (com_logfile && com_logfile->current.integer)
+	{
+		com_log_print_message(msg);
+	}
 }
 
 void log_file::post_load()
 {
-	if (!game::is_mp())
-	{
-		return;
-	}
+	// The game closes the logfile handle in Com_Quit_f
 
-	utils::hook::set<void(*)()>(0x8AC858, gscr_log_print);
+	com_logfile = game::native::Dvar_RegisterInt("logfile", 1,
+		0, 2, 0, "Write to log file - 0 = disabled, 1 = async file write, 2 = Sync every write");
 
-	utils::hook(0x50D135, g_init_game_stub, HOOK_CALL).install()->quick();
-
-	utils::hook(0x573C82, g_shutdown_game_stub, HOOK_CALL).install()->quick();
-	utils::hook(0x573D3A, g_shutdown_game_stub, HOOK_CALL).install()->quick();
-
-	utils::hook(0x50D5F4, exit_level_stub, HOOK_JUMP).install()->quick();
-
-	scheduler::once([]
-	{
-		g_log = game::native::Dvar_RegisterString("g_log", "games_mp.log",
-			game::native::DVAR_ARCHIVE, "Log file name");
-		g_logSync = game::native::Dvar_RegisterBool("g_logSync", false,
-			game::native::DVAR_NONE, "Enable synchronous logging");
-	}, scheduler::pipeline::main);
+	log_file_name = SELECT_VALUE("console_sp.log", "console_mp.log", "console_mp_dedicated.log");
 }
 
 REGISTER_MODULE(log_file)

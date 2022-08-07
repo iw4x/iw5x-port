@@ -5,7 +5,7 @@
 
 #include <utils/hook.hpp>
 
-#include "log_file.hpp"
+#include "game_log.hpp"
 
 static void notify_on_say(game::native::gentity_s* ent, int mode, const char* message)
 {
@@ -22,11 +22,11 @@ static void notify_on_say(game::native::gentity_s* ent, int mode, const char* me
 
 	if (mode == 0)
 	{
-		log_file::g_log_printf("say;%s;%d;%s;%s\n", guid, ent_num, name, message + 1);
+		game_log::g_log_printf("say;%s;%d;%s;%s\n", guid, ent_num, name, message + 1);
 	}
 	else
 	{
-		log_file::g_log_printf("sayteam;%s;%d;%s;%s\n", guid, ent_num, name, message + 1);
+		game_log::g_log_printf("sayteam;%s;%d;%s;%s\n", guid, ent_num, name, message + 1);
 	}
 }
 

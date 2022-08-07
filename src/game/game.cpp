@@ -13,7 +13,6 @@ namespace game
 		DB_LoadXAssets_t DB_LoadXAssets;
 
 		Dvar_RegisterBool_t Dvar_RegisterBool;
-		Dvar_RegisterInt_t Dvar_RegisterInt;
 		Dvar_RegisterString_t Dvar_RegisterString;
 
 		Dvar_SetIntByName_t Dvar_SetIntByName;
@@ -39,7 +38,7 @@ namespace game
 
 		Sys_ShowConsole_t Sys_ShowConsole;
 		Sys_Error_t Sys_Error;
-		Sys_IsServerThread_t Sys_IsServerThread;
+		Sys_Milliseconds_t Sys_Milliseconds;
 
 		VM_Notify_t VM_Notify;
 
@@ -72,6 +71,8 @@ namespace game
 		Cmd_ExecuteSingleCommand_t Cmd_ExecuteSingleCommand;
 
 		Com_Quit_f_t Com_Quit_f;
+
+		FS_Printf_t FS_Printf;
 
 		player_die_t player_die;
 
@@ -106,6 +107,22 @@ namespace game
 		DeferredQueue* deferredQueue;
 
 		float* com_codeTimeScale;
+
+		RTL_CRITICAL_SECTION* s_criticalSection;
+
+		int* logfile;
+
+		searchpath_s** fs_searchpaths;
+		char* fs_gamedir;
+		fileHandleData_t* fsh;
+		int* com_fileAccessed;
+
+		// DS does not have MJPEG thread
+		unsigned int (*threadId)[THREAD_CONTEXT_COUNT];
+
+		int* initialized_0;
+		int* sys_timeBase;
+		unsigned __int64* sys_counterBase;
 
 		namespace mp
 		{
@@ -193,11 +210,9 @@ namespace game
 			{
 				return find_variable_dedicated(parentId, name);
 			}
-			else
-			{
-				return reinterpret_cast<unsigned int(*)(unsigned int, unsigned int)> //
-					(SELECT_VALUE(0x4C4E70, 0x5651F0, 0x0))(parentId, name);
-			}
+
+			return reinterpret_cast<unsigned int(*)(unsigned int, unsigned int)> //
+				(SELECT_VALUE(0x4C4E70, 0x5651F0, 0x0))(parentId, name);
 		}
 
 		__declspec(naked) VariableValue get_entity_field_value_dedicated(unsigned int classnum, int entnum, int _offset)
@@ -221,11 +236,9 @@ namespace game
 			{
 				return get_entity_field_value_dedicated(classnum, entnum, offset);
 			}
-			else
-			{
-				return reinterpret_cast<VariableValue(*)(unsigned int, int, int)> //
-					(SELECT_VALUE(0x530E30, 0x56AF20, 0x0))(classnum, entnum, offset);
-			}
+
+			return reinterpret_cast<VariableValue(*)(unsigned int, int, int)> //
+				(SELECT_VALUE(0x530E30, 0x56AF20, 0x0))(classnum, entnum, offset);
 		}
 
 		void* MT_Alloc(const int numBytes, const int type)
@@ -312,6 +325,27 @@ namespace game
 				flags, dvar_value, domain, description);
 		}
 
+		const dvar_t* Dvar_RegisterInt(const char* dvarName, int value,
+			int min, int max, unsigned __int16 flags, const char* description)
+		{
+			if (!is_dedi())
+			{
+				return reinterpret_cast<const dvar_t*(*)(const char*, int, int, int, unsigned __int16, const char*)>
+					(SELECT_VALUE(0x48CD40, 0x5BEA40, 0x0))(dvarName, value, min, max, flags, description);
+			}
+
+			DvarLimits domain;
+			DvarValue dvar_value;
+
+			domain.integer.min = min;
+			domain.integer.max = max;
+
+			dvar_value.integer = value;
+
+			return dvar_register_variant_dedicated(dvarName, DVAR_TYPE_INT,
+				flags, dvar_value, domain, description);
+		}
+
 		void IncInParam()
 		{
 			Scr_ClearOutParams();
@@ -368,10 +402,8 @@ namespace game
 			{
 				return scr_instanceFunctions[index];
 			}
-			else
-			{
-				return scr_globalFunctions[index];
-			}
+
+			return scr_globalFunctions[index];
 		}
 
 		__declspec(naked) void scr_notify_id_multiplayer(unsigned int id, unsigned int string_value,
@@ -444,11 +476,9 @@ namespace game
 			{
 				return scr_set_object_field_dedicated(classnum, entnum, offset);
 			}
-			else
-			{
-				return reinterpret_cast<int(*)(unsigned int, int, int)> //
-					(SELECT_VALUE(0x42CAD0, 0x52BCC0, 0x0))(classnum, entnum, offset);
-			}
+			
+			return reinterpret_cast<int(*)(unsigned int, int, int)> //
+				(SELECT_VALUE(0x42CAD0, 0x52BCC0, 0x0))(classnum, entnum, offset);
 		}
 
 		__declspec(naked) void scr_add_string_dedicated(const char* value)
@@ -529,7 +559,8 @@ namespace game
 			{
 				return dedi::svs_clients[clientNum].bIsTestClient;
 			}
-			else if (is_mp())
+
+			if (is_mp())
 			{
 				return mp::svs_clients[clientNum].bIsTestClient;
 			}
@@ -667,6 +698,238 @@ namespace game
 				reinterpret_cast<void(*)(LocalClientNum_t, const char*, int)>(0x4228A0)(localClientNum, msg, flags);
 			}
 		}
+
+		void Sys_EnterCriticalSection(CriticalSection critSect)
+		{
+			assert(static_cast<unsigned int>(critSect) <
+				static_cast<unsigned int>(CRITSECT_COUNT));
+
+			EnterCriticalSection(&s_criticalSection[critSect]);
+		}
+
+		void Sys_LeaveCriticalSection(CriticalSection critSect)
+		{
+			assert(static_cast<unsigned int>(critSect) <
+				static_cast<unsigned int>(CRITSECT_COUNT));
+
+			LeaveCriticalSection(&s_criticalSection[critSect]);
+		}
+
+		bool Sys_TryEnterCriticalSection(CriticalSection critSect)
+		{
+			assert(static_cast<unsigned int>(critSect) <
+				static_cast<unsigned int>(CRITSECT_COUNT));
+
+			return TryEnterCriticalSection(&s_criticalSection[critSect]) != FALSE;
+		}
+
+		bool Sys_IsMainThread()
+		{
+			const auto id = GetCurrentThreadId();
+			assert(id);
+			return id == *threadId[THREAD_CONTEXT_MAIN];
+		}
+
+		bool Sys_IsDatabaseThread()
+		{
+			const auto id = GetCurrentThreadId();
+			assert(id);
+			return id == *threadId[THREAD_CONTEXT_DATABASE];
+		}
+
+		bool Sys_IsStreamThread()
+		{
+			const auto id = GetCurrentThreadId();
+			assert(id);
+			return id == *threadId[THREAD_CONTEXT_STREAM];
+		}
+
+		bool Sys_IsRenderThread()
+		{
+			const auto id = GetCurrentThreadId();
+			assert(id);
+			return id == *threadId[THREAD_CONTEXT_BACKEND];
+		}
+
+		bool Sys_IsServerThread()
+		{
+			const auto id = GetCurrentThreadId();
+			assert(id);
+			return id == *threadId[THREAD_CONTEXT_SERVER];
+		}
+
+		void fs_fclose_file_dedicated(int h)
+		{
+			static DWORD func = 0x524910;
+
+			__asm
+			{
+				pushad
+				mov eax, h
+				call func
+				popad
+			}
+		}
+
+		void FS_FCloseFile(int h)
+		{
+			if (is_dedi())
+			{
+				fs_fclose_file_dedicated(h);
+			}
+			else
+			{
+				reinterpret_cast<void(*)(int)>
+					(SELECT_VALUE(0x415160, 0x5AF170, 0x0))(h);
+			}
+		}
+
+		bool FS_Initialized()
+		{
+			return (*fs_searchpaths != nullptr);
+		}
+
+		int fs_handle_for_file_dedicated(FsThread thread)
+		{
+			static DWORD func = 0x5245F0;
+			auto result = 0;
+
+			__asm
+			{
+				pushad
+				mov edi, thread
+				call func
+				mov result, eax
+				popad
+			}
+
+			return result;
+		}
+
+		int FS_HandleForFile(FsThread thread)
+		{
+			if (is_dedi())
+			{
+				return fs_handle_for_file_dedicated(thread);
+			}
+
+			return reinterpret_cast<int(*)(FsThread)>
+				(SELECT_VALUE(0x46B1C0, 0x5AEE50, 0x0))(thread);
+		}
+
+		int fs_fopen_file_read_for_thread_singleplayer(const char* filename, int* file, FsThread thread)
+		{
+			static DWORD func = 0x627F20;
+			auto result = 0;
+
+			__asm
+			{
+				pushad
+
+				mov eax, file
+				mov edx, filename
+				push thread
+				call func
+				add esp, 0x4
+				mov result, eax
+
+				popad
+			}
+
+			return result;
+		}
+
+		int fs_fopen_file_read_for_thread_multiplayer(const char* filename, int* file, FsThread thread)
+		{
+			static DWORD func = 0x5B1990;
+			auto result = 0;
+
+			__asm
+			{
+				pushad
+
+				mov edx, filename
+				push thread
+				push file
+				call func
+				add esp, 0x8
+				mov result, eax
+
+				popad
+			}
+
+			return result;
+		}
+
+		int fs_fopen_file_read_for_thread_dedicated(const char* filename, int* file, FsThread thread)
+		{
+			static DWORD func = 0x524E30;
+			auto result = 0;
+
+			__asm
+			{
+				pushad
+
+				mov edx, filename
+				push thread
+				push file
+				call func
+				add esp, 0x8
+				mov result, eax
+
+				popad
+			}
+
+			return result;
+		}
+
+		int FS_FOpenFileReadForThread(const char* filename, int* file, FsThread thread)
+		{
+			if (is_sp())
+			{
+				return fs_fopen_file_read_for_thread_singleplayer(filename, file, thread);
+			}
+
+			if (is_mp())
+			{
+				return fs_fopen_file_read_for_thread_multiplayer(filename, file, thread);
+			}
+
+			return fs_fopen_file_read_for_thread_dedicated(filename, file, thread);
+		}
+
+		int fs_create_path_directory(char* OSPath)
+		{
+			static DWORD func = 0x5247D0;
+			auto result = 0;
+
+			__asm
+			{
+				pushad
+				mov edi, OSPath
+				call func
+				mov result, eax
+				popad
+			}
+
+			return result;
+		}
+
+		int FS_CreatePath(char* OSPath)
+		{
+			if (is_dedi())
+			{
+				return fs_create_path_directory(OSPath);
+			}
+
+			return reinterpret_cast<int(*)(char*)>
+				(SELECT_VALUE(0x4F5AB0, 0x5AF060, 0x0))(OSPath);
+		}
+
+		void FS_CheckFileSystemStarted()
+		{
+			assert(*fs_searchpaths);
+		}
 	}
 
 	launcher::mode mode = launcher::mode::none;
@@ -708,7 +971,6 @@ namespace game
 		native::DB_LoadXAssets = native::DB_LoadXAssets_t(SELECT_VALUE(0x48A8E0, 0x4CD020, 0x44F770));
 
 		native::Dvar_RegisterBool = native::Dvar_RegisterBool_t(SELECT_VALUE(0x4914D0, 0x5BE9F0, 0x0));
-		native::Dvar_RegisterInt = native::Dvar_RegisterInt_t(SELECT_VALUE(0x48CD40, 0x5BEA40, 0x0));
 		native::Dvar_RegisterString = native::Dvar_RegisterString_t(SELECT_VALUE(0x5197F0, 0x5BEC90, 0x0));
 
 		native::Dvar_SetIntByName = native::Dvar_SetIntByName_t(SELECT_VALUE(0x5396B0, 0x5BF560, 0x0));
@@ -735,8 +997,8 @@ namespace game
 		native::Scr_GetString = native::Scr_GetString_t(SELECT_VALUE(0x497530, 0x56A3D0, 0x0));
 
 		native::Sys_ShowConsole = native::Sys_ShowConsole_t(SELECT_VALUE(0x470AF0, 0x5CF590, 0));
-
 		native::Sys_Error = native::Sys_Error_t(SELECT_VALUE(0x490D90, 0x5CC3B0, 0x539590));
+		native::Sys_Milliseconds = native::Sys_Milliseconds_t(SELECT_VALUE(0x4A1610, 0x5CE740, 0x53B900));
 
 		native::VM_Notify = native::VM_Notify_t(SELECT_VALUE(0x610200, 0x569720, 0x4EF450));
 
@@ -755,8 +1017,6 @@ namespace game
 		native::SV_GameSendServerCommand = native::SV_GameSendServerCommand_t(SELECT_VALUE(0x402130, 0x573220, 0x0));
 		native::SV_SendServerCommand = native::SV_SendServerCommand_t(SELECT_VALUE(0x4F6990, 0x575DE0, 0x4FD5A0));
 		native::mp::SV_GetGuid = native::mp::SV_GetGuid_t(0x573990);
-
-		native::Sys_IsServerThread = native::Sys_IsServerThread_t(SELECT_VALUE(0x4CC5A0, 0x55F9A0, 0x0));
 
 		native::sp::IsServerRunning = native::sp::IsServerRunning_t(0x45D310);
 
@@ -780,6 +1040,8 @@ namespace game
 			SELECT_VALUE(0x4D6960, 0x5462B0, 0x4CC360));
 
 		native::Com_Quit_f = native::Com_Quit_f_t(SELECT_VALUE(0x4F48B0, 0x5556B0, 0x4D95B0));
+
+		native::FS_Printf = native::FS_Printf_t(SELECT_VALUE(0x421E90, 0x5AF7C0, 0x5255A0));
 
 		native::player_die = native::player_die_t(SELECT_VALUE(0x0, 0x503460, 0x47F4D0));
 
@@ -823,5 +1085,20 @@ namespace game
 		native::deferredQueue = reinterpret_cast<native::DeferredQueue*>(SELECT_VALUE(0x0, 0x1D55438, 0x0));
 
 		native::com_codeTimeScale = reinterpret_cast<float*>(SELECT_VALUE(0x1769F1C, 0x1CEF554, 0x1B9CEC0));
+
+		native::s_criticalSection = reinterpret_cast<RTL_CRITICAL_SECTION*>(SELECT_VALUE(0x1CD5638, 0x5A91048, 0x593FF98));
+
+		native::logfile = reinterpret_cast<int*>(SELECT_VALUE(0x176B534, 0x1CF0B78, 0x1B9E4C8));
+
+		native::fs_searchpaths = reinterpret_cast<native::searchpath_s**>(SELECT_VALUE(0x1C2FE78, 0x59BA858, 0x62F4F60));
+		native::fs_gamedir = reinterpret_cast<char*>(SELECT_VALUE(0x1C2B220, 0x59A98F8, 0x585A4D8));
+		native::fsh = reinterpret_cast<native::fileHandleData_t*>(SELECT_VALUE(0x1C2B540, 0x59B5F20, 0x5866AF8));
+		native::com_fileAccessed = reinterpret_cast<int*>(SELECT_VALUE(0x1C2B328, 0x59A9A04, 0x585A5E0));
+
+		native::threadId = reinterpret_cast<unsigned(*)[native::THREAD_CONTEXT_COUNT]>(SELECT_VALUE(0x18576C8, 0x1D6E448, 0x1C14BDC));
+
+		native::initialized_0 = reinterpret_cast<int*>(SELECT_VALUE(0x1CE1CA0, 0x5AA3058, 0x62F4F9C));
+		native::sys_timeBase = reinterpret_cast<int*>(SELECT_VALUE(0x1CE1C98, 0x5AA3050, 0x5950CE4));
+		native::sys_counterBase = reinterpret_cast<unsigned __int64*>(SELECT_VALUE(0x1CE1C90, 0x5AA3048, 0x5950CE8));
 	}
 }
