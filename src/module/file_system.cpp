@@ -27,14 +27,27 @@ static unsigned int file_write(const void* ptr, unsigned int len, FILE* stream)
 
 static FILE* file_open_append_text(const char* filename)
 {
-	FILE* file;
-	const auto err = fopen_s(&file, filename, "at");
-	if (err == 0)
+	errno = 0;
+	auto* file = fopen(filename, "at");
+	if (file)
 	{
 		return file;
 	}
 
-	printf("Couldn't open file: %s\n", filename);
+	printf("Couldn't open file: %s %s\n", filename, strerror(errno));
+	return nullptr;
+}
+
+static FILE* file_open_write_binary(const char* filename)
+{
+	errno = 0;
+	auto* file = fopen(filename, "wb");
+	if (file)
+	{
+		return file;
+	}
+
+	printf("Couldn't open file: %s %s\n", filename, strerror(errno));
 	return nullptr;
 }
 
@@ -127,7 +140,7 @@ static game::native::FsThread get_current_thread()
 	return game::native::FS_THREAD_INVALID;
 }
 
-static void* handle_for_file_current_thread()
+static int handle_for_file_current_thread()
 {
 	return game::native::FS_HandleForFile(get_current_thread());
 }
@@ -155,7 +168,7 @@ static int open_file_append(const char* filename)
 		return 0;
 	}
 
-	auto h = reinterpret_cast<int>(handle_for_file_current_thread());
+	auto h = handle_for_file_current_thread();
 	game::native::fsh[h].zipFile = nullptr;
 	strncpy_s(game::native::fsh[h].name, filename, _TRUNCATE);
 	game::native::fsh[h].handleFiles.file.o = f;
@@ -170,12 +183,56 @@ static int open_file_append(const char* filename)
 	return h;
 }
 
+static int get_handle_and_open_file(const char* filename, const char* ospath, game::native::FsThread thread)
+{
+	auto* fp = file_open_write_binary(ospath);
+	if (!fp)
+	{
+		return 0;
+	}
+
+	const auto f = game::native::FS_HandleForFile(thread);
+	game::native::fsh[f].zipFile = NULL;
+	game::native::fsh[f].handleFiles.file.o = fp;
+
+	strncpy_s(game::native::fsh[f].name, filename, _TRUNCATE);
+	game::native::fsh[f].handleSync = 0;
+
+	return f;
+}
+
+static int open_file_write_to_dir_for_thread(const char* filename, const char* dir, const char* osbasepath, game::native::FsThread thread)
+{
+	char ospath[MAX_PATH]{};
+
+	game::native::FS_CheckFileSystemStarted();
+
+	const char* basepath = (*fs_homepath)->current.string;
+	build_os_path_for_thread(basepath, dir, filename, ospath, game::native::FS_THREAD_MAIN);
+
+	if ((*fs_debug)->current.integer)
+	{
+		printf("FS_FOpenFileWriteToDirForThread: %s\n", ospath);
+	}
+
+	if (game::native::FS_CreatePath(ospath))
+	{
+		return 0;
+	}
+
+	return get_handle_and_open_file(filename, ospath, thread);
+}
+
+static int open_file_write(const char* filename)
+{
+	return open_file_write_to_dir_for_thread(filename, game::native::fs_gamedir, "", game::native::FS_THREAD_MAIN);
+}
+
 static const char* sys_default_install_path_stub()
 {
 	static auto current_path = std::filesystem::current_path().string();
 	return current_path.data();
 }
-
 int file_system::open_file_by_mode(const char* qpath, int* f, game::native::fsMode_t mode)
 {
 	auto r = 6969;
@@ -186,6 +243,14 @@ int file_system::open_file_by_mode(const char* qpath, int* f, game::native::fsMo
 	case game::native::FS_READ:
 		*game::native::com_fileAccessed = TRUE;
 		r = game::native::FS_FOpenFileReadForThread(qpath, f, game::native::FS_THREAD_MAIN);
+		break;
+	case game::native::FS_WRITE:
+		*f = open_file_write(qpath);
+		r = 0;
+		if (!*f)
+		{
+			r = -1;
+		}
 		break;
 	case game::native::FS_APPEND_SYNC:
 		sync = 1;

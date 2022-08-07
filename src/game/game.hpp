@@ -286,7 +286,7 @@ namespace game
 
 		void FS_FCloseFile(int h);
 		bool FS_Initialized();
-		void* FS_HandleForFile(FsThread thread);
+		int FS_HandleForFile(FsThread thread);
 		int FS_FOpenFileReadForThread(const char* filename, int* file, FsThread thread);
 		int FS_CreatePath(char* OSPath);
 		void FS_CheckFileSystemStarted();

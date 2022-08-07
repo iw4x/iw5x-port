@@ -789,10 +789,10 @@ namespace game
 			return (*fs_searchpaths != nullptr);
 		}
 
-		void* fs_handle_for_file_dedicated(FsThread thread)
+		int fs_handle_for_file_dedicated(FsThread thread)
 		{
 			static DWORD func = 0x5245F0;
-			void* result = nullptr;
+			auto result = 0;
 
 			__asm
 			{
@@ -806,14 +806,14 @@ namespace game
 			return result;
 		}
 
-		void* FS_HandleForFile(FsThread thread)
+		int FS_HandleForFile(FsThread thread)
 		{
 			if (is_dedi())
 			{
 				return fs_handle_for_file_dedicated(thread);
 			}
 
-			return reinterpret_cast<void*(*)(FsThread)>
+			return reinterpret_cast<int(*)(FsThread)>
 				(SELECT_VALUE(0x46B1C0, 0x5AEE50, 0x0))(thread);
 		}
 
