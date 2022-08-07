@@ -233,6 +233,7 @@ static const char* sys_default_install_path_stub()
 	static auto current_path = std::filesystem::current_path().string();
 	return current_path.data();
 }
+
 int file_system::open_file_by_mode(const char* qpath, int* f, game::native::fsMode_t mode)
 {
 	auto r = 6969;
