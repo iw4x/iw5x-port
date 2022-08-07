@@ -91,7 +91,7 @@ private:
 	static void log_message(const std::string& message)
 	{
 		OutputDebugStringA(message.data());
-		log_file::info("%s", message.data());
+		log_file::com_log_print_message(message);
 		game::native::Conbuf_AppendText(message.data());
 	}
 

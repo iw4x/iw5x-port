@@ -36,7 +36,7 @@ void log_file::com_open_log_file()
 	}
 }
 
-void log_file::com_log_print_message(const char* msg)
+void log_file::com_log_print_message(const std::string& msg)
 {
 	char print_buffer[0x40]{};
 
@@ -61,8 +61,8 @@ void log_file::com_log_print_message(const char* msg)
 			file_system::write(print_buffer, len, *game::native::logfile);
 		}
 
-		log_next_time_stamp = std::strchr(msg, 10) != nullptr;
-		file_system::write(msg, static_cast<int>(std::strlen(msg)), *game::native::logfile);
+		log_next_time_stamp = (msg.find('\n') != std::string::npos);
+		file_system::write(msg.data(), static_cast<int>(msg.size()), *game::native::logfile);
 	}
 }
 

@@ -268,6 +268,9 @@ void file_system::post_load()
 
 	// Make open-iw5 work outside of the game directory
 	sys_default_install_path_hook.create(SELECT_VALUE(0x487E50, 0x5C4A80, 0x535F80), &sys_default_install_path_stub);
+
+	// fs_basegame
+	utils::hook::set<const char*>(SELECT_VALUE(0x629031, 0x5B0FD1, 0x526F5C), "userraw");
 }
 
 REGISTER_MODULE(file_system)
