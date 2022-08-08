@@ -192,7 +192,7 @@ static int get_handle_and_open_file(const char* filename, const char* ospath, ga
 	}
 
 	const auto f = game::native::FS_HandleForFile(thread);
-	game::native::fsh[f].zipFile = NULL;
+	game::native::fsh[f].zipFile = nullptr;
 	game::native::fsh[f].handleFiles.file.o = fp;
 
 	strncpy_s(game::native::fsh[f].name, filename, _TRUNCATE);
