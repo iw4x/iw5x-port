@@ -6,6 +6,8 @@
 #include "command.hpp"
 #include "scheduler.hpp"
 
+static const game::native::dvar_t* g_cheats;
+
 class client_command final : public module
 {
 public:
@@ -13,14 +15,21 @@ public:
 	{
 		if (game::is_mp())
 		{
+			g_cheats = game::native::Dvar_RegisterBool("sv_cheats", true, game::native::DVAR_CODINFO, "Enable cheats");
 			add_mp_client_commands();
 		}
 	}
 
 private:
-	// I know this is supposed to check sv_cheats but it's not even a registered dvar so why bother
 	static bool cheats_ok(game::native::gentity_s* ent)
 	{
+		if (!g_cheats->current.enabled)
+		{
+			game::native::mp::SV_GameSendServerCommand(ent->s.number, game::native::SV_CMD_CAN_IGNORE,
+				utils::string::va("%c \"GAME_CHEATSNOTENABLED\"", 0x65));
+			return false;
+		}
+
 		if (ent->health < 1)
 		{
 			game::native::mp::SV_GameSendServerCommand(ent->s.number, game::native::SV_CMD_CAN_IGNORE,

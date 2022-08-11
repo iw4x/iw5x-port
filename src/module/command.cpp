@@ -330,7 +330,7 @@ void command::add_sp_commands()
 		assert(ent->s.eType == game::native::ET_PLAYER);
 		assert(ent->client);
 
-		game::native::vec3_t origin, angles{ 0.f, 0.f, 0.f };
+		game::native::vec3_t origin, angles{0.f, 0.f, 0.f};
 
 		if (params.size() < 4 || params.size() > 6)
 		{
