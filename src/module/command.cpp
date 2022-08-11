@@ -89,7 +89,7 @@ void command::add(const char* name, const std::function<void(const command::para
 {
 	const auto command = utils::string::to_lower(name);
 
-	if (handlers.find(command) == handlers.end())
+	if (!handlers.contains(command))
 	{
 		add_raw(name, main_handler);
 	}
@@ -99,7 +99,7 @@ void command::add(const char* name, const std::function<void(const command::para
 
 void command::add(const char* name, const std::function<void()>& callback)
 {
-	add(name, [callback](const command::params&)
+	add(name, [callback]([[maybe_unused]] const params& params)
 	{
 		callback();
 	});
@@ -110,7 +110,7 @@ void command::add_sv(const char* name, std::function<void(game::native::gentity_
 	// Since the game console is not usable there is no point in calling add_raw
 	const auto command = utils::string::to_lower(name);
 
-	if (handlers_sv.find(command) == handlers_sv.end())
+	if (!handlers_sv.contains(command))
 	{
 		handlers_sv[command] = callback;
 	}
@@ -120,7 +120,7 @@ void command::add_sp_sv(const char* name, std::function<void(game::native::sp::g
 {
 	const auto command = utils::string::to_lower(name);
 
-	if (handlers_sp_sv.find(command) == handlers_sp_sv.end())
+	if (!handlers_sp_sv.contains(command))
 	{
 		handlers_sp_sv[command] = callback;
 	}
@@ -145,8 +145,8 @@ void command::main_handler()
 	params params;
 
 	const auto command = utils::string::to_lower(params[0]);
-	const auto got = command::handlers.find(command);
 
+	const auto got = command::handlers.find(command);
 	if (got != handlers.end())
 	{
 		got->second(params);
@@ -165,8 +165,8 @@ void command::client_command_stub(int client_num)
 	params_sv params;
 
 	const auto command = utils::string::to_lower(params[0]);
-	const auto got = command::handlers_sv.find(command);
 
+	const auto got = command::handlers_sv.find(command);
 	if (got != handlers_sv.end())
 	{
 		got->second(entity, params);
@@ -180,13 +180,13 @@ void command::client_command_sp(int client_num, const char* s)
 {
 	auto* entity = &game::native::sp::g_entities[client_num];
 
-	assert(entity->client != nullptr); // On sp it should only be an assertion
+	assert(entity->client); // On sp it should only be an assertion
 
 	params_sv params;
 
 	const auto command = utils::string::to_lower(params[0]);
-	const auto got = command::handlers_sp_sv.find(command);
 
+	const auto got = command::handlers_sp_sv.find(command);
 	if (got != handlers_sp_sv.end())
 	{
 		got->second(entity, params);
@@ -239,7 +239,6 @@ void command::add_sp_commands()
 			return;
 
 		const auto* ent = &game::native::sp::g_entities[0];
-
 		if (ent->health < 1)
 			return;
 
@@ -257,7 +256,6 @@ void command::add_sp_commands()
 			return;
 
 		const auto* ent = &game::native::sp::g_entities[0];
-
 		if (ent->health < 1)
 			return;
 
@@ -275,7 +273,6 @@ void command::add_sp_commands()
 			return;
 
 		auto* ent = &game::native::sp::g_entities[0];
-
 		if (ent->health < 1)
 			return;
 
@@ -293,7 +290,6 @@ void command::add_sp_commands()
 			return;
 
 		auto* ent = &game::native::sp::g_entities[0];
-
 		if (ent->health < 1)
 			return;
 
@@ -311,7 +307,6 @@ void command::add_sp_commands()
 			return;
 
 		auto* ent = &game::native::sp::g_entities[0];
-
 		if (ent->health < 1)
 			return;
 
@@ -321,6 +316,44 @@ void command::add_sp_commands()
 
 		const auto* msg = (ent->flags & game::native::FL_NOTARGET) ? "GAME_NOTARGETON" : "GAME_NOTARGETOFF";
 		printf("%s\n", game::native::SEH_LocalizeTextMessage(msg, "notarget print", game::native::LOCMSG_SAFE));
+	});
+
+	add("setviewpos", [](const params& params)
+	{
+		if (!game::native::sp::IsServerRunning())
+			return;
+
+		auto* ent = &game::native::sp::g_entities[0];
+		if (ent->health < 1)
+			return;
+
+		assert(ent->s.eType == game::native::ET_PLAYER);
+		assert(ent->client);
+
+		game::native::vec3_t origin, angles{ 0.f, 0.f, 0.f };
+
+		if (params.size() < 4 || params.size() > 6)
+		{
+			printf("setviewpos x y z [yaw] [pitch]\n");
+			return;
+		}
+
+		for (auto i = 0; i < 3; i++)
+		{
+			origin[i] = std::strtof(params.get(i + 1), nullptr);
+		}
+
+		if (params.size() > 4)
+		{
+			angles[1] = std::strtof(params.get(4), nullptr); // Yaw
+		}
+
+		if (params.size() == 6)
+		{
+			angles[0] = std::strtof(params.get(5), nullptr); // Pitch
+		}
+
+		game::native::sp::TeleportPlayer(ent, origin, angles);
 	});
 }
 

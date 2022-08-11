@@ -18,26 +18,24 @@ public:
 	}
 
 private:
-	static void send_msg_to_client(int client_num, game::native::svscmd_type type, const char* string)
-	{
-		if (game::is_dedi())
-		{
-			game::native::SV_SendServerCommand(&game::native::dedi::svs_clients[client_num],
-				type, string);
-		}
-		else
-		{
-			game::native::SV_GameSendServerCommand(client_num, type, string);
-		}
-	}
-
 	// I know this is supposed to check sv_cheats but it's not even a registered dvar so why bother
 	static bool cheats_ok(game::native::gentity_s* ent)
 	{
 		if (ent->health < 1)
 		{
-			send_msg_to_client(ent->s.number, game::native::SV_CMD_CAN_IGNORE,
+			game::native::mp::SV_GameSendServerCommand(ent->s.number, game::native::SV_CMD_CAN_IGNORE,
 				utils::string::va("%c \"GAME_MUSTBEALIVECOMMAND\"", 0x65));
+			return false;
+		}
+
+		return true;
+	}
+
+	static bool cheats_ok_internal(game::native::sp::gentity_s* ent)
+	{
+		if (ent->health < 1)
+		{
+			game::native::sp::SV_GameSendServerCommand(ent->s.number, "print \"GAME_MUSTBEALIVECOMMAND\"");
 			return false;
 		}
 
@@ -53,7 +51,7 @@ private:
 
 			ent->client->flags ^= 1;
 
-			send_msg_to_client(ent->s.number, game::native::SV_CMD_CAN_IGNORE,
+			game::native::mp::SV_GameSendServerCommand(ent->s.number, game::native::SV_CMD_CAN_IGNORE,
 				utils::string::va("%c \"%s\"", 0x65, (ent->client->flags & 1) ? "GAME_NOCLIPON" : "GAME_NOCLIPOFF"));
 		});
 
@@ -64,7 +62,7 @@ private:
 
 			ent->client->flags ^= 2;
 
-			send_msg_to_client(ent->s.number, game::native::SV_CMD_CAN_IGNORE,
+			game::native::mp::SV_GameSendServerCommand(ent->s.number, game::native::SV_CMD_CAN_IGNORE,
 				utils::string::va("%c \"%s\"", 0x65, (ent->client->flags & 2) ? "GAME_UFOON" : "GAME_UFOOFF"));
 		});
 
@@ -75,9 +73,8 @@ private:
 
 			ent->flags ^= game::native::FL_GODMODE;
 
-			send_msg_to_client(ent->s.number, game::native::SV_CMD_CAN_IGNORE,
-				utils::string::va("%c \"%s\"", 0x65, (ent->flags & game::native::FL_GODMODE)
-					? "GAME_GODMODE_ON" : "GAME_GODMODE_OFF"));
+			game::native::mp::SV_GameSendServerCommand(ent->s.number, game::native::SV_CMD_CAN_IGNORE,
+				utils::string::va("%c \"%s\"", 0x65, (ent->flags & game::native::FL_GODMODE) ? "GAME_GODMODE_ON" : "GAME_GODMODE_OFF"));
 		});
 
 		command::add_sv("demigod", [](game::native::gentity_s* ent, [[maybe_unused]] const command::params_sv& params)
@@ -87,9 +84,8 @@ private:
 
 			ent->flags ^= game::native::FL_DEMI_GODMODE;
 
-			send_msg_to_client(ent->s.number, game::native::SV_CMD_CAN_IGNORE,
-				utils::string::va("%c \"%s\"", 0x65, (ent->flags & game::native::FL_DEMI_GODMODE)
-					? "GAME_DEMI_GODMODE_ON" : "GAME_DEMI_GODMODE_OFF"));
+			game::native::mp::SV_GameSendServerCommand(ent->s.number, game::native::SV_CMD_CAN_IGNORE,
+				utils::string::va("%c \"%s\"", 0x65, (ent->flags & game::native::FL_DEMI_GODMODE) ? "GAME_DEMI_GODMODE_ON" : "GAME_DEMI_GODMODE_OFF"));
 		});
 
 		command::add_sv("notarget", [](game::native::gentity_s* ent, [[maybe_unused]] const command::params_sv& params)
@@ -99,9 +95,8 @@ private:
 
 			ent->flags ^= game::native::FL_NOTARGET;
 
-			send_msg_to_client(ent->s.number, game::native::SV_CMD_CAN_IGNORE,
-				utils::string::va("%c \"%s\"", 0x65, (ent->flags & game::native::FL_NOTARGET)
-					? "GAME_NOTARGETON" : "GAME_NOTARGETOFF"));
+			game::native::mp::SV_GameSendServerCommand(ent->s.number, game::native::SV_CMD_CAN_IGNORE,
+				utils::string::va("%c \"%s\"", 0x65, (ent->flags & game::native::FL_NOTARGET) ? "GAME_NOTARGETON" : "GAME_NOTARGETOFF"));
 		});
 
 		command::add_sv("setviewpos", [](game::native::gentity_s* ent, [[maybe_unused]] const command::params_sv& params)
@@ -113,7 +108,7 @@ private:
 
 			if (params.size() < 4 || params.size() > 6)
 			{
-				send_msg_to_client(ent->s.number, game::native::SV_CMD_CAN_IGNORE,
+				game::native::mp::SV_GameSendServerCommand(ent->s.number, game::native::SV_CMD_CAN_IGNORE,
 					utils::string::va("%c \"GAME_USAGE\x15: setviewpos x y z [yaw] [pitch]\"", 0x65));
 				return;
 			}
@@ -145,7 +140,7 @@ private:
 
 			scheduler::once([ent]
 			{
-				ent->flags &= ~(game::native::entityFlag::FL_GODMODE | game::native::entityFlag::FL_DEMI_GODMODE);
+				ent->flags &= ~(game::native::FL_GODMODE | game::native::FL_DEMI_GODMODE);
 				ent->health = 0;
 				game::native::player_die(ent, ent, ent, 100000, 12, nullptr, false, nullptr, game::native::hitLocation_t::HITLOC_NONE, 0);
 			}, scheduler::pipeline::server);

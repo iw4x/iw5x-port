@@ -964,7 +964,7 @@ namespace game
 
 		static_assert(sizeof(gclient_s) == 0x3980);
 
-		enum entityFlag
+		enum
 		{
 			FL_GODMODE = 0x1,
 			FL_DEMI_GODMODE = 0x2,

@@ -106,12 +106,6 @@ namespace game
 		typedef void (*SV_Cmd_EndTokenizedString_t)();
 		extern SV_Cmd_EndTokenizedString_t SV_Cmd_EndTokenizedString;
 
-		typedef void (*SV_GameSendServerCommand_t)(int clientNum, svscmd_type type, const char* text);
-		extern SV_GameSendServerCommand_t SV_GameSendServerCommand;
-
-		typedef void (*SV_SendServerCommand_t)(dedi::client_t* cl, svscmd_type type, const char* fmt, ...);
-		extern SV_SendServerCommand_t SV_SendServerCommand;
-
 		typedef void (*XUIDToString_t)(const unsigned __int64* xuid, char* str);
 		extern XUIDToString_t XUIDToString;
 
@@ -214,6 +208,9 @@ namespace game
 			typedef char* (*SV_GetGuid_t)(int clientNum);
 			extern SV_GetGuid_t SV_GetGuid;
 
+			typedef void (*SV_GameSendServerCommand_t)(int clientNum, svscmd_type type, const char* text);
+			extern SV_GameSendServerCommand_t SV_GameSendServerCommand;
+
 			extern client_t* svs_clients;
 		}
 
@@ -226,6 +223,12 @@ namespace game
 		{
 			typedef bool (*IsServerRunning_t)();
 			extern IsServerRunning_t IsServerRunning;
+
+			typedef void (*SV_GameSendServerCommand_t)(int clientNum, const char* text);
+			extern SV_GameSendServerCommand_t SV_GameSendServerCommand;
+
+			typedef void (*TeleportPlayer_t)(gentity_s* player, float* origin, float* angles);
+			extern TeleportPlayer_t TeleportPlayer;
 
 			extern gentity_s* g_entities;
 

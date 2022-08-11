@@ -51,8 +51,6 @@ namespace game
 		SV_ClientEnterWorld_t SV_ClientEnterWorld;
 		SV_Cmd_TokenizeString_t SV_Cmd_TokenizeString;
 		SV_Cmd_EndTokenizedString_t SV_Cmd_EndTokenizedString;
-		SV_GameSendServerCommand_t SV_GameSendServerCommand;
-		SV_SendServerCommand_t SV_SendServerCommand;
 
 		XUIDToString_t XUIDToString;
 
@@ -127,6 +125,7 @@ namespace game
 		namespace mp
 		{
 			SV_GetGuid_t SV_GetGuid;
+			SV_GameSendServerCommand_t SV_GameSendServerCommand;
 
 			client_t* svs_clients;
 		}
@@ -139,6 +138,9 @@ namespace game
 		namespace sp
 		{
 			IsServerRunning_t IsServerRunning;
+			SV_GameSendServerCommand_t SV_GameSendServerCommand;
+
+			TeleportPlayer_t TeleportPlayer;
 
 			gentity_s* g_entities;
 
@@ -658,18 +660,21 @@ namespace game
 			}
 		}
 
-		__declspec(naked) void teleport_player_dedicated(gentity_s* player, float* origin, float* angles)
+		void teleport_player_dedicated(gentity_s* player, float* origin, float* angles)
 		{
 			static DWORD func = 0x48B840;
 
 			__asm
 			{
+				pushad
+
 				mov eax, player
 				mov ecx, origin
 				push angles
 				call func
 				add esp, 4h
-				retn
+
+				popad
 			}
 		}
 
@@ -1014,11 +1019,13 @@ namespace game
 		native::SV_ClientEnterWorld = native::SV_ClientEnterWorld_t(SELECT_VALUE(0x0, 0x571100, 0x0));
 		native::SV_Cmd_TokenizeString = native::SV_Cmd_TokenizeString_t(SELECT_VALUE(0x0, 0x545D40, 0x0));
 		native::SV_Cmd_EndTokenizedString = native::SV_Cmd_EndTokenizedString_t(SELECT_VALUE(0x0, 0x545D70, 0x0));
-		native::SV_GameSendServerCommand = native::SV_GameSendServerCommand_t(SELECT_VALUE(0x402130, 0x573220, 0x0));
-		native::SV_SendServerCommand = native::SV_SendServerCommand_t(SELECT_VALUE(0x4F6990, 0x575DE0, 0x4FD5A0));
+		native::mp::SV_GameSendServerCommand = native::mp::SV_GameSendServerCommand_t(0x573220);
 		native::mp::SV_GetGuid = native::mp::SV_GetGuid_t(0x573990);
 
 		native::sp::IsServerRunning = native::sp::IsServerRunning_t(0x45D310);
+		native::sp::SV_GameSendServerCommand = native::sp::SV_GameSendServerCommand_t(0x402130);
+
+		native::sp::TeleportPlayer = native::sp::TeleportPlayer_t(0x4CCEE0);
 
 		native::XUIDToString = native::XUIDToString_t(SELECT_VALUE(0x4FAA30, 0x55CC20, 0x0));
 
