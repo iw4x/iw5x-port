@@ -196,8 +196,11 @@ namespace game
 		extern int* sys_timeBase;
 		extern unsigned __int64* sys_counterBase;
 
-		// PM Global Definitions & Functions
+		// Global Definitions & Functions
 		constexpr auto JUMP_LAND_SLOWDOWN_TIME = 1800;
+
+		constexpr auto MAX_QPATH = 64;
+		constexpr auto MAX_OSPATH = 256;
 
 		// From Quake III, to match game's assembly
 		template <typename T, typename R>

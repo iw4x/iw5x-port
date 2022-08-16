@@ -12,7 +12,7 @@ static utils::hook::detour sys_default_install_path_hook;
 static const game::native::dvar_t** fs_homepath;
 static const game::native::dvar_t** fs_debug;
 
-static FILE* file_for_handle(int f)
+static FILE* file_for_handle(const int f)
 {
 	assert(!game::native::fsh[f].zipFile);
 	assert(game::native::fsh[f].handleFiles.file.o);
@@ -20,9 +20,9 @@ static FILE* file_for_handle(int f)
 	return game::native::fsh[f].handleFiles.file.o;
 }
 
-static unsigned int file_write(const void* ptr, unsigned int len, FILE* stream)
+static unsigned int file_write(const void* ptr, const unsigned int len, FILE* stream)
 {
-	return std::fwrite(ptr, 1, len, stream);
+	return std::fwrite(ptr, sizeof(char), len, stream);
 }
 
 static FILE* file_open_append_text(const char* filename)
@@ -94,7 +94,7 @@ static void build_os_path_for_thread(const char* base, const char* game, const c
 	auto len_base = std::strlen(base);
 	auto len_game = std::strlen(game);
 	auto len_qpath = std::strlen(qpath);
-	if (len_game + 1 + len_base + len_qpath + 1 >= 256)
+	if (len_game + 1 + len_base + len_qpath + 1 >= game::native::MAX_OSPATH)
 	{
 		if (thread)
 		{
@@ -147,7 +147,7 @@ static int handle_for_file_current_thread()
 
 static int open_file_append(const char* filename)
 {
-	char ospath[MAX_PATH]{};
+	char ospath[game::native::MAX_OSPATH]{};
 
 	game::native::FS_CheckFileSystemStarted();
 	const auto* basepath = (*fs_homepath)->current.string;
@@ -203,7 +203,7 @@ static int get_handle_and_open_file(const char* filename, const char* ospath, ga
 
 static int open_file_write_to_dir_for_thread(const char* filename, const char* dir, const char* osbasepath, game::native::FsThread thread)
 {
-	char ospath[MAX_PATH]{};
+	char ospath[game::native::MAX_OSPATH]{};
 
 	game::native::FS_CheckFileSystemStarted();
 
