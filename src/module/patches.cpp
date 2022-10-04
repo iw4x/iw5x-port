@@ -43,6 +43,8 @@ private:
 	{
 		// Note: on SP the max value is already 1000
 		utils::hook(0x55411F, &dvar_register_com_max_fps, HOOK_CALL).install()->quick();
+
+		utils::hook(0x5C9980, &live_get_local_client_name_stub, HOOK_JUMP).install()->quick();
 	}
 
 	void patch_dedi() const
@@ -71,6 +73,11 @@ private:
 	{
 		return game::native::Dvar_RegisterInt(dvarName, value, min, 1000,
 			game::native::dvar_flags::DVAR_ARCHIVE, description);
+	}
+
+	static const char* live_get_local_client_name_stub()
+	{
+		return game::native::Dvar_FindVar("name")->current.string;
 	}
 };
 
