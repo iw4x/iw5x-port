@@ -37,6 +37,8 @@ private:
 		// Disable remote storage
 		utils::hook::set<BYTE>(0x663B5A, 0xEB);
 		utils::hook::set<BYTE>(0x663C54, 0xEB);
+
+		utils::hook(0x44C640, &live_get_local_client_name_stub, HOOK_JUMP).install()->quick();
 	}
 
 	void patch_mp() const
