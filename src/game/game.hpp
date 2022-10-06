@@ -40,6 +40,9 @@ namespace game
 		typedef void (*Dvar_SetString_t)(const dvar_t* dvar, const char* value);
 		extern Dvar_SetString_t Dvar_SetString;
 
+		typedef const char* (*Dvar_DisplayableValue_t)(const dvar_t* dvar);
+		extern Dvar_DisplayableValue_t Dvar_DisplayableValue;
+
 		typedef int (*G_RunFrame_t)(int, int);
 		extern G_RunFrame_t G_RunFrame;
 
@@ -195,6 +198,9 @@ namespace game
 		extern int* initialized_0;
 		extern int* sys_timeBase;
 		extern unsigned __int64* sys_counterBase;
+
+		extern int* dvarCount;
+		extern dvar_t** sortedDvars;
 
 		// Global Definitions & Functions
 		constexpr auto JUMP_LAND_SLOWDOWN_TIME = 1800;

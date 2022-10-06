@@ -19,6 +19,8 @@ namespace game
 		Dvar_SetFromStringByName_t Dvar_SetFromStringByName;
 		Dvar_SetString_t Dvar_SetString;
 
+		Dvar_DisplayableValue_t Dvar_DisplayableValue;
+
 		G_RunFrame_t G_RunFrame;
 		G_GetWeaponForName_t G_GetWeaponForName;
 
@@ -121,6 +123,9 @@ namespace game
 		int* initialized_0;
 		int* sys_timeBase;
 		unsigned __int64* sys_counterBase;
+
+		int* dvarCount;
+		dvar_t** sortedDvars;
 
 		namespace mp
 		{
@@ -983,6 +988,8 @@ namespace game
 			SELECT_VALUE(0x4DD090, 0x5BF740, 0x518DF0));
 		native::Dvar_SetString = native::Dvar_SetString_t(SELECT_VALUE(0x540570, 0x5BF3E0, 0x0));
 
+		native::Dvar_DisplayableValue = native::Dvar_DisplayableValue_t(SELECT_VALUE(0x4AB1D0, 0x5BD260, 0x0));
+
 		native::G_RunFrame = native::G_RunFrame_t(SELECT_VALUE(0x52EAA0, 0x50CB70, 0x48AD60));
 		native::G_GetWeaponForName = native::G_GetWeaponForName_t(SELECT_VALUE(0x495E40, 0x531070, 0x0));
 
@@ -1107,5 +1114,8 @@ namespace game
 		native::initialized_0 = reinterpret_cast<int*>(SELECT_VALUE(0x1CE1CA0, 0x5AA3058, 0x62F4F9C));
 		native::sys_timeBase = reinterpret_cast<int*>(SELECT_VALUE(0x1CE1C98, 0x5AA3050, 0x5950CE4));
 		native::sys_counterBase = reinterpret_cast<unsigned __int64*>(SELECT_VALUE(0x1CE1C90, 0x5AA3048, 0x5950CE8));
+
+		native::dvarCount = reinterpret_cast<int*>(SELECT_VALUE(0x1C42398, 0x59CCDD8, 0x5879644));
+		native::sortedDvars = reinterpret_cast<native::dvar_t**>(SELECT_VALUE(0x1C423C0, 0x59CCE00, 0x587C5D8));
 	}
 }

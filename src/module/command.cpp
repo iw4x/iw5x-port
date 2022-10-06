@@ -1,11 +1,14 @@
 #include <std_include.hpp>
 #include <loader/module_loader.hpp>
-#include <utils/string.hpp>
-#include <utils/hook.hpp>
-
 #include "game/game.hpp"
 
+#include <utils/string.hpp>
+#include <utils/hook.hpp>
+#include <utils/io.hpp>
+
 #include "command.hpp"
+#include "log_file.hpp"
+
 
 utils::memory::allocator command::allocator_;
 std::unordered_map<std::string, std::function<void(const command::params&)>> command::handlers;
@@ -366,6 +369,33 @@ void command::post_load()
 	}
 
 	add("quit", game::native::Com_Quit_f);
+	add("dvarDump", [](const params& params)
+	{
+		if (params.size() < 2)
+		{
+			return;
+		}
+
+		std::string file_name = "userraw/";
+		file_name.append(params.get(1));
+		if (!file_name.ends_with(".txt"))
+		{
+			file_name.append(".txt");
+		}
+
+		for (auto i = 0; i < *game::native::dvarCount; ++i)
+		{
+			const auto* dvar = game::native::sortedDvars[i];
+
+			if (dvar != nullptr)
+			{
+				const auto* line = utils::string::va("%s \"%s\"\r\n", dvar->name, game::native::Dvar_DisplayableValue(dvar));
+				utils::io::write_file(file_name, line, i != 0);
+			}
+		}
+
+		log_file::info("%i dvars\n", *game::native::dvarCount);
+	});
 
 	if (game::is_mp())
 	{
