@@ -197,8 +197,8 @@ void player_movement::jump_apply_slowdown_stub(game::native::playerState_s* ps)
 		scale = 0.65f;
 	}
 
-	if ((ps->pm_flags & game::native::PMF_DIVING) == 0
-		&& jump_slowdownEnable->current.enabled)
+	if ((ps->pm_flags & game::native::PMF_DIVING) == 0 &&
+		jump_slowdownEnable->current.enabled)
 	{
 		game::native::VectorScale(ps->velocity, scale, ps->velocity);
 	}
@@ -209,8 +209,8 @@ float player_movement::jump_get_land_factor(game::native::playerState_s* ps)
 	assert(ps->pm_flags & game::native::PMF_JUMPING);
 	assert(ps->pm_time <= game::native::JUMP_LAND_SLOWDOWN_TIME);
 
-	if (!jump_slowdownEnable->current.enabled
-		|| (ps->pm_flags & game::native::PMF_DIVING) != 0)
+	if (!jump_slowdownEnable->current.enabled ||
+		(ps->pm_flags & game::native::PMF_DIVING) != 0)
 	{
 		return 1.0f;
 	}

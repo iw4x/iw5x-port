@@ -387,7 +387,7 @@ void command::post_load()
 		{
 			const auto* dvar = game::native::sortedDvars[i];
 
-			if (dvar != nullptr)
+			if (dvar)
 			{
 				const auto* line = utils::string::va("%s \"%s\"\r\n", dvar->name, game::native::Dvar_DisplayableValue(dvar));
 				utils::io::write_file(file_name, line, i != 0);
