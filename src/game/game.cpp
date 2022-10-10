@@ -9,6 +9,7 @@ namespace game
 		Cmd_RemoveCommand_t Cmd_RemoveCommand;
 
 		Com_Error_t Com_Error;
+		Com_Filter_t Com_Filter;
 
 		DB_LoadXAssets_t DB_LoadXAssets;
 
@@ -19,7 +20,10 @@ namespace game
 		Dvar_SetFromStringByName_t Dvar_SetFromStringByName;
 		Dvar_SetString_t Dvar_SetString;
 
+		Dvar_ForEach_t Dvar_ForEach;
+
 		Dvar_DisplayableValue_t Dvar_DisplayableValue;
+		Dvar_DisplayableLatchedValue_t Dvar_DisplayableLatchedValue;
 
 		G_RunFrame_t G_RunFrame;
 		G_GetWeaponForName_t G_GetWeaponForName;
@@ -126,6 +130,11 @@ namespace game
 
 		int* dvarCount;
 		dvar_t** sortedDvars;
+
+		int Vec4Compare(const float* a, const float* b)
+		{
+			return a[0] == b[0] && a[1] == b[1] && a[2] == b[2] && a[3] == b[3];
+		}
 
 		namespace mp
 		{
@@ -977,6 +986,7 @@ namespace game
 		native::Cmd_RemoveCommand = native::Cmd_RemoveCommand_t(SELECT_VALUE(0x443A30, 0x545E20, 0x4CC060));
 
 		native::Com_Error = native::Com_Error_t(SELECT_VALUE(0x425540, 0x555450, 0x4D93F0));
+		native::Com_Filter = native::Com_Filter_t(SELECT_VALUE(0x44EFF0, 0x5B7C30, 0x0));
 
 		native::DB_LoadXAssets = native::DB_LoadXAssets_t(SELECT_VALUE(0x48A8E0, 0x4CD020, 0x44F770));
 
@@ -988,7 +998,10 @@ namespace game
 			SELECT_VALUE(0x4DD090, 0x5BF740, 0x518DF0));
 		native::Dvar_SetString = native::Dvar_SetString_t(SELECT_VALUE(0x540570, 0x5BF3E0, 0x0));
 
+		native::Dvar_ForEach = native::Dvar_ForEach_t(SELECT_VALUE(0x536720, 0x5BFFB0, 0x0));
+
 		native::Dvar_DisplayableValue = native::Dvar_DisplayableValue_t(SELECT_VALUE(0x4AB1D0, 0x5BD260, 0x0));
+		native::Dvar_DisplayableLatchedValue = native::Dvar_DisplayableLatchedValue_t(SELECT_VALUE(0x464F50, 0x5BD290, 0x0));
 
 		native::G_RunFrame = native::G_RunFrame_t(SELECT_VALUE(0x52EAA0, 0x50CB70, 0x48AD60));
 		native::G_GetWeaponForName = native::G_GetWeaponForName_t(SELECT_VALUE(0x495E40, 0x531070, 0x0));

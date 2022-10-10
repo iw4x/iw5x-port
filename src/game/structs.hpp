@@ -611,6 +611,7 @@ namespace game
 			DVAR_CODINFO = 1 << 3,
 			DVAR_SCRIPTINFO = 1 << 4,
 			DVAR_SAVED = 1 << 6,
+			DVAR_USERINFO = 1 << 9,
 			DVAR_SERVERINFO = 1 << 10,
 			DVAR_INIT = 1 << 11,
 			DVAR_ROM = 1 << 13,
@@ -629,6 +630,8 @@ namespace game
 			DVAR_TYPE_STRING = 0x7,
 			DVAR_TYPE_COLOR = 0x8,
 			DVAR_TYPE_FLOAT_3_COLOR = 0x9,
+
+			DVAR_TYPE_COUNT = 0xA
 		};
 
 		union DvarValue
@@ -680,8 +683,15 @@ namespace game
 			DvarValue latched;
 			DvarValue reset;
 			DvarLimits domain;
-			bool (__cdecl *domainFunc)(dvar_t*, DvarValue);
+			bool (*domainFunc)(dvar_t*, DvarValue);
 			dvar_t* hashNext;
+		};
+
+		struct DvarDumpInfo
+		{
+			int count;
+			int channel;
+			const char* match;
 		};
 
 		struct Bounds

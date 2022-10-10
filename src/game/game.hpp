@@ -20,6 +20,9 @@ namespace game
 		typedef void (*Com_Error_t)(errorParm_t code, const char* fmt, ...);
 		extern Com_Error_t Com_Error;
 
+		typedef bool (*Com_Filter_t)(const char* filter, const char* name, int casesensitive);
+		extern Com_Filter_t Com_Filter;
+
 		typedef void (*DB_LoadXAssets_t)(XZoneInfo* zoneInfo, unsigned int zoneCount, int sync);
 		extern DB_LoadXAssets_t DB_LoadXAssets;
 
@@ -40,8 +43,14 @@ namespace game
 		typedef void (*Dvar_SetString_t)(const dvar_t* dvar, const char* value);
 		extern Dvar_SetString_t Dvar_SetString;
 
+		typedef void (*Dvar_ForEach_t)(void (*callback)(const dvar_t*, void*), void* userData);
+		extern Dvar_ForEach_t Dvar_ForEach;
+
 		typedef const char* (*Dvar_DisplayableValue_t)(const dvar_t* dvar);
 		extern Dvar_DisplayableValue_t Dvar_DisplayableValue;
+
+		typedef const char* (*Dvar_DisplayableLatchedValue_t)(const dvar_t* dvar);
+		extern Dvar_DisplayableLatchedValue_t Dvar_DisplayableLatchedValue;
 
 		typedef int (*G_RunFrame_t)(int, int);
 		extern G_RunFrame_t G_RunFrame;
@@ -211,6 +220,8 @@ namespace game
 		// From Quake III, to match game's assembly
 		template <typename T, typename R>
 		constexpr auto VectorScale(T v, R s, T out) { out[0] = v[0] * s; out[1] = v[1] * s; out[2] = v[2] * s; }
+
+		int Vec4Compare(const float* a, const float* b);
 
 		namespace mp
 		{

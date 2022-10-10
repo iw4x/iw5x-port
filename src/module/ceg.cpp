@@ -77,6 +77,10 @@ public:
 
 		signature.process();
 
+		// Checks on startup
+		utils::hook::set<DWORD>(0x402ED0, 0xC301B0);
+		utils::hook::set<DWORD>(0x4b9280, 0xC301B0);
+
 		// Function fixup
 		utils::hook(0x4CA310, game::native::DB_LoadXAssets, HOOK_JUMP).install()->quick();
 
