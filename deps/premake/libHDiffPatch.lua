@@ -20,7 +20,8 @@ end
 
 function libHDiffPatch.project()
 	project "libHDiffPatch"
-		language "C"
+		language "C++"
+		cppdialect "C++11"
 
 		libHDiffPatch.includes()
 
