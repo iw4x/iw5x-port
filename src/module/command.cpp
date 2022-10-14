@@ -148,10 +148,9 @@ void command::main_handler()
 
 	const auto command = utils::string::to_lower(params[0]);
 
-	const auto got = command::handlers.find(command);
-	if (got != handlers.end())
+	if (const auto itr = command::handlers.find(command); itr != handlers.end())
 	{
-		got->second(params);
+		itr->second(params);
 	}
 }
 
@@ -168,10 +167,9 @@ void command::client_command_stub(int client_num)
 
 	const auto command = utils::string::to_lower(params[0]);
 
-	const auto got = command::handlers_sv.find(command);
-	if (got != handlers_sv.end())
+	if (const auto itr = command::handlers_sv.find(command); itr != handlers_sv.end())
 	{
-		got->second(entity, params);
+		itr->second(entity, params);
 		return;
 	}
 
@@ -188,10 +186,9 @@ void command::client_command_sp(int client_num, const char* s)
 
 	const auto command = utils::string::to_lower(params[0]);
 
-	const auto got = command::handlers_sp_sv.find(command);
-	if (got != handlers_sp_sv.end())
+	if (const auto itr = command::handlers_sp_sv.find(command); itr != handlers_sp_sv.end())
 	{
-		got->second(entity, params);
+		itr->second(entity, params);
 	}
 }
 
