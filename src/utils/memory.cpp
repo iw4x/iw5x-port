@@ -64,7 +64,7 @@ namespace utils
 
 	void* memory::allocate(const size_t length)
 	{
-		const auto data = calloc(length, 1);
+		const auto data = std::calloc(length, 1);
 		assert(data != nullptr);
 		return data;
 	}
@@ -78,10 +78,7 @@ namespace utils
 
 	void memory::free(void* data)
 	{
-		if (data)
-		{
-			::free(data);
-		}
+		std::free(data);
 	}
 
 	void memory::free(const void* data)
