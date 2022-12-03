@@ -27,7 +27,5 @@ namespace game::scripting
 		std::unordered_map<unsigned int, std::unordered_map<std::string, chaiscript::Boxed_Value>> entity_fields_;
 
 		int get_field_id(int classnum, const std::string& field) const;
-
-		static int find_function_index(const std::string& function, bool prefer_global);
 	};
 }

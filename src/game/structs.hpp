@@ -374,6 +374,27 @@ namespace game
 		};
 #pragma pack(pop)
 
+		enum XAssetType
+		{
+			ASSET_TYPE_SCRIPTFILE = 0x27,
+		};
+
+		struct ScriptFile
+		{
+			const char* name;
+			int compressedLen;
+			int len;
+			int bytecodeLen;
+			const char* buffer;
+			unsigned char* bytecode;
+		};
+
+		union XAssetHeader
+		{
+			void* data;
+			ScriptFile* scriptfile;
+		};
+
 		enum errorParm_t
 		{
 			ERR_FATAL = 0x0,

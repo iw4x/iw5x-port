@@ -26,6 +26,9 @@ namespace game
 		typedef void (*DB_LoadXAssets_t)(XZoneInfo* zoneInfo, unsigned int zoneCount, int sync);
 		extern DB_LoadXAssets_t DB_LoadXAssets;
 
+		typedef XAssetHeader (*DB_FindXAssetHeader_t)(XAssetType type, const char* name, int allowCreateDefault);
+		extern DB_FindXAssetHeader_t DB_FindXAssetHeader;
+
 		typedef const dvar_t* (*Dvar_RegisterBool_t)(const char* dvarName, bool value,
 			unsigned __int16 flags, const char* description);
 		extern Dvar_RegisterBool_t Dvar_RegisterBool;
@@ -171,9 +174,6 @@ namespace game
 		extern scrVarPub_t* scr_VarPub;
 		extern scrVmPub_t* scr_VmPub;
 
-		extern scr_call_t* scr_instanceFunctions;
-		extern scr_call_t* scr_globalFunctions;
-
 		extern unsigned int* levelEntityId;
 
 		extern int* g_script_error_level;
@@ -272,7 +272,6 @@ namespace game
 		const float* Scr_AllocVector(const float* v);
 		void Scr_ClearOutParams();
 		scr_entref_t Scr_GetEntityIdRef(unsigned int id);
-		scr_call_t Scr_GetFunc(unsigned int index);
 		void Scr_NotifyId(unsigned int id, unsigned int stringValue, unsigned int paramcount);
 		int Scr_SetObjectField(unsigned int classnum, int entnum, int offset);
 		void Scr_AddString(const char* value);
@@ -280,6 +279,7 @@ namespace game
 
 		const char* SL_ConvertToString(unsigned int stringValue);
 		unsigned int SL_GetString(const char* str, unsigned int user);
+		unsigned int SL_GetCanonicalString(const char* str);
 
 		void SV_SendClientGameState(mp::client_t* client);
 		int SV_IsTestClient(int clientNum);

@@ -1,7 +1,8 @@
 #include <std_include.hpp>
+#include "game/game.hpp"
+
 #include <utils/string.hpp>
 
-#include "game/game.hpp"
 #include "functions.hpp"
 #include "stack_isolation.hpp"
 #include "safe_executer.hpp"
@@ -111,7 +112,7 @@ namespace game::scripting
 	chaiscript::Boxed_Value executer::call(const std::string& function, const unsigned int entity_id,
 	                                       std::vector<chaiscript::Boxed_Value> arguments) const
 	{
-		const auto function_index = find_function_index(function, entity_id == 0);
+		const auto function_index = ::scripting::find_function_index(function, entity_id == 0);
 		if (function_index < 0)
 		{
 			throw std::runtime_error("No function found for name '" + function + "'");
@@ -121,7 +122,7 @@ namespace game::scripting
 			                    ? native::Scr_GetEntityIdRef(entity_id)
 			                    : native::scr_entref_t{~0u};
 
-		const auto function_ptr = native::Scr_GetFunc(function_index);
+		const auto function_ptr = ::scripting::get_function_by_index(function_index);
 
 		stack_isolation _;
 
@@ -142,34 +143,8 @@ namespace game::scripting
 		return this->context_->get_parameters()->get_return_value();
 	}
 
-	int executer::find_function_index(const std::string& function, const bool prefer_global)
+	bool executer::function_exists(const std::string& function, bool prefer_global)
 	{
-		const auto target = utils::string::to_lower(function);
-
-		const auto primary_map = prefer_global
-			                         ? &global_function_map
-			                         : &instance_function_map;
-		const auto secondary_map = !prefer_global
-			                           ? &global_function_map
-			                           : &instance_function_map;
-
-		auto function_entry = primary_map->find(target);
-		if (function_entry != primary_map->end())
-		{
-			return function_entry->second;
-		}
-
-		function_entry = secondary_map->find(target);
-		if (function_entry != secondary_map->end())
-		{
-			return function_entry->second;
-		}
-
-		return -1;
-	}
-
-	bool executer::function_exists(const std::string& function, const bool prefer_global)
-	{
-		return find_function_index(function, prefer_global) >= 0;
+		return ::scripting::find_function_index(function, prefer_global) >= 0;
 	}
 }

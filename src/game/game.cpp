@@ -12,6 +12,7 @@ namespace game
 		Com_Filter_t Com_Filter;
 
 		DB_LoadXAssets_t DB_LoadXAssets;
+		DB_FindXAssetHeader_t DB_FindXAssetHeader;
 
 		Dvar_RegisterBool_t Dvar_RegisterBool;
 		Dvar_RegisterString_t Dvar_RegisterString;
@@ -91,9 +92,6 @@ namespace game
 
 		scrVarPub_t* scr_VarPub;
 		scrVmPub_t* scr_VmPub;
-
-		scr_call_t* scr_instanceFunctions;
-		scr_call_t* scr_globalFunctions;
 
 		unsigned int* levelEntityId;
 
@@ -412,16 +410,6 @@ namespace game
 			return result;
 		}
 
-		scr_call_t Scr_GetFunc(const unsigned int index)
-		{
-			if (index > 0x1C7)
-			{
-				return scr_instanceFunctions[index];
-			}
-
-			return scr_globalFunctions[index];
-		}
-
 		__declspec(naked) void scr_notify_id_multiplayer(unsigned int id, unsigned int string_value,
 		                                                 unsigned int paramcount)
 		{
@@ -541,6 +529,50 @@ namespace game
 		unsigned int SL_GetString(const char* str, const unsigned int user)
 		{
 			return SL_GetStringOfSize(str, user, std::strlen(str) + 1, 7);
+		}
+
+		unsigned int sl_get_canonical_string(const char* str)
+		{
+			static DWORD func = SELECT_VALUE(0x610750, 0x56B040, 0x0);
+			unsigned int result{};
+
+			__asm
+			{
+				pushad
+				mov edi, str
+				call func
+				mov result, eax
+				popad
+			}
+
+			return result;
+		}
+
+		unsigned int sl_get_canonical_dedicated(const char* str)
+		{
+			static DWORD func = 0x4F1620;
+			unsigned int result{};
+
+			__asm
+			{
+				pushad
+				mov esi, str
+				call func
+				mov result, eax
+				popad
+			}
+
+			return result;
+		}
+
+		unsigned int SL_GetCanonicalString(const char* str)
+		{
+			if (!is_dedi())
+			{
+				return sl_get_canonical_string(str);
+			}
+
+			return sl_get_canonical_dedicated(str);
 		}
 
 		__declspec(naked) void sv_send_client_game_state_mp(mp::client_t* /*client*/)
@@ -989,6 +1021,7 @@ namespace game
 		native::Com_Filter = native::Com_Filter_t(SELECT_VALUE(0x44EFF0, 0x5B7C30, 0x0));
 
 		native::DB_LoadXAssets = native::DB_LoadXAssets_t(SELECT_VALUE(0x48A8E0, 0x4CD020, 0x44F770));
+		native::DB_FindXAssetHeader = native::DB_FindXAssetHeader_t(SELECT_VALUE(0x4FF000, 0x4CA620, 0x44E7A0));
 
 		native::Dvar_RegisterBool = native::Dvar_RegisterBool_t(SELECT_VALUE(0x4914D0, 0x5BE9F0, 0x0));
 		native::Dvar_RegisterString = native::Dvar_RegisterString_t(SELECT_VALUE(0x5197F0, 0x5BEC90, 0x0));
@@ -1083,12 +1116,6 @@ namespace game
 
 		native::scr_VarPub = reinterpret_cast<native::scrVarPub_t*>(SELECT_VALUE(0x0, 0x208E188, 0x1CD8720));
 		native::scr_VmPub = reinterpret_cast<native::scrVmPub_t*>(SELECT_VALUE(0x1BF2580, 0x20B4A80, 0x1F5B080));
-
-		native::scr_instanceFunctions = reinterpret_cast<native::scr_call_t*>(SELECT_VALUE(0x184CDB0, 0x1D4F258,
-		                                                                                   0x1BF59C8));
-		native::scr_globalFunctions = reinterpret_cast<native::scr_call_t*>(SELECT_VALUE(0x186C68C, 0x1D6EB34,
-		                                                                                 0x1C152A4
-		));
 
 		native::g_script_error_level = reinterpret_cast<int*>(SELECT_VALUE(0x1BEFCFC, 0x20B21FC, 0x1F5B058));
 		native::g_script_error = reinterpret_cast<jmp_buf*>(SELECT_VALUE(0x1BF1D18, 0x20B4218, 0x1F5A818));
