@@ -531,7 +531,7 @@ namespace game
 			return SL_GetStringOfSize(str, user, std::strlen(str) + 1, 7);
 		}
 
-		unsigned int sl_get_canonical_string(const char* str)
+		unsigned int sl_get_canonical_string(const char* string)
 		{
 			static DWORD func = SELECT_VALUE(0x610750, 0x56B040, 0x0);
 			unsigned int result{};
@@ -539,7 +539,7 @@ namespace game
 			__asm
 			{
 				pushad
-				mov edi, str
+				mov edi, string
 				call func
 				mov result, eax
 				popad
@@ -548,7 +548,7 @@ namespace game
 			return result;
 		}
 
-		unsigned int sl_get_canonical_dedicated(const char* str)
+		unsigned int sl_get_canonical_dedicated(const char* string)
 		{
 			static DWORD func = 0x4F1620;
 			unsigned int result{};
@@ -556,7 +556,7 @@ namespace game
 			__asm
 			{
 				pushad
-				mov esi, str
+				mov esi, string
 				call func
 				mov result, eax
 				popad
