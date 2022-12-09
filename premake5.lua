@@ -70,7 +70,7 @@ workspace "open-iw5"
 
 	filter "configurations:Release"
 		optimize "Size"
-			buildoptions {"/Os"}
+		buildoptions {"/Os"}
 		defines {"NDEBUG"}
 		flags {"FatalCompileWarnings"}
 	filter {}
