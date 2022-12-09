@@ -93,8 +93,7 @@ namespace utils::nt
 		if (!this->is_valid()) return;
 
 		DWORD protection;
-		VirtualProtect(this->get_ptr(), this->get_optional_header()->SizeOfImage, PAGE_EXECUTE_READWRITE,
-		               &protection);
+		VirtualProtect(this->get_ptr(), this->get_optional_header()->SizeOfImage, PAGE_EXECUTE_READWRITE, &protection);
 	}
 
 	size_t library::get_relative_entry_point() const
@@ -116,7 +115,7 @@ namespace utils::nt
 
 	std::string library::get_name() const
 	{
-		if (!this->is_valid()) return "";
+		if (!this->is_valid()) return {};
 
 		auto path = this->get_path();
 		const auto pos = path.find_last_of("/\\");
@@ -127,17 +126,17 @@ namespace utils::nt
 
 	std::string library::get_path() const
 	{
-		if (!this->is_valid()) return "";
+		if (!this->is_valid()) return {};
 
 		char name[MAX_PATH] = {0};
 		GetModuleFileNameA(this->module_, name, sizeof name);
 
-		return name;
+		return {name};
 	}
 
 	std::string library::get_folder() const
 	{
-		if (!this->is_valid()) return "";
+		if (!this->is_valid()) return {};
 
 		const auto path = std::filesystem::path(this->get_path());
 		return path.parent_path().generic_string();

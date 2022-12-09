@@ -16,6 +16,7 @@
 #pragma warning(disable: 26495)
 #pragma warning(disable: 28020)
 
+#define _CRT_SECURE_NO_WARNINGS
 #define WIN32_LEAN_AND_MEAN
 
 #include <Windows.h>

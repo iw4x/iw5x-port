@@ -28,7 +28,7 @@ namespace game::scripting
 		if (offset)
 		{
 			const auto index = 4 * (offset + 0xC800 * (class_id & 1));
-			return PINT(SELECT_VALUE(0x1A3BC80, 0x1EFE180, 0x1DC8800))[index];
+			return PINT(SELECT_VALUE(0x1A3BC80, 0x1EFE180))[index];
 		}
 
 		return -1;

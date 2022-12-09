@@ -73,7 +73,7 @@ namespace scripting
 				add_function(current_file, thread_name, code_pos);
 			}
 
-			utils::hook::invoke<void>(SELECT_VALUE(0x4845F0, 0x5616D0, 0x0), thread_name, code_pos);
+			utils::hook::invoke<void>(SELECT_VALUE(0x4845F0, 0x5616D0), thread_name, code_pos);
 		}
 
 		void process_script(const char* filename)
@@ -91,7 +91,7 @@ namespace scripting
 				current_file = filename;
 			}
 
-			utils::hook::invoke<void>(SELECT_VALUE(0x446850, 0x56B130, 0x0), filename);
+			utils::hook::invoke<void>(SELECT_VALUE(0x446850, 0x56B130), filename);
 		}
 	}
 

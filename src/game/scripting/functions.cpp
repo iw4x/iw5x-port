@@ -72,8 +72,8 @@ namespace scripting
 
 	game::native::scr_call_t get_function_by_index(const std::uint32_t index)
 	{
-		static const auto function_table = SELECT_VALUE(0x186C68C, 0x1D6EB34, 0x1C152A4);
-		static const auto method_table = SELECT_VALUE(0x184CDB0, 0x1D4F258, 0x1BF59C8);
+		static const auto function_table = SELECT_VALUE(0x186C68C, 0x1D6EB34);
+		static const auto method_table = SELECT_VALUE(0x184CDB0, 0x1D4F258);
 
 		if (index < 0x1C7)
 		{

@@ -623,7 +623,7 @@ namespace game
 			const char* name;
 		};
 
-		enum dvar_flags : std::uint16_t
+		enum : std::uint16_t
 		{
 			DVAR_NONE = 0,
 			DVAR_ARCHIVE = 1 << 0,

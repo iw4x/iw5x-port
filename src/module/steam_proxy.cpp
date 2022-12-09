@@ -69,7 +69,7 @@ private:
 	void run_mod() const
 	{
 		const auto command = "-proc ";
-		const char* parent_proc = strstr(GetCommandLineA(), command);
+		const char* parent_proc = std::strstr(GetCommandLineA(), command);
 
 		if (parent_proc)
 		{
@@ -89,11 +89,10 @@ private:
 	{
 		if (!this->steam_client_module_) return nullptr;
 
-		for (auto i = 1; i > 0; ++i)
+		for (auto i = 1; i < 1000; ++i)
 		{
-			std::string name = utils::string::va("CLIENTENGINE_INTERFACE_VERSION%03i", i);
-			const auto client_engine = this->steam_client_module_
-			                               .invoke<void*>("CreateInterface", name.data(), nullptr);
+			const auto* name = utils::string::va("CLIENTENGINE_INTERFACE_VERSION%03i", i);
+			const auto client_engine = this->steam_client_module_.invoke<void*>("CreateInterface", name, nullptr);
 			if (client_engine) return client_engine;
 		}
 
@@ -102,12 +101,12 @@ private:
 
 	void load_client()
 	{
-		const auto steam_path = ::steam::get_steam_install_directory();
+		const std::filesystem::path steam_path = ::steam::get_steam_install_directory();
 		if (steam_path.empty()) return;
 
-		utils::nt::library::load(steam_path + "tier0_s.dll");
-		utils::nt::library::load(steam_path + "vstdlib_s.dll");
-		this->steam_client_module_ = utils::nt::library::load(steam_path + "steamclient.dll");
+		utils::nt::library::load(steam_path / "tier0_s.dll");
+		utils::nt::library::load(steam_path / "vstdlib_s.dll");
+		this->steam_client_module_ = utils::nt::library::load(steam_path / "steamclient.dll");
 		if (!this->steam_client_module_) return;
 
 		this->client_engine_ = load_client_engine();
@@ -136,7 +135,7 @@ private:
 		char our_directory[MAX_PATH] = {0};
 		GetCurrentDirectoryA(sizeof(our_directory), our_directory);
 
-		const std::string cmdline = utils::string::va("\"%s\" -proc %d", path.data(), GetCurrentProcessId());
+		const auto* cmdline = utils::string::va("\"%s\" -proc %d", path.data(), GetCurrentProcessId());
 
 		game_id game_id;
 		game_id.raw.type = 1; // k_EGameIDTypeGameMod
@@ -145,8 +144,7 @@ private:
 		const auto mod_id = "OIW5";
 		game_id.raw.mod_id = *reinterpret_cast<const unsigned int*>(mod_id) | 0x80000000;
 
-		this->client_user_.invoke<bool>("SpawnProcess", self.get_path().data(), cmdline.data(), our_directory,
-		                                game_id.bits, title.data(), app_id, 0, 0);
+		this->client_user_.invoke<bool>("SpawnProcess", self.get_path().data(), cmdline, our_directory, game_id.bits, title.data(), app_id, 0, 0, 0);
 	}
 
 	void clean_up_on_error()
@@ -157,7 +155,11 @@ private:
 			&& this->steam_client_module_.invoke<bool>("Steam_BConnected", this->global_user_, this->steam_pipe_)
 			&& this->steam_client_module_.invoke<bool>("Steam_BLoggedOn", this->global_user_, this->steam_pipe_))
 		{
-			scheduler::once(std::bind(&steam_proxy::clean_up_on_error, this));
+			scheduler::once([this]
+			{
+				clean_up_on_error();
+			});
+
 			return;
 		}
 

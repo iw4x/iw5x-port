@@ -7,8 +7,6 @@
 #include "file_system.hpp"
 #include "log_file.hpp"
 
-#define _CRT_SECURE_NO_WARNINGS
-
 static utils::hook::detour sys_default_install_path_hook;
 
 static const game::native::dvar_t** fs_homepath;

@@ -37,6 +37,9 @@ private:
 		utils::hook::set<std::uint8_t>(0x663B5A, 0xEB);
 		utils::hook::set<std::uint8_t>(0x663C54, 0xEB);
 
+		// archive "name" dvar
+		utils::hook::set<std::uint8_t>(0x4296F9, game::native::DVAR_ARCHIVE);
+
 		utils::hook(0x44C640, &live_get_local_client_name_stub, HOOK_JUMP).install()->quick();
 	}
 
@@ -44,6 +47,9 @@ private:
 	{
 		// Note: on SP the max value is already 1000
 		utils::hook(0x55411F, &dvar_register_com_max_fps, HOOK_CALL).install()->quick();
+
+		// archive "name" dvar
+		utils::hook::set<std::uint32_t>(0x492C82, game::native::DVAR_USERINFO | game::native::DVAR_ARCHIVE);
 
 		utils::hook(0x5C9980, &live_get_local_client_name_stub, HOOK_JUMP).install()->quick();
 	}
@@ -72,8 +78,7 @@ private:
 	static const game::native::dvar_t* dvar_register_com_max_fps(const char* dvarName, int value,
 		int min, int /*max*/, unsigned __int16 /*flags*/, const char* description)
 	{
-		return game::native::Dvar_RegisterInt(dvarName, value, min, 1000,
-			game::native::dvar_flags::DVAR_ARCHIVE, description);
+		return game::native::Dvar_RegisterInt(dvarName, value, min, 1000, game::native::DVAR_ARCHIVE, description);
 	}
 
 	static const char* live_get_local_client_name_stub()
