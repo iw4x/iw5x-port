@@ -42,7 +42,7 @@ workspace "open-iw5"
 	objdir "%{wks.location}/obj"
 	targetdir "%{wks.location}/bin/%{cfg.platform}/%{cfg.buildcfg}"
 
-	configurations { "Debug", "Release" }
+	configurations {"Debug", "Release"}
 
 	language "C++"
 	cppdialect "C++20"
@@ -65,19 +65,19 @@ workspace "open-iw5"
 	}
 
 	filter "platforms:Win*"
-		defines { "_WINDOWS", "WIN32" }
+		defines {"_WINDOWS", "WIN32"}
 	filter {}
 
 	filter "configurations:Release"
-		optimize "Full"
-		buildoptions { "/Os" }
-		defines { "NDEBUG" }
-		flags { "FatalCompileWarnings" }
+		optimize "Size"
+			buildoptions {"/Os"}
+		defines {"NDEBUG"}
+		flags {"FatalCompileWarnings"}
 	filter {}
 
 	filter "configurations:Debug"
 		optimize "Debug"
-		defines { "DEBUG", "_DEBUG" }
+		defines {"DEBUG", "_DEBUG"}
 	filter  {}
 
 	project "open-iw5"
@@ -87,8 +87,13 @@ workspace "open-iw5"
 		pchheader "std_include.hpp"
 		pchsource "src/std_include.cpp"
 		
-		linkoptions "/IGNORE:4254 /DYNAMICBASE:NO /SAFESEH:NO /LARGEADDRESSAWARE"
-		linkoptions "/LAST:.main"
+		linkoptions {
+			"/IGNORE:4254",
+			"/DYNAMICBASE:NO",
+			"/SAFESEH:NO",
+			"/LARGEADDRESSAWARE",
+			"/LAST:.main"
+		}
 
 		files {
 			"./src/**.rc",

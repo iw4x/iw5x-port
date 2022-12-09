@@ -3,6 +3,8 @@
 class test_clients final : public module
 {
 public:
+	static_assert(offsetof(game::native::mp::client_t, bIsTestClient) == 0x41CB4);
+
 	void post_load() override;
 
 private:
