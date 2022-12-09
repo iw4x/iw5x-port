@@ -206,7 +206,7 @@ namespace utils::cryptography
 		cbc_start(des3, reinterpret_cast<const uint8_t*>(iv.data()), reinterpret_cast<const uint8_t*>(key.data()),
 		          key.size(), 0, &cbc);
 		cbc_decrypt(reinterpret_cast<const uint8_t*>(data.data()),
-		            reinterpret_cast<uint8_t*>(const_cast<char*>(dec_data.data())), data.size(), &cbc);
+		            reinterpret_cast<uint8_t*>(dec_data.data()), data.size(), &cbc);
 		cbc_done(&cbc);
 
 		return dec_data;

@@ -132,7 +132,7 @@ namespace binary_loader
 			long));
 
 		std::string binary;
-		binary.resize(size_t(*size));
+		binary.resize(static_cast<size_t>(*size));
 
 		const auto new_data = reinterpret_cast<unsigned char*>(binary.data());
 		const auto old_data = reinterpret_cast<const unsigned char*>(base.data());
@@ -149,12 +149,7 @@ namespace binary_loader
 
 	std::string load(const launcher::mode mode)
 	{
-		auto base = load_base();
-		if (mode == launcher::mode::server)
-		{
-			return base;
-		}
-
+		const auto base = load_base();
 		auto delta = load_delta(mode);
 		delta = utils::compression::zstd::decompress(delta);
 		return build_binary(base, delta);

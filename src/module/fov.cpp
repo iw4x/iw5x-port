@@ -1,18 +1,18 @@
 #include <std_include.hpp>
 #include <loader/module_loader.hpp>
-#include <utils/hook.hpp>
-
 #include "game/game.hpp"
+
+#include "log_file.hpp"
+
+#include <utils/hook.hpp>
 
 class fov final : public module
 {
 public:
 	void post_load() override
 	{
-		if (game::is_dedi()) return;
-
 		// Set dvar flag
-		utils::hook::set<BYTE>(SELECT_VALUE(0x4302C5, 0x455155, 0), game::native::DVAR_ARCHIVE | (game::is_mp() ? game::native::DVAR_SAVED : 0));
+		utils::hook::set<BYTE>(SELECT_VALUE(0x4302C5, 0x455155), game::native::DVAR_ARCHIVE | (game::is_mp() ? game::native::DVAR_SAVED : 0));
 
 		if (game::is_mp())
 		{
@@ -31,7 +31,7 @@ private:
 		const auto* dvar = game::native::Dvar_FindVar(dvar_name);
 		if (dvar != nullptr && ((dvar->flags & game::native::DVAR_ARCHIVE) != 0))
 		{
-			printf("Not allowing server to override archive dvar '%s'\n", dvar_name);
+			log_file::info("Not allowing server to override archive dvar '%s'\n", dvar_name);
 			return;
 		}
 

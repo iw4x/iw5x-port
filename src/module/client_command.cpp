@@ -1,10 +1,11 @@
 #include <std_include.hpp>
 #include <loader/module_loader.hpp>
-#include <utils/string.hpp>
-
 #include "game/game.hpp"
+
 #include "command.hpp"
 #include "scheduler.hpp"
+
+#include <utils/string.hpp>
 
 static const game::native::dvar_t* g_cheats;
 

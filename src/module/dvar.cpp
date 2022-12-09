@@ -193,11 +193,6 @@ void dvar::list_f(const command::params& params)
 
 void dvar::post_load()
 {
-	if (game::is_dedi())
-	{
-		return;
-	}
-
 	command::add("dvardump", dump_f);
 	command::add("dvarlist", list_f);
 }

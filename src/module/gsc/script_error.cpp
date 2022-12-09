@@ -73,7 +73,7 @@ namespace gsc
 
 		unsigned int find_variable_stub(unsigned int parent_id, unsigned int thread_name)
 		{
-			const auto res = utils::hook::invoke<unsigned int>(SELECT_VALUE(0x4C4E70, 0x5651F0, 0x0), parent_id, thread_name);
+			const auto res = utils::hook::invoke<unsigned int>(SELECT_VALUE(0x4C4E70, 0x5651F0), parent_id, thread_name);
 			if (!res)
 			{
 				get_unknown_function_error(thread_name);
@@ -106,16 +106,11 @@ namespace gsc
 	public:
 		void post_load() override
 		{
-			if (game::is_dedi())
-			{
-				return;
-			}
+			scr_emit_function_hook.create(SELECT_VALUE(0x40DCB0, 0x561400), &scr_emit_function_stub);
 
-			scr_emit_function_hook.create(SELECT_VALUE(0x40DCB0, 0x561400, 0x0), &scr_emit_function_stub);
-
-			utils::hook(SELECT_VALUE(0x60DABA, 0x5615FA, 0x0), &compile_error_stub, HOOK_CALL).install()->quick();
-			utils::hook(SELECT_VALUE(0x60DAD1, 0x561611, 0x0), &compile_error_stub, HOOK_CALL).install()->quick();
-			utils::hook(SELECT_VALUE(0x40DCFA, 0x56144A, 0x0), &find_variable_stub, HOOK_CALL).install()->quick();
+			utils::hook(SELECT_VALUE(0x60DABA, 0x5615FA), &compile_error_stub, HOOK_CALL).install()->quick();
+			utils::hook(SELECT_VALUE(0x60DAD1, 0x561611), &compile_error_stub, HOOK_CALL).install()->quick();
+			utils::hook(SELECT_VALUE(0x40DCFA, 0x56144A), &find_variable_stub, HOOK_CALL).install()->quick();
 		}
 
 		void pre_destroy() override

@@ -1,18 +1,17 @@
 #include <std_include.hpp>
 #include <loader/module_loader.hpp>
+#include "game/game.hpp"
+
+#include "scheduler.hpp"
+#include "log_file.hpp"
 
 #include <discord_rpc.h>
-
-#include "game/game.hpp"
-#include "scheduler.hpp"
 
 class discord final : public module
 {
 public:
 	void post_load() override
 	{
-		if (game::is_dedi()) return;
-
 		DiscordEventHandlers handlers;
 		ZeroMemory(&handlers, sizeof(handlers));
 		handlers.ready = ready;
@@ -45,7 +44,7 @@ private:
 
 	static void errored(const int error_code, const char* message)
 	{
-		printf("Discord: (%i) %s", error_code, message);
+		log_file::info("Discord: (%i) %s", error_code, message);
 	}
 };
 

@@ -29,7 +29,7 @@ void game_log::g_log_printf(const char* fmt, ...)
 		return;
 	}
 
-	const auto time = game::native::level->time / 1000;
+	const auto time = game::native::mp::level->time / 1000;
 	const auto len = sprintf_s(out, "%3i:%i%i %s", time / 60, time % 60 / 10, time % 60 % 10, buf);
 
 	file_system::write(out, len, log_file);

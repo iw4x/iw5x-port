@@ -1,4 +1,6 @@
 #include <std_include.hpp>
+#include "game/game.hpp"
+
 #include <utils/hook.hpp>
 #include <utils/nt.hpp>
 #include <utils/cryptography.hpp>
@@ -11,15 +13,13 @@
 #include "game/demonware/services/bdDediRSAAuth.hpp"    // 26
 #include "game/demonware/services/bdSteamAuth.hpp"      // 28
 
-#include "game/game.hpp"
 #include "dw.hpp"
 
 namespace demonware
 {
 	namespace io
 	{
-		int __stdcall send_to(const SOCKET s, const char* buf, const int len, const int flags, const sockaddr* to,
-		                      const int tolen)
+		int WINAPI send_to(const SOCKET s, const char* buf, const int len, const int flags, const sockaddr* to, const int tolen)
 		{
 			if (tolen == sizeof(sockaddr_in))
 			{
@@ -31,7 +31,7 @@ namespace demonware
 			return sendto(s, buf, len, flags, to, tolen);
 		}
 
-		int __stdcall recv_from(const SOCKET s, char* buf, const int len, const int flags, sockaddr* from, int* fromlen)
+		int WINAPI recv_from(const SOCKET s, char* buf, const int len, const int flags, sockaddr* from, int* fromlen)
 		{
 			auto res = dw::recv_datagam_packet(s, buf, len, from, fromlen);
 			if (res != 0) return res;
@@ -41,7 +41,7 @@ namespace demonware
 			return res;
 		}
 
-		int __stdcall send(const SOCKET s, const char* buf, const int len, const int flags)
+		int WINAPI send(const SOCKET s, const char* buf, const int len, const int flags)
 		{
 			auto server = dw::find_server_by_socket(s);
 			if (server) return server->send(buf, len);
@@ -49,7 +49,7 @@ namespace demonware
 			return ::send(s, buf, len, flags);
 		}
 
-		int __stdcall recv(const SOCKET s, char* buf, const int len, const int flags)
+		int WINAPI recv(const SOCKET s, char* buf, const int len, const int flags)
 		{
 			auto server = dw::find_server_by_socket(s);
 			if (server)
@@ -75,7 +75,7 @@ namespace demonware
 			return ::recv(s, buf, len, flags);
 		}
 
-		int __stdcall connect(const SOCKET s, const sockaddr* addr, const int len)
+		int WINAPI connect(const SOCKET s, const sockaddr* addr, const int len)
 		{
 			if (len == sizeof(sockaddr_in))
 			{
@@ -86,14 +86,14 @@ namespace demonware
 			return ::connect(s, addr, len);
 		}
 
-		int __stdcall close_socket(const SOCKET s)
+		int WINAPI close_socket(const SOCKET s)
 		{
 			dw::remove_blocking_socket(s);
 			dw::unlink_socket(s);
 			return closesocket(s);
 		}
 
-		int __stdcall ioctl_socket(const SOCKET s, const long cmd, u_long* argp)
+		int WINAPI ioctl_socket(const SOCKET s, const long cmd, u_long* argp)
 		{
 			if (static_cast<unsigned long>(cmd) == (FIONBIO))
 			{
@@ -103,7 +103,7 @@ namespace demonware
 			return ioctlsocket(s, cmd, argp);
 		}
 
-		hostent* __stdcall get_host_by_name(char* name)
+		hostent* WINAPI get_host_by_name(char* name)
 		{
 			static std::mutex mutex;
 			std::lock_guard<std::mutex> _(mutex);
@@ -185,7 +185,7 @@ namespace demonware
 			return server->second;
 		}
 
-		return std::shared_ptr<service_server>();
+		return {};
 	}
 
 	std::shared_ptr<stun_server> dw::find_stun_server_by_name(const std::string& name)
@@ -204,7 +204,7 @@ namespace demonware
 			return server->second;
 		}
 
-		return std::shared_ptr<stun_server>();
+		return {};
 	}
 
 	std::shared_ptr<service_server> dw::find_server_by_socket(const SOCKET s)
@@ -217,7 +217,7 @@ namespace demonware
 			return server->second;
 		}
 
-		return std::shared_ptr<service_server>();
+		return {};
 	}
 
 	bool dw::link_socket(const SOCKET s, const unsigned long address)
@@ -406,7 +406,7 @@ namespace demonware
 		io::register_hook("ioctlsocket", io::ioctl_socket);
 		io::register_hook("gethostbyname", io::get_host_by_name);
 
-		utils::hook(SELECT_VALUE(0x6F40A0, 0x6EE1C0, 0x611310), bd_logger_stub, HOOK_JUMP).install()->quick();
+		utils::hook(SELECT_VALUE(0x6F40A0, 0x6EE1C0), bd_logger_stub, HOOK_JUMP).install()->quick();
 	}
 
 	void dw::bd_logger_stub(int /*type*/, const char* const /*channelName*/, const char*, const char* const /*file*/,
@@ -417,11 +417,11 @@ namespace demonware
 		va_list ap;
 		va_start(ap, msg);
 
-		_vsnprintf_s(buffer, _TRUNCATE, msg, ap);
+		vsnprintf_s(buffer, _TRUNCATE, msg, ap);
 		printf("%s: %s\n", function, buffer);
 
 		va_end(ap);
 	}
-
-	REGISTER_MODULE(dw)
 }
+
+REGISTER_MODULE(demonware::dw)

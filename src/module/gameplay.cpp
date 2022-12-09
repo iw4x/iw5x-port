@@ -1,8 +1,8 @@
 #include <std_include.hpp>
 #include <loader/module_loader.hpp>
-#include <utils/hook.hpp>
-
 #include "game/game.hpp"
+
+#include <utils/hook.hpp>
 
 static const game::native::dvar_t** com_fixedtime = nullptr;
 
@@ -42,7 +42,7 @@ static float com_get_timescale_for_snd()
 
 static float com_get_timescale_for_sv()
 {
-	assert(com_timescale != nullptr);
+	assert(com_timescale);
 
 	if (dev_timescale->current.value == 1.0f && com_timescale->current.value == 1.0f
 		&& *game::native::com_codeTimeScale == 1.0f)

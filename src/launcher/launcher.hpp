@@ -9,7 +9,6 @@ public:
 		none,
 		singleplayer,
 		multiplayer,
-		server,
 	};
 
 	launcher();

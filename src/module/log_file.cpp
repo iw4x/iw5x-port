@@ -88,7 +88,7 @@ void log_file::post_load()
 	com_logfile = game::native::Dvar_RegisterInt("logfile", 1,
 		0, 2, 0, "Write to log file - 0 = disabled, 1 = async file write, 2 = Sync every write");
 
-	log_file_name = SELECT_VALUE("console_sp.log", "console_mp.log", "console_mp_dedicated.log");
+	log_file_name = SELECT_VALUE("console_sp.log", "console_mp.log");
 }
 
 REGISTER_MODULE(log_file)

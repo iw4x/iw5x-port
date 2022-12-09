@@ -1,11 +1,11 @@
 #include <std_include.hpp>
 #include <loader/module_loader.hpp>
+#include "game/game.hpp"
 
 #include <utils/hook.hpp>
 #include <utils/thread.hpp>
 #include <utils/concurrency.hpp>
 
-#include "game/game.hpp"
 #include "scheduler.hpp"
 
 namespace
@@ -95,19 +95,19 @@ void scheduler::execute(const pipeline type)
 
 void scheduler::r_end_frame_stub()
 {
-	utils::hook::invoke<void>(SELECT_VALUE(0x4193D0, 0x67F840, 0x0));
+	utils::hook::invoke<void>(SELECT_VALUE(0x4193D0, 0x67F840));
 	execute(pipeline::renderer);
 }
 
 void scheduler::g_glass_update_stub()
 {
-	utils::hook::invoke<void>(SELECT_VALUE(0x4E3730, 0x505BB0, 0x481EA0));
+	utils::hook::invoke<void>(SELECT_VALUE(0x4E3730, 0x505BB0));
 	execute(pipeline::server);
 }
 
 void scheduler::main_frame_stub()
 {
-	utils::hook::invoke<void>(SELECT_VALUE(0x458600, 0x556470, 0x4DB070));
+	utils::hook::invoke<void>(SELECT_VALUE(0x458600, 0x556470));
 	execute(pipeline::main);
 }
 
@@ -137,7 +137,7 @@ void scheduler::loop(const std::function<void()>& callback, const pipeline type,
 void scheduler::once(const std::function<void()>& callback, const pipeline type,
 	const std::chrono::milliseconds delay)
 {
-	schedule([callback]()
+	schedule([callback]
 	{
 		callback();
 		return cond_end;
@@ -158,15 +158,12 @@ void scheduler::post_start()
 
 void scheduler::post_load()
 {
-	utils::hook(SELECT_VALUE(0x44C7DB, 0x55688E, 0x4DB324), main_frame_stub, HOOK_CALL).install()->quick();
+	utils::hook(SELECT_VALUE(0x44C7DB, 0x55688E), main_frame_stub, HOOK_CALL).install()->quick();
 
-	if (!game::is_dedi())
-	{
-		utils::hook(SELECT_VALUE(0x57F7F8, 0x4978E2, 0x0), r_end_frame_stub, HOOK_CALL).install()->quick();
-	}
+	utils::hook(SELECT_VALUE(0x57F7F8, 0x4978E2), r_end_frame_stub, HOOK_CALL).install()->quick();
 
 	// Hook a function inside G_RunFrame. Fixes TLS issues
-	utils::hook(SELECT_VALUE(0x52EFBC, 0x50CEC6, 0x48B277), g_glass_update_stub, HOOK_CALL).install()->quick();
+	utils::hook(SELECT_VALUE(0x52EFBC, 0x50CEC6), g_glass_update_stub, HOOK_CALL).install()->quick();
 }
 
 void scheduler::pre_destroy()

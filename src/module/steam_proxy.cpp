@@ -19,8 +19,6 @@ public:
 
 	void post_load() override
 	{
-		if (game::is_dedi()) return;
-
 		this->load_client();
 
 		this->clean_up_on_error();

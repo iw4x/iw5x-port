@@ -3,7 +3,7 @@
 #include "structs.hpp"
 #include "launcher/launcher.hpp"
 
-#define SELECT_VALUE(sp, mp, dedi) (game::is_sp() ? (sp) : (game::is_mp() ? (mp) : (dedi)))
+#define SELECT_VALUE(sp, mp) (game::is_sp() ? (sp) : (mp))
 
 #define SERVER_CD_KEY "Open-IW5-CD-Key"
 
@@ -181,13 +181,12 @@ namespace game
 
 		extern scr_classStruct_t* g_classMap;
 
+		constexpr auto MAX_CLIENTS = 18;
 		extern int* svs_clientCount;
 
 		constexpr auto MAX_GENTITIES = 2048u;
 		constexpr auto ENTITYNUM_NONE = MAX_GENTITIES - 1u;
 		extern gentity_s* g_entities;
-
-		extern level_locals_t* level;
 
 		extern DeferredQueue* deferredQueue;
 
@@ -232,11 +231,8 @@ namespace game
 			extern SV_GameSendServerCommand_t SV_GameSendServerCommand;
 
 			extern client_t* svs_clients;
-		}
 
-		namespace dedi
-		{
-			extern client_t* svs_clients;
+			extern level_locals_t* level;
 		}
 
 		namespace sp
@@ -317,7 +313,6 @@ namespace game
 
 	bool is_mp();
 	bool is_sp();
-	bool is_dedi();
 
 	void initialize(launcher::mode mode);
 }

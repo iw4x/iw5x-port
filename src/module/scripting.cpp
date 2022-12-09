@@ -105,20 +105,20 @@ namespace scripting
 	public:
 		void post_load() override
 		{
-			start_hook_.initialize(SELECT_VALUE(0x50C575, 0x50D4F2, 0x48A026), &start_execution_stub, HOOK_CALL) //
+			start_hook_.initialize(SELECT_VALUE(0x50C575, 0x50D4F2), &start_execution_stub, HOOK_CALL) //
 				->install() //
 				->quick();
 
-			stop_hook_.initialize(SELECT_VALUE(0x528B04, 0x569E46, 0x4F03FA), &stop_execution_stub, HOOK_CALL) //
+			stop_hook_.initialize(SELECT_VALUE(0x528B04, 0x569E46), &stop_execution_stub, HOOK_CALL) //
 				->install() //
 				->quick();
 
-			utils::hook(SELECT_VALUE(0x4F9706, 0x5772A0, 0x4FAB88), &frame_stub, HOOK_CALL).install()->quick();
-			utils::hook(SELECT_VALUE(0x4FFA48, 0x5774AB, 0x4FEFD7), &frame_stub, HOOK_CALL).install()->quick();
+			utils::hook(SELECT_VALUE(0x4F9706, 0x5772A0), &frame_stub, HOOK_CALL).install()->quick();
+			utils::hook(SELECT_VALUE(0x4FFA48, 0x5774AB), &frame_stub, HOOK_CALL).install()->quick();
 			// Only relevant one?
 
-			utils::hook(SELECT_VALUE(0x6109F3, 0x56B637, 0x4EDFF7), &vm_notify_stub, HOOK_CALL).install()->quick();
-			utils::hook(SELECT_VALUE(0x6128BE, 0x56D541, 0x4EFAF9), &vm_notify_stub, HOOK_CALL).install()->quick();
+			utils::hook(SELECT_VALUE(0x6109F3, 0x56B637), &vm_notify_stub, HOOK_CALL).install()->quick();
+			utils::hook(SELECT_VALUE(0x6128BE, 0x56D541), &vm_notify_stub, HOOK_CALL).install()->quick();
 
 			if (game::is_sp())
 			{
@@ -129,10 +129,8 @@ namespace scripting
 				utils::hook(0x610970, &vm_notify_stub, HOOK_JUMP).install()->quick();
 			}
 
-			if (game::is_dedi()) return;
-
-			utils::hook(SELECT_VALUE(0x44690A, 0x56B1EA, 0x0), &scr_set_thread_position, HOOK_CALL).install()->quick();
-			utils::hook(SELECT_VALUE(0x4232A8, 0x561748, 0x0), &process_script, HOOK_CALL).install()->quick();
+			utils::hook(SELECT_VALUE(0x44690A, 0x56B1EA), &scr_set_thread_position, HOOK_CALL).install()->quick();
+			utils::hook(SELECT_VALUE(0x4232A8, 0x561748), &process_script, HOOK_CALL).install()->quick();
 		}
 
 		void pre_destroy() override
@@ -145,7 +143,7 @@ namespace scripting
 
 		void load_scripts()
 		{
-			const auto script_dir = "open-iw5/scripts/"s;
+			const auto script_dir = "userraw/scripts/"s;
 
 			if (!utils::io::directory_exists(script_dir))
 			{

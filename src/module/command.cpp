@@ -4,12 +4,12 @@
 
 #include <utils/string.hpp>
 #include <utils/hook.hpp>
-#include <utils/io.hpp>
 
 #include "command.hpp"
 
 
-utils::memory::allocator command::allocator_;
+static utils::memory::allocator allocator;
+
 std::unordered_map<std::string, std::function<void(const command::params&)>> command::handlers;
 std::unordered_map<std::string, std::function<void(game::native::gentity_s*, command::params_sv&)>> command::handlers_sv;
 std::unordered_map<std::string, std::function<void(game::native::sp::gentity_s*, command::params_sv&)>> command::handlers_sp_sv;
@@ -84,7 +84,7 @@ std::string command::params_sv::join(const int index) const
 
 void command::add_raw(const char* name, void (*callback)())
 {
-	game::native::Cmd_AddCommand(name, callback, command::allocator_.allocate<game::native::cmd_function_t>());
+	game::native::Cmd_AddCommand(name, callback, allocator.allocate<game::native::cmd_function_t>());
 }
 
 void command::add(const char* name, const std::function<void(const command::params&)>& callback)
@@ -148,7 +148,7 @@ void command::main_handler()
 
 	const auto command = utils::string::to_lower(params[0]);
 
-	if (const auto itr = command::handlers.find(command); itr != handlers.end())
+	if (const auto itr = handlers.find(command); itr != handlers.end())
 	{
 		itr->second(params);
 	}
@@ -158,7 +158,7 @@ void command::client_command_stub(int client_num)
 {
 	const auto entity = &game::native::g_entities[client_num];
 
-	if (entity->client == nullptr)
+	if (!entity->client)
 	{
 		return;
 	}
@@ -167,7 +167,7 @@ void command::client_command_stub(int client_num)
 
 	const auto command = utils::string::to_lower(params[0]);
 
-	if (const auto itr = command::handlers_sv.find(command); itr != handlers_sv.end())
+	if (const auto itr = handlers_sv.find(command); itr != handlers_sv.end())
 	{
 		itr->second(entity, params);
 		return;
@@ -186,7 +186,7 @@ void command::client_command_sp(int client_num, const char* s)
 
 	const auto command = utils::string::to_lower(params[0]);
 
-	if (const auto itr = command::handlers_sp_sv.find(command); itr != handlers_sp_sv.end())
+	if (const auto itr = handlers_sp_sv.find(command); itr != handlers_sp_sv.end())
 	{
 		itr->second(entity, params);
 	}
@@ -200,7 +200,7 @@ __declspec(naked) void command::client_command_sp_stub()
 
 		push [esp + 0x20 + 0x8]
 		push [esp + 0x20 + 0x8]
-		call command::client_command_sp
+		call client_command_sp
 		add esp, 0x8
 
 		popad
@@ -210,21 +210,6 @@ __declspec(naked) void command::client_command_sp_stub()
 		sub esp, 0x400
 
 		push 0x44BB5A // ClientCommand
-		retn
-	}
-}
-
-__declspec(naked) void command::client_command_dedi_stub()
-{
-	__asm
-	{
-		pushad
-
-		push edi
-		call client_command_stub
-		add esp, 4h
-
-		popad
 		retn
 	}
 }
@@ -358,21 +343,15 @@ void command::add_sp_commands()
 
 void command::post_load()
 {
-	if (game::is_dedi())
-	{
-		utils::hook(0x4F96B5, &command::client_command_dedi_stub, HOOK_CALL).install()->quick(); // SV_ExecuteClientCommand
-		return;
-	}
-
 	add("quit", game::native::Com_Quit_f);
 
 	if (game::is_mp())
 	{
-		utils::hook(0x57192A, &command::client_command_stub, HOOK_CALL).install()->quick(); // SV_ExecuteClientCommand
+		utils::hook(0x57192A, &client_command_stub, HOOK_CALL).install()->quick(); // SV_ExecuteClientCommand
 	}
 	else
 	{
-		utils::hook(0x44BB50, &command::client_command_sp_stub, HOOK_JUMP).install()->quick();
+		utils::hook(0x44BB50, &client_command_sp_stub, HOOK_JUMP).install()->quick();
 		utils::hook::nop(0x44BB55, 5); // Nop skipped instructions
 		add_sp_commands();
 	}

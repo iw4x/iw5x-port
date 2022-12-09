@@ -1,19 +1,21 @@
 #include <std_include.hpp>
 #include <loader/module_loader.hpp>
+#include "game/game.hpp"
+
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
 
-#include "game/game.hpp"
 #include "test_clients.hpp"
 #include "command.hpp"
 #include "scheduler.hpp"
+#include "log_file.hpp"
 
 bool test_clients::can_add()
 {
 	auto i = 0;
 	while (i < *game::native::svs_clientCount)
 	{
-		if (game::native::mp::svs_clients[i].header.state == game::native::clientState_t::CS_FREE)
+		if (game::native::mp::svs_clients[i].header.state == game::native::CS_FREE)
 		{
 			// Free slot was found
 			break;
@@ -27,7 +29,7 @@ bool test_clients::can_add()
 
 game::native::gentity_s* test_clients::sv_add_test_client()
 {
-	if (!test_clients::can_add())
+	if (!can_add())
 	{
 		return nullptr;
 	}
@@ -54,7 +56,7 @@ game::native::gentity_s* test_clients::sv_add_test_client()
 	game::native::SV_Cmd_TokenizeString(user_info);
 
 	adr.port = static_cast<std::uint16_t>(bot_port++);
-	game::native::NetAdr_SetType(&adr, game::native::netadrtype_t::NA_BOT);
+	game::native::NetAdr_SetType(&adr, game::native::NA_BOT);
 
 	game::native::SV_DirectConnect(adr);
 
@@ -64,7 +66,7 @@ game::native::gentity_s* test_clients::sv_add_test_client()
 	int idx;
 	for (idx = 0; idx < *game::native::svs_clientCount; idx++)
 	{
-		if (game::native::mp::svs_clients[idx].header.state == game::native::clientState_t::CS_FREE)
+		if (game::native::mp::svs_clients[idx].header.state == game::native::CS_FREE)
 			continue;
 
 		if (game::native::mp::svs_clients[idx].header.netchan.remoteAddress.type == adr.type
@@ -84,7 +86,7 @@ game::native::gentity_s* test_clients::sv_add_test_client()
 	game::native::SV_SendClientGameState(client);
 
 	game::native::usercmd_s cmd;
-	std::memset(&cmd, 0, sizeof(game::native::usercmd_s));
+	ZeroMemory(&cmd, sizeof(game::native::usercmd_s));
 
 	game::native::SV_ClientEnterWorld(client, &cmd);
 
@@ -95,7 +97,7 @@ game::native::gentity_s* test_clients::sv_add_test_client()
 
 void test_clients::gscr_add_test_client()
 {
-	const auto* ent = test_clients::sv_add_test_client();
+	const auto* ent = sv_add_test_client();
 
 	if (ent != nullptr)
 	{
@@ -107,19 +109,19 @@ void test_clients::spawn(const int count)
 {
 	for (int i = 0; i < count; ++i)
 	{
-		scheduler::once([]()
+		scheduler::once([]
 		{
 			auto* ent = sv_add_test_client();
 			if (ent == nullptr) return;
 
 			game::native::Scr_AddEntityNum(ent->s.number, 0);
-			scheduler::once([ent]()
+			scheduler::once([ent]
 			{
 				game::native::Scr_AddString("autoassign");
 				game::native::Scr_AddString("team_marinesopfor");
 				game::native::Scr_Notify(ent, static_cast<std::uint16_t>(game::native::SL_GetString("menuresponse", 0)), 2);
 
-				scheduler::once([ent]()
+				scheduler::once([ent]
 				{
 					game::native::Scr_AddString(utils::string::va("class%i", std::rand() % 5));
 					game::native::Scr_AddString("changeclass");
@@ -157,8 +159,8 @@ __declspec(naked) void test_clients::reset_reliable_mp()
 
 bool test_clients::check_timeouts(const game::native::mp::client_t* client)
 {
-	return (!client->bIsTestClient || client->header.state == game::native::clientState_t::CS_ZOMBIE)
-		&& client->header.netchan.remoteAddress.type != game::native::netadrtype_t::NA_LOOPBACK;
+	return (!client->bIsTestClient || client->header.state == game::native::clientState_t::CS_ZOMBIE) &&
+		client->header.netchan.remoteAddress.type != game::native::netadrtype_t::NA_LOOPBACK;
 }
 
 __declspec(naked) void test_clients::check_timeouts_stub_mp()
@@ -170,7 +172,7 @@ __declspec(naked) void test_clients::check_timeouts_stub_mp()
 
 		lea esi, [ebx - 0x2146C]
 		push esi
-		call test_clients::check_timeouts
+		call check_timeouts
 		add esp, 4
 
 		mov [esp + 0x20], eax
@@ -187,17 +189,26 @@ __declspec(naked) void test_clients::check_timeouts_stub_mp()
 void test_clients::post_load()
 {
 	if (game::is_mp()) this->patch_mp();
-	else return; // No sp/dedi bots for now :(
+	else return; // No sp bots for now :(
 
 	command::add("spawnBot", [](const command::params& params)
 	{
+		char* end;
+
 		if (params.size() < 2)
 		{
 			return;
 		}
 
-		const auto count = std::atoi(params.get(1));
-		test_clients::spawn(count);
+		const auto* input = params.get(1);
+		const auto count = std::strtol(input, &end, 10);
+		if (input == end)
+		{
+			log_file::info("%s is not a valid input\nUsage: %s <number of bots>\n", input, params.get(0));
+			return;
+		}
+
+		spawn(count);
 	});
 }
 
@@ -206,16 +217,16 @@ void test_clients::patch_mp()
 	utils::hook::nop(0x639803, 5); // LiveSteamServer_RunFrame
 	utils::hook::nop(0x5CD65A, 5); // Do not crash for silly fatal error
 
-	utils::hook::set<BYTE>(0x572879, 0xEB); // Skip checks in SV_DirectConnect
-	utils::hook::set<BYTE>(0x5728D4, 0xEB);
-	utils::hook::set<BYTE>(0x57293D, 0xEB);
+	utils::hook::set<std::uint8_t>(0x572879, 0xEB); // Skip checks in SV_DirectConnect
+	utils::hook::set<std::uint8_t>(0x5728D4, 0xEB);
+	utils::hook::set<std::uint8_t>(0x57293D, 0xEB);
 
-	utils::hook(0x50C147, &test_clients::scr_shutdown_system_mp_stub, HOOK_CALL).install()->quick(); // G_ShutdownGame
-	utils::hook(0x57BBF9, &test_clients::reset_reliable_mp, HOOK_CALL).install()->quick(); // SV_SendMessageToClient
-	utils::hook(0x576DCC, &test_clients::check_timeouts_stub_mp, HOOK_JUMP).install()->quick(); // SV_CheckTimeouts
+	utils::hook(0x50C147, &scr_shutdown_system_mp_stub, HOOK_CALL).install()->quick(); // G_ShutdownGame
+	utils::hook(0x57BBF9, &reset_reliable_mp, HOOK_CALL).install()->quick(); // SV_SendMessageToClient
+	utils::hook(0x576DCC, &check_timeouts_stub_mp, HOOK_JUMP).install()->quick(); // SV_CheckTimeouts
 
 	// Replace nullsubbed gsc func "GScr_AddTestClient" with our spawn
-	utils::hook::set<void(*)()>(0x8AC8DC, test_clients::gscr_add_test_client);
+	utils::hook::set<void(*)()>(0x8AC8DC, gscr_add_test_client);
 }
 
 REGISTER_MODULE(test_clients);

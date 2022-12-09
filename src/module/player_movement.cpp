@@ -26,6 +26,7 @@ const game::native::dvar_t* player_movement::g_speed;
 
 DWORD player_movement::bounce_addr;
 DWORD player_movement::dont_bounce_addr;
+DWORD player_movement::pm_project_velocity_addr;
 DWORD player_movement::push_off_ladder_addr;
 DWORD player_movement::jump_start_addr;
 DWORD player_movement::jump_get_step_height_addr;
@@ -310,28 +311,24 @@ __declspec(naked) void player_movement::jump_start_stub()
 	}
 }
 
-void player_movement::pm_project_velocity_stub(const float* vel_in, const float* normal, float* vel_out)
+__declspec(naked) void player_movement::pm_project_velocity_stub()
 {
-	const auto length_squared_2d = vel_in[0] * vel_in[0] + vel_in[1] * vel_in[1];
-
-	if (std::fabsf(normal[2]) < 0.001f || length_squared_2d == 0.0f)
+	__asm
 	{
-		std::memcpy(vel_out, vel_in, sizeof(std::float_t[3]));
-		return;
-	}
+		push eax
+		mov eax, pm_bouncesAllAngles
+		cmp byte ptr [eax + 0xC], 1
+		pop eax
 
-	auto new_z = vel_in[0] * normal[0] + vel_in[1] * normal[1];
-	new_z = -new_z / normal[2];
+		je bounce
 
-	const auto length_scale = std::sqrtf((vel_in[2] * vel_in[2] + length_squared_2d) /
-		(new_z * new_z + length_squared_2d));
+		fstp ST(0)
+		pop esi
+		add esp, 0x10
+		retn
 
-	if (pm_bouncesAllAngles->current.enabled == true
-		|| (length_scale < 1.f || new_z < 0.f || vel_in[2] > 0.f))
-	{
-		vel_out[0] = vel_in[0] * length_scale;
-		vel_out[1] = vel_in[1] * length_scale;
-		vel_out[2] = new_z * length_scale;
+	bounce:
+		jmp dont_bounce_addr
 	}
 }
 
@@ -525,7 +522,7 @@ void player_movement::patch_mp()
 	utils::hook(0x4166F0, jump_start_stub, HOOK_JUMP).install()->quick();
 	utils::hook::nop(0x4166F5, 1); // Nop skipped opcode
 
-	utils::hook(0x424E0A, pm_project_velocity_stub, HOOK_CALL).install()->quick(); // PM_StepSlideMove
+	utils::hook(0x41D196, pm_project_velocity_stub, HOOK_JUMP).install()->quick(); // PM_StepSlideMove
 
 	utils::hook(0x4F9BB3, bg_gravity_stub, HOOK_JUMP).install()->quick(); // ClientEndFrame
 	utils::hook::nop(0x4F9BB8, 2); // Nop skipped opcode
@@ -579,7 +576,7 @@ void player_movement::patch_sp()
 	utils::hook(0x63E90A, jump_start_stub, HOOK_JUMP).install()->quick();
 	utils::hook::nop(0x63E90F, 1); // Nop skipped opcode
 
-	utils::hook(0x43D9D1, pm_project_velocity_stub, HOOK_CALL).install()->quick(); // PM_StepSlideMove
+	utils::hook(0x4A57E6, pm_project_velocity_stub, HOOK_JUMP).install()->quick(); // PM_StepSlideMove
 
 	utils::hook(0x64384F, pm_cmd_scale_crawl_speed_stub, HOOK_JUMP).install()->quick(); // PM_CmdScaleForStance
 	utils::hook(0x643859, pm_cmd_scale_ducked_speed_stub, HOOK_JUMP).install()->quick(); // PM_CmdScaleForStance
@@ -616,18 +613,14 @@ void player_movement::register_common_dvars()
 void player_movement::post_load()
 {
 	// Un-cheat missileMacross. It seems it retained its functionality
-	utils::hook::set<BYTE>(SELECT_VALUE(0x44DFED, 0x50DDDD, 0x48C16F), 0x0);
+	utils::hook::set<BYTE>(SELECT_VALUE(0x44DFED, 0x50DDDD), 0x0);
 
-	if (game::is_dedi())
-	{
-		return;
-	}
-
-	bounce_addr = SELECT_VALUE(0x43D91F, 0x424D58, 0x0);
-	dont_bounce_addr = SELECT_VALUE(0x43D933, 0x424D6C, 0x0);
-	push_off_ladder_addr = SELECT_VALUE(0x63EA4C, 0x41686C, 0x0);
-	jump_start_addr = SELECT_VALUE(0x63E910, 0x4166F6, 0x0);
-	jump_get_step_height_addr = SELECT_VALUE(0x48C1E2, 0x416145, 0x0);
+	bounce_addr = SELECT_VALUE(0x43D91F, 0x424D58);
+	dont_bounce_addr = SELECT_VALUE(0x43D933, 0x424D6C);
+	pm_project_velocity_addr = SELECT_VALUE(0x4A57Ef, 0x41D19F);
+	push_off_ladder_addr = SELECT_VALUE(0x63EA4C, 0x41686C);
+	jump_start_addr = SELECT_VALUE(0x63E910, 0x4166F6);
+	jump_get_step_height_addr = SELECT_VALUE(0x48C1E2, 0x416145);
 
 	this->register_common_dvars();
 

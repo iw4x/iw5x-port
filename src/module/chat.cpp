@@ -1,11 +1,10 @@
 #include <std_include.hpp>
 #include <loader/module_loader.hpp>
-
 #include "game/game.hpp"
 
-#include <utils/hook.hpp>
-
 #include "game_log.hpp"
+
+#include <utils/hook.hpp>
 
 static void notify_on_say(game::native::gentity_s* ent, int mode, const char* message)
 {

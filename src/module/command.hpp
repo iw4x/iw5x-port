@@ -1,5 +1,4 @@
 #pragma once
-#include <utils/memory.hpp>
 
 class command final : public module
 {
@@ -51,8 +50,6 @@ public:
 	void post_load() override;
 
 private:
-	static utils::memory::allocator allocator_;
-
 	static std::unordered_map<std::string, std::function<void(const params&)>> handlers;
 	static std::unordered_map<std::string, std::function<void(game::native::gentity_s*, params_sv&)>> handlers_sv;
 	static std::unordered_map<std::string, std::function<void(game::native::sp::gentity_s*, params_sv&)>> handlers_sp_sv;

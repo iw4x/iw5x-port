@@ -47,10 +47,10 @@ void bullet::post_load()
 		0.0f, std::numeric_limits<float>::max(), game::native::DVAR_CODINFO,
 		"Set to a value greater than 0 to override the surface penetration depth");
 
-	bullet_fire_addr = SELECT_VALUE(0x5B6442, 0x4F6C5C, 0x46CFFA);
-	utils::hook(SELECT_VALUE(0x5B643C, 0x4F6C56, 0x46CFF4), &bullet_fire_stub, HOOK_JUMP).install()->quick();
+	bullet_fire_addr = SELECT_VALUE(0x5B6442, 0x4F6C5C);
+	utils::hook(SELECT_VALUE(0x5B643C, 0x4F6C56), &bullet_fire_stub, HOOK_JUMP).install()->quick();
 
-	bg_get_surface_penetration_depth_hook.create(SELECT_VALUE(0x43BDE0, 0x42F4D0, 0x421610), &bg_get_surface_penetration_depth_stub);
+	bg_get_surface_penetration_depth_hook.create(SELECT_VALUE(0x43BDE0, 0x42F4D0), &bg_get_surface_penetration_depth_stub);
 }
 
 REGISTER_MODULE(bullet)

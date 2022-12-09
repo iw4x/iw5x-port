@@ -1,11 +1,13 @@
 #include <std_include.hpp>
 #include <loader/module_loader.hpp>
+#include "game/game.hpp"
 
 #include <utils/hook.hpp>
 
-#include "game/game.hpp"
-
 #include "file_system.hpp"
+#include "log_file.hpp"
+
+#define _CRT_SECURE_NO_WARNINGS
 
 static utils::hook::detour sys_default_install_path_hook;
 
@@ -34,7 +36,7 @@ static FILE* file_open_append_text(const char* filename)
 		return file;
 	}
 
-	printf("Couldn't open file: %s %s\n", filename, std::strerror(errno));
+	log_file::info("Couldn't open file: %s %s\n", filename, std::strerror(errno));
 	return nullptr;
 }
 
@@ -47,7 +49,7 @@ static FILE* file_open_write_binary(const char* filename)
 		return file;
 	}
 
-	printf("Couldn't open file: %s %s\n", filename, std::strerror(errno));
+	log_file::info("Couldn't open file: %s %s\n", filename, std::strerror(errno));
 	return nullptr;
 }
 
@@ -154,7 +156,7 @@ static int open_file_append(const char* filename)
 	build_os_path_for_thread(basepath, game::native::fs_gamedir, filename, ospath, game::native::FS_THREAD_MAIN);
 	if ((*fs_debug)->current.integer)
 	{
-		printf("FS_FOpenFileAppend: %s\n", ospath);
+		log_file::info("FS_FOpenFileAppend: %s\n", ospath);
 	}
 
 	if (game::native::FS_CreatePath(ospath))
@@ -212,7 +214,7 @@ static int open_file_write_to_dir_for_thread(const char* filename, const char* d
 
 	if ((*fs_debug)->current.integer)
 	{
-		printf("FS_FOpenFileWriteToDirForThread: %s\n", ospath);
+		log_file::info("FS_FOpenFileWriteToDirForThread: %s\n", ospath);
 	}
 
 	if (game::native::FS_CreatePath(ospath))
@@ -297,8 +299,8 @@ int file_system::write(const char* buffer, int len, int h)
 	auto tries = 0;
 	while (remaining)
 	{
-		auto block = remaining;
-		auto written = static_cast<int>(file_write(buf, block, f));
+		const auto block = remaining;
+		const auto written = static_cast<int>(file_write(buf, block, f));
 		if (!written)
 		{
 			if (tries)
@@ -327,16 +329,14 @@ int file_system::write(const char* buffer, int len, int h)
 
 void file_system::post_load()
 {
-	fs_homepath = reinterpret_cast<const game::native::dvar_t**>(
-		SELECT_VALUE(0x1C2B538, 0x59ADD18, 0x585E8F0));
-	fs_debug = reinterpret_cast<const game::native::dvar_t**>(
-		SELECT_VALUE(0x1C2B32C, 0x59A9A08, 0x585A5E4));
+	fs_homepath = reinterpret_cast<const game::native::dvar_t**>(SELECT_VALUE(0x1C2B538, 0x59ADD18));
+	fs_debug = reinterpret_cast<const game::native::dvar_t**>(SELECT_VALUE(0x1C2B32C, 0x59A9A08));
 
 	// Make open-iw5 work outside of the game directory
-	sys_default_install_path_hook.create(SELECT_VALUE(0x487E50, 0x5C4A80, 0x535F80), &sys_default_install_path_stub);
+	sys_default_install_path_hook.create(SELECT_VALUE(0x487E50, 0x5C4A80), &sys_default_install_path_stub);
 
 	// fs_basegame
-	utils::hook::set<const char*>(SELECT_VALUE(0x629031, 0x5B0FD1, 0x526F5C), "userraw");
+	utils::hook::set<const char*>(SELECT_VALUE(0x629031, 0x5B0FD1), "userraw");
 }
 
 REGISTER_MODULE(file_system)

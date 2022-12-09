@@ -31,6 +31,7 @@ private:
 
 	static DWORD bounce_addr;
 	static DWORD dont_bounce_addr;
+	static DWORD pm_project_velocity_addr;
 	static DWORD push_off_ladder_addr;
 	static DWORD jump_start_addr;
 	static DWORD jump_get_step_height_addr;
@@ -59,11 +60,11 @@ private:
 		int contents, const float* origin, const float* angles);
 
 	static game::native::gentity_s* weapon_rocket_launcher_fire_mp_stub(game::native::gentity_s* ent,
-		const game::native::Weapon weapon, float spread, game::native::weaponParms* wp,
+		game::native::Weapon weapon, float spread, game::native::weaponParms* wp,
 		const float* gun_vel, game::native::missileFireParms* fire_parms, game::native::missileFireParms* magic_bullet);
 
 	static game::native::sp::gentity_s* weapon_rocket_launcher_fire_sp_stub(game::native::sp::gentity_s* ent,
-		const game::native::Weapon weapon, float spread, game::native::weaponParms* wp,
+		game::native::Weapon weapon, float spread, game::native::weaponParms* wp,
 		const float* gun_vel, game::native::missileFireParms* fire_parms, game::native::missileFireParms* magic_bullet);
 
 	static void pm_player_trace_stub(game::native::pmove_t* pm, game::native::trace_t* results,
@@ -88,7 +89,7 @@ private:
 
 	static void jump_start_stub();
 
-	static void pm_project_velocity_stub(const float* vel_in, const float* normal, float* vel_out);
+	static void pm_project_velocity_stub();
 
 	// On SP these are already implemented
 	static void bg_gravity_stub();

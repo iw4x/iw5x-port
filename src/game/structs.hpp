@@ -1354,23 +1354,6 @@ namespace game
 			static_assert(sizeof(client_t) == 0x78698);
 		}
 
-		namespace dedi
-		{
-			struct client_t
-			{
-				clientHeader_t header;
-				const char* dropReason;
-				char userinfo[1024];
-				unsigned char __pad0[0x4123E];
-				unsigned __int16 scriptId;
-				int bIsTestClient; // 0x41CB0
-				int serverId;
-				unsigned char __pad1[0x369D8];
-			};
-
-			static_assert(sizeof(dedi::client_t) == 0x78690);
-		}
-
 		namespace sp
 		{
 			struct usercmd_s

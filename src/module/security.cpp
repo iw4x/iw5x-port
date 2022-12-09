@@ -1,8 +1,8 @@
 #include <std_include.hpp>
 #include <loader/module_loader.hpp>
-#include <utils/hook.hpp>
-
 #include "game/game.hpp"
+
+#include <utils/hook.hpp>
 
 class security final : public module
 {
@@ -15,7 +15,7 @@ public:
 
 			utils::hook(0x57680C, net_defer_packet_to_client, HOOK_CALL).install()->quick(); // SV_ConnectionlessPacket
 		}
-		else if (game::is_sp())
+		else
 		{
 			// Disable CL_ShellExecute_URL_f
 			utils::hook::nop(0x4298F6, 5);
@@ -38,8 +38,7 @@ private:
 			return;
 		}
 
-		auto* msg = &game::native::deferredQueue->msgs[game::native::deferredQueue->send
-			% std::extent_v<decltype(game::native::DeferredQueue::msgs)>];
+		auto* msg = &game::native::deferredQueue->msgs[game::native::deferredQueue->send % std::extent_v<decltype(game::native::DeferredQueue::msgs)>];
 		std::memcpy(msg->data, net_message->data, net_message->cursize);
 
 		msg->datalen = net_message->cursize;

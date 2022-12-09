@@ -1,6 +1,5 @@
 #include <std_include.hpp>
 #include <loader/module_loader.hpp>
-
 #include "game/game.hpp"
 
 #include "scheduler.hpp"
@@ -46,10 +45,7 @@ public:
 
 	void post_load() override
 	{
-		if (!game::is_dedi())
-		{
-			game::native::Sys_ShowConsole();
-		}
+		game::native::Sys_ShowConsole();
 
 		std::lock_guard _(this->mutex_);
 		this->console_initialized_ = true;

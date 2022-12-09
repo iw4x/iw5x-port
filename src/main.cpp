@@ -38,11 +38,6 @@ void verify_tls()
 
 launcher::mode detect_mode_from_arguments()
 {
-	if (utils::flags::has_flag("dedicated"))
-	{
-		return launcher::mode::server;
-	}
-
 	if (utils::flags::has_flag("multiplayer"))
 	{
 		return launcher::mode::multiplayer;

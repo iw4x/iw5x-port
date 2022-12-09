@@ -17,7 +17,6 @@
 #pragma warning(disable: 28020)
 
 #define WIN32_LEAN_AND_MEAN
-#define _CRT_SECURE_NO_WARNINGS
 
 #include <Windows.h>
 #include <MsHTML.h>
@@ -39,17 +38,17 @@
 #undef min
 #endif
 
-#include <map>
 #include <atomic>
-#include <vector>
+#include <chrono>
+#include <filesystem>
+#include <fstream>
+#include <map>
 #include <mutex>
 #include <queue>
 #include <regex>
-#include <chrono>
 #include <thread>
-#include <fstream>
 #include <utility>
-#include <filesystem>
+#include <vector>
 
 #include <zlib.h>
 #include <zstd.h>
