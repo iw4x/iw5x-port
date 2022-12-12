@@ -13,6 +13,7 @@ namespace game
 
 		DB_LoadXAssets_t DB_LoadXAssets;
 		DB_FindXAssetHeader_t DB_FindXAssetHeader;
+		DB_IsXAssetDefault_t DB_IsXAssetDefault;
 
 		Dvar_RegisterBool_t Dvar_RegisterBool;
 		Dvar_RegisterString_t Dvar_RegisterString;
@@ -46,6 +47,12 @@ namespace game
 		Sys_ShowConsole_t Sys_ShowConsole;
 		Sys_Error_t Sys_Error;
 		Sys_Milliseconds_t Sys_Milliseconds;
+		Sys_Sleep_t Sys_Sleep;
+
+		PMem_AllocFromSource_NoDebug_t PMem_AllocFromSource_NoDebug;
+
+		Hunk_AllocateTempMemoryHighInternal_t Hunk_AllocateTempMemoryHighInternal;
+		Hunk_FreeTempMemory_t Hunk_FreeTempMemory;
 
 		VM_Notify_t VM_Notify;
 
@@ -78,6 +85,7 @@ namespace game
 		Com_Quit_f_t Com_Quit_f;
 
 		FS_Printf_t FS_Printf;
+		FS_ReadFile_t FS_ReadFile;
 
 		player_die_t player_die;
 
@@ -126,6 +134,8 @@ namespace game
 
 		int* dvarCount;
 		dvar_t** sortedDvars;
+
+		FastCriticalSection* db_hashCritSect;
 
 		int Vec4Compare(const float* a, const float* b)
 		{
@@ -528,6 +538,18 @@ namespace game
 			return id == *threadId[THREAD_CONTEXT_SERVER];
 		}
 
+		void Sys_LockRead(FastCriticalSection* critSect)
+		{
+			InterlockedIncrement(&critSect->readCount);
+			while (critSect->writeCount) Sys_Sleep(0);
+		}
+
+		void Sys_UnlockRead(FastCriticalSection* critSect)
+		{
+			assert(critSect->readCount > 0);
+			InterlockedDecrement(&critSect->readCount);
+		}
+
 		void FS_FCloseFile(int h)
 		{
 			reinterpret_cast<void(*)(int)>(SELECT_VALUE(0x415160, 0x5AF170))(h);
@@ -606,6 +628,38 @@ namespace game
 		{
 			assert(*fs_searchpaths);
 		}
+
+		XAssetEntry* db_find_x_asset_entry(XAssetType type_, const char* name)
+		{
+			static DWORD func = SELECT_VALUE(0x585400, 0x4CA450);
+			XAssetEntry* result{};
+
+			__asm
+			{
+				pushad
+				push name
+				mov edi, type_
+				call func
+				add esp, 0x4
+				mov result, eax
+				popad
+			}
+
+			return result;
+		}
+
+		XAssetEntry* DB_FindXAssetEntry(XAssetType type, const char* name)
+		{
+			return db_find_x_asset_entry(type, name);
+		}
+
+		int DB_XAssetExists(XAssetType type, const char* name)
+		{
+			Sys_LockRead(db_hashCritSect);
+			auto* asset_entry = DB_FindXAssetEntry(type, name);
+			Sys_UnlockRead(db_hashCritSect);
+			return asset_entry != nullptr;
+		}
 	}
 
 	launcher::mode mode = launcher::mode::none;
@@ -642,6 +696,7 @@ namespace game
 
 		native::DB_LoadXAssets = native::DB_LoadXAssets_t(SELECT_VALUE(0x48A8E0, 0x4CD020));
 		native::DB_FindXAssetHeader = native::DB_FindXAssetHeader_t(SELECT_VALUE(0x4FF000, 0x4CA620));
+		native::DB_IsXAssetDefault = native::DB_IsXAssetDefault_t(SELECT_VALUE(0x4868E0, 0x4CA800));
 
 		native::Dvar_RegisterBool = native::Dvar_RegisterBool_t(SELECT_VALUE(0x4914D0, 0x5BE9F0));
 		native::Dvar_RegisterString = native::Dvar_RegisterString_t(SELECT_VALUE(0x5197F0, 0x5BEC90));
@@ -676,6 +731,12 @@ namespace game
 		native::Sys_ShowConsole = native::Sys_ShowConsole_t(SELECT_VALUE(0x470AF0, 0x5CF590));
 		native::Sys_Error = native::Sys_Error_t(SELECT_VALUE(0x490D90, 0x5CC3B0));
 		native::Sys_Milliseconds = native::Sys_Milliseconds_t(SELECT_VALUE(0x4A1610, 0x5CE740));
+		native::Sys_Sleep = native::Sys_Sleep_t(SELECT_VALUE(0x438600, 0x55F460));
+
+		native::PMem_AllocFromSource_NoDebug = native::PMem_AllocFromSource_NoDebug_t(SELECT_VALUE(0x449E50, 0x5C15C0));
+
+		native::Hunk_AllocateTempMemoryHighInternal = native::Hunk_AllocateTempMemoryHighInternal_t(SELECT_VALUE(0x517870, 0x5B6C60));
+		native::Hunk_FreeTempMemory = native::Hunk_FreeTempMemory_t(SELECT_VALUE(0x434A40, 0x5B6F90));
 
 		native::VM_Notify = native::VM_Notify_t(SELECT_VALUE(0x610200, 0x569720));
 
@@ -716,6 +777,7 @@ namespace game
 		native::Com_Quit_f = native::Com_Quit_f_t(SELECT_VALUE(0x4F48B0, 0x5556B0));
 
 		native::FS_Printf = native::FS_Printf_t(SELECT_VALUE(0x421E90, 0x5AF7C0));
+		native::FS_ReadFile = native::FS_ReadFile_t(SELECT_VALUE(0x4D8DF0, 0x5B1FB0));
 
 		native::player_die = native::player_die_t(SELECT_VALUE(0x0, 0x503460));
 
@@ -770,5 +832,7 @@ namespace game
 
 		native::dvarCount = reinterpret_cast<int*>(SELECT_VALUE(0x1C42398, 0x59CCDD8));
 		native::sortedDvars = reinterpret_cast<native::dvar_t**>(SELECT_VALUE(0x1C423C0, 0x59CCE00));
+
+		native::db_hashCritSect = reinterpret_cast<native::FastCriticalSection*>(SELECT_VALUE(0xFA9E7C, 0x18596E4));
 	}
 }

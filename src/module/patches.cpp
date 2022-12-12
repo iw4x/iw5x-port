@@ -37,7 +37,7 @@ private:
 		utils::hook::set<std::uint8_t>(0x663B5A, 0xEB);
 		utils::hook::set<std::uint8_t>(0x663C54, 0xEB);
 
-		// archive "name" dvar
+		// Archive "name" dvar
 		utils::hook::set<std::uint8_t>(0x4296F9, game::native::DVAR_ARCHIVE);
 
 		utils::hook(0x44C640, &live_get_local_client_name_stub, HOOK_JUMP).install()->quick();
@@ -48,10 +48,17 @@ private:
 		// Note: on SP the max value is already 1000
 		utils::hook(0x55411F, &dvar_register_com_max_fps, HOOK_CALL).install()->quick();
 
-		// archive "name" dvar
+		// Archive "name" dvar
 		utils::hook::set<std::uint32_t>(0x492C82, game::native::DVAR_USERINFO | game::native::DVAR_ARCHIVE);
 
 		utils::hook(0x5C9980, &live_get_local_client_name_stub, HOOK_JUMP).install()->quick();
+
+		// Unpure client detected
+		utils::hook::set<std::uint8_t>(0x57228C, 0xEB);
+
+		// Allow any IWD file to be loaded
+		utils::hook::nop(0x5B090F, 6);
+		utils::hook::nop(0x5B092C, 6);
 	}
 
 	void patch_dedi() const

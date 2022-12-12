@@ -51,7 +51,7 @@ namespace gsc
 			}
 			else
 			{
-				unknown_function_error = std::format("unknown script '{}'", scripting::current_file);
+				unknown_function_error = std::format("unknown script '{}'.gsc", scripting::current_file);
 			}
 		}
 

@@ -389,10 +389,48 @@ namespace game
 			unsigned char* bytecode;
 		};
 
+		struct RawFile
+		{
+			const char* name;
+			int compressedLen;
+			int len;
+			const char* buffer;
+		};
+
 		union XAssetHeader
 		{
 			void* data;
 			ScriptFile* scriptfile;
+			RawFile* rawfile;
+		};
+
+		struct XAsset
+		{
+			XAssetType type;
+			XAssetHeader header;
+		};
+
+		struct XAssetEntry
+		{
+			XAsset asset;
+			char zoneIndex;
+			volatile char inuseMask;
+			bool printedMissingAsset;
+			unsigned __int16 nextHash;
+			unsigned __int16 nextOverride;
+		};
+
+		struct TempPriority
+		{
+			void* threadHandle;
+			int oldPriority;
+		};
+
+		struct FastCriticalSection
+		{
+			volatile long readCount;
+			volatile long writeCount;
+			TempPriority tempPriority;
 		};
 
 		enum errorParm_t
@@ -435,6 +473,14 @@ namespace game
 		{
 			LOCMSG_SAFE,
 			LOCMSG_NOERR,
+		};
+
+		enum PMem_Source
+		{
+			PMEM_SOURCE_EXTERNAL,
+			PMEM_SOURCE_DATABASE,
+			PMEM_SOURCE_MOVIE,
+			PMEM_SOURCE_SCRIPT,
 		};
 
 		struct cmd_function_t

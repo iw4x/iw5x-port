@@ -9,4 +9,6 @@ namespace scripting
 	extern std::string current_file;
 
 	std::string get_token(unsigned int id);
+
+	void on_shutdown(const std::function<void(int)>& callback);
 }

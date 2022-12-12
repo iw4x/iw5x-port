@@ -29,6 +29,9 @@ namespace game
 		typedef XAssetHeader (*DB_FindXAssetHeader_t)(XAssetType type, const char* name, int allowCreateDefault);
 		extern DB_FindXAssetHeader_t DB_FindXAssetHeader;
 
+		typedef int (*DB_IsXAssetDefault_t)(XAssetType type, const char* name);
+		extern DB_IsXAssetDefault_t DB_IsXAssetDefault;
+
 		typedef const dvar_t* (*Dvar_RegisterBool_t)(const char* dvarName, bool value,
 			unsigned __int16 flags, const char* description);
 		extern Dvar_RegisterBool_t Dvar_RegisterBool;
@@ -97,6 +100,18 @@ namespace game
 		typedef int (*Sys_Milliseconds_t)();
 		extern Sys_Milliseconds_t Sys_Milliseconds;
 
+		typedef void (*Sys_Sleep_t)(int msec);
+		extern Sys_Sleep_t Sys_Sleep;
+
+		typedef void* (*PMem_AllocFromSource_NoDebug_t)(unsigned int size, unsigned int alignment, unsigned int type, int source);
+		extern PMem_AllocFromSource_NoDebug_t PMem_AllocFromSource_NoDebug;
+
+		typedef void* (*Hunk_AllocateTempMemoryHighInternal_t)(unsigned int size);
+		extern Hunk_AllocateTempMemoryHighInternal_t Hunk_AllocateTempMemoryHighInternal;
+
+		typedef void (*Hunk_FreeTempMemory_t)(void* buf);
+		extern Hunk_FreeTempMemory_t Hunk_FreeTempMemory;
+
 		typedef void (*VM_Notify_t)(unsigned int notifyListOwnerId, unsigned int stringValue, VariableValue* top);
 		extern VM_Notify_t VM_Notify;
 
@@ -158,6 +173,9 @@ namespace game
 		typedef void (*FS_Printf_t)(int h, const char* fmt, ...);
 		extern FS_Printf_t FS_Printf;
 
+		typedef int (*FS_ReadFile_t)(const char* qpath, char** buffer);
+		extern FS_ReadFile_t FS_ReadFile;
+
 		typedef void (*player_die_t)(gentity_s* self, const gentity_s* inflictor, gentity_s* attacker, int damage, int meansOfDeath, const Weapon* iWeapon, bool isAlternate, const float* vDir, const hitLocation_t hitLoc, int psTimeOffset);
 		extern player_die_t player_die;
 
@@ -209,6 +227,8 @@ namespace game
 
 		extern int* dvarCount;
 		extern dvar_t** sortedDvars;
+
+		extern FastCriticalSection* db_hashCritSect;
 
 		// Global Definitions & Functions
 		constexpr auto JUMP_LAND_SLOWDOWN_TIME = 1800;
@@ -309,6 +329,9 @@ namespace game
 		int FS_FOpenFileReadForThread(const char* filename, int* file, FsThread thread);
 		int FS_CreatePath(char* OSPath);
 		void FS_CheckFileSystemStarted();
+
+		XAssetEntry* DB_FindXAssetEntry(XAssetType type, const char* name);
+		int DB_XAssetExists(XAssetType type, const char* name);
 	}
 
 	bool is_mp();

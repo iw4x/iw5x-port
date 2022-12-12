@@ -24,6 +24,8 @@ namespace scripting
 		std::uint32_t current_file_id = 0;
 		std::string current_script_file;
 
+		std::vector<std::function<void(int)>> shutdown_callbacks;
+
 		std::string get_token(unsigned int id)
 		{
 			return find_token(id);
@@ -93,11 +95,32 @@ namespace scripting
 
 			utils::hook::invoke<void>(SELECT_VALUE(0x446850, 0x56B130), filename);
 		}
+
+		void g_shutdown_game_stub(int free_scripts)
+		{
+			utils::hook::invoke<void>(SELECT_VALUE(0x528A90, 0x50C100), free_scripts);
+
+			if (free_scripts)
+			{
+				script_function_table_sort.clear();
+				script_function_table.clear();
+			}
+
+			for (const auto& callback : shutdown_callbacks)
+			{
+				callback(free_scripts);
+			}
+		}
 	}
 
 	std::string get_token(unsigned int id)
 	{
 		return find_token(id);
+	}
+
+	void on_shutdown(const std::function<void(int)>& callback)
+	{
+		shutdown_callbacks.push_back(callback);
 	}
 
 	class scripting_class final : public module
@@ -131,6 +154,9 @@ namespace scripting
 
 			utils::hook(SELECT_VALUE(0x44690A, 0x56B1EA), &scr_set_thread_position, HOOK_CALL).install()->quick();
 			utils::hook(SELECT_VALUE(0x4232A8, 0x561748), &process_script, HOOK_CALL).install()->quick();
+
+			utils::hook(SELECT_VALUE(0x651E1B, 0x573C82), &g_shutdown_game_stub, HOOK_CALL).install()->quick();
+			utils::hook(SELECT_VALUE(0x651ECC, 0x573D3A), &g_shutdown_game_stub, HOOK_CALL).install()->quick();
 		}
 
 		void pre_destroy() override
