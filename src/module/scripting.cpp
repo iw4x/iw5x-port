@@ -104,6 +104,7 @@ namespace scripting
 			{
 				script_function_table_sort.clear();
 				script_function_table.clear();
+				script_function_table_rev.clear();
 			}
 
 			for (const auto& callback : shutdown_callbacks)
