@@ -136,6 +136,9 @@ namespace game
 		typedef void (*SV_Cmd_EndTokenizedString_t)();
 		extern SV_Cmd_EndTokenizedString_t SV_Cmd_EndTokenizedString;
 
+		typedef void (*SV_SpawnServer_t)(const char* server, int mapIsPreloaded, int savegame);
+		extern SV_SpawnServer_t SV_SpawnServer;
+
 		typedef void (*XUIDToString_t)(const unsigned __int64* xuid, char* str);
 		extern XUIDToString_t XUIDToString;
 

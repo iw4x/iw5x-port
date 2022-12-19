@@ -11,8 +11,8 @@
 static utils::memory::allocator allocator;
 
 std::unordered_map<std::string, std::function<void(const command::params&)>> command::handlers;
-std::unordered_map<std::string, std::function<void(game::native::gentity_s*, command::params_sv&)>> command::handlers_sv;
-std::unordered_map<std::string, std::function<void(game::native::sp::gentity_s*, command::params_sv&)>> command::handlers_sp_sv;
+std::unordered_map<std::string, std::function<void(game::native::gentity_s*, const command::params_sv&)>> command::handlers_sv;
+std::unordered_map<std::string, std::function<void(game::native::sp::gentity_s*, const command::params_sv&)>> command::handlers_sp_sv;
 
 command::params::params()
 	: nesting_(game::native::cmd_args->nesting)
@@ -87,7 +87,7 @@ void command::add_raw(const char* name, void (*callback)())
 	game::native::Cmd_AddCommand(name, callback, allocator.allocate<game::native::cmd_function_t>());
 }
 
-void command::add(const char* name, const std::function<void(const command::params&)>& callback)
+void command::add(const char* name, const std::function<void(const params&)>& callback)
 {
 	const auto command = utils::string::to_lower(name);
 
@@ -107,7 +107,7 @@ void command::add(const char* name, const std::function<void()>& callback)
 	});
 }
 
-void command::add_sv(const char* name, std::function<void(game::native::gentity_s*, const command::params_sv&)> callback)
+void command::add_sv(const char* name, std::function<void(game::native::gentity_s*, const params_sv&)> callback)
 {
 	// Since the game console is not usable there is no point in calling add_raw
 	const auto command = utils::string::to_lower(name);
@@ -144,7 +144,7 @@ void command::execute(std::string command, bool sync)
 
 void command::main_handler()
 {
-	params params;
+	const params params;
 
 	const auto command = utils::string::to_lower(params[0]);
 
@@ -163,7 +163,7 @@ void command::client_command_stub(int client_num)
 		return;
 	}
 
-	params_sv params;
+	const params_sv params;
 
 	const auto command = utils::string::to_lower(params[0]);
 
@@ -182,7 +182,7 @@ void command::client_command_sp(int client_num, const char* s)
 
 	assert(entity->client); // On sp it should only be an assertion
 
-	params_sv params;
+	const params_sv params;
 
 	const auto command = utils::string::to_lower(params[0]);
 

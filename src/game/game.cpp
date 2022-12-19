@@ -65,6 +65,7 @@ namespace game
 		SV_ClientEnterWorld_t SV_ClientEnterWorld;
 		SV_Cmd_TokenizeString_t SV_Cmd_TokenizeString;
 		SV_Cmd_EndTokenizedString_t SV_Cmd_EndTokenizedString;
+		SV_SpawnServer_t SV_SpawnServer;
 
 		XUIDToString_t XUIDToString;
 
@@ -750,6 +751,7 @@ namespace game
 		native::SV_ClientEnterWorld = native::SV_ClientEnterWorld_t(SELECT_VALUE(0x0, 0x571100));
 		native::SV_Cmd_TokenizeString = native::SV_Cmd_TokenizeString_t(SELECT_VALUE(0x0, 0x545D40));
 		native::SV_Cmd_EndTokenizedString = native::SV_Cmd_EndTokenizedString_t(SELECT_VALUE(0x0, 0x545D70));
+		native::SV_SpawnServer = native::SV_SpawnServer_t(SELECT_VALUE(0x0, 0x575020));
 		native::mp::SV_GameSendServerCommand = native::mp::SV_GameSendServerCommand_t(0x573220);
 		native::mp::SV_GetGuid = native::mp::SV_GetGuid_t(0x573990);
 
