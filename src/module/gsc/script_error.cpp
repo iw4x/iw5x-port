@@ -20,7 +20,6 @@ namespace gsc
 {
 	namespace
 	{
-		// Array count confirmed at TODO
 		std::array<const char*, game::native::VAR_TOTAL_COUNT> var_typename =
 		{
 			"undefined",
