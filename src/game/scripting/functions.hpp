@@ -1,5 +1,4 @@
 #pragma once
-#include "game/game.hpp"
 
 namespace scripting
 {
@@ -8,6 +7,4 @@ namespace scripting
 	unsigned int find_token_id(const std::string& name);
 
 	int find_function_index(const std::string& name, bool prefer_global);
-	game::native::scr_call_t get_function_by_index(std::uint32_t index);
-	game::native::scr_call_t find_function(const std::string& name, bool prefer_global);
 }

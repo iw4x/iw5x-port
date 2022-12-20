@@ -19,6 +19,8 @@
 
 namespace gsc
 {
+	std::uint16_t scr_func_max_id = 0x1C7;
+
 	namespace
 	{
 		auto compiler = ::gsc::compiler();
@@ -164,6 +166,23 @@ namespace gsc
 			// ProcessScript
 			utils::hook(SELECT_VALUE(0x44685E, 0x56B13E), find_script, HOOK_CALL).install()->quick();
 			utils::hook(SELECT_VALUE(0x446868, 0x56B148), db_is_x_asset_default, HOOK_CALL).install()->quick();
+
+			// Allow custom scripts to include other custom scripts
+			xsk::gsc::iw5::resolver::init([](const auto& include_name) -> std::vector<std::uint8_t>
+			{
+				const auto real_name = include_name + ".gsc";
+
+				std::string file_buffer;
+				if (!read_script_file(real_name, &file_buffer) || file_buffer.empty())
+				{
+					throw std::runtime_error(std::format("Could not load gsc file '{}'", real_name));
+				}
+
+				std::vector<std::uint8_t> result;
+				result.assign(file_buffer.begin(), file_buffer.end());
+
+				return result;
+			});
 
 			scripting::on_shutdown([](int free_scripts) -> void
 			{

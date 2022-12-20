@@ -39,10 +39,17 @@ namespace game
 		SL_GetStringOfSize_t SL_GetStringOfSize;
 
 		Scr_AddEntityNum_t Scr_AddEntityNum;
+		Scr_AddString_t Scr_AddString;
+		Scr_AddInt_t Scr_AddInt;
+		Scr_AddFloat_t Scr_AddFloat;
 		Scr_Notify_t Scr_Notify;
 		Scr_NotifyLevel_t Scr_NotifyLevel;
 		Scr_GetNumParam_t Scr_GetNumParam;
 		Scr_GetString_t Scr_GetString;
+		Scr_CastString_t Scr_CastString;
+		Scr_ErrorInternal_t Scr_ErrorInternal;
+
+		GetObjectType_t GetObjectType;
 
 		Sys_ShowConsole_t Sys_ShowConsole;
 		Sys_Error_t Sys_Error;
@@ -66,6 +73,7 @@ namespace game
 		SV_Cmd_TokenizeString_t SV_Cmd_TokenizeString;
 		SV_Cmd_EndTokenizedString_t SV_Cmd_EndTokenizedString;
 		SV_SpawnServer_t SV_SpawnServer;
+		SV_GetConfigstring_t SV_GetConfigstring;
 
 		XUIDToString_t XUIDToString;
 
@@ -90,6 +98,8 @@ namespace game
 
 		player_die_t player_die;
 
+		LargeLocalResetToMark_t LargeLocalResetToMark;
+
 		decltype(longjmp)* _longjmp;
 
 		CmdArgs* sv_cmd_args;
@@ -99,6 +109,7 @@ namespace game
 		char** scrMemTreePub;
 		char* scrMemTreeGlob;
 
+		function_stack_t* scr_function_stack;
 		scrVarPub_t* scr_VarPub;
 		scrVmPub_t* scr_VmPub;
 
@@ -167,17 +178,17 @@ namespace game
 
 		void AddRefToValue(VariableValue* value)
 		{
-			if (value->type == SCRIPT_OBJECT)
+			if (value->type == VAR_POINTER)
 			{
 				++scrVarGlob[4 * value->u.entityId];
 			}
-			else if ((value->type & ~1) == SCRIPT_STRING)
+			else if ((value->type & ~1) == VAR_STRING)
 			{
 				static const auto size = is_sp() ? 16 : 12;
 				const auto ref_count = reinterpret_cast<unsigned volatile *>(*scrMemTreePub + size * value->u.stringValue);
 				InterlockedIncrement(ref_count);
 			}
-			else if (value->type == SCRIPT_VECTOR)
+			else if (value->type == VAR_VECTOR)
 			{
 				if (!*PBYTE(value->u.vectorValue - 1))
 				{
@@ -269,8 +280,8 @@ namespace game
 			static auto ent_array = reinterpret_cast<WORD*>(SELECT_VALUE(0x19AFC82, 0x1E72182));
 
 			scr_entref_t result;
-			result.raw.classnum = static_cast<unsigned short>(class_array[2 * id]) >> 8;
-			result.raw.entnum = ent_array[4 * id];
+			result.classnum = static_cast<unsigned short>(class_array[2 * id]) >> 8;
+			result.entnum = ent_array[4 * id];
 
 			return result;
 		}
@@ -321,19 +332,6 @@ namespace game
 		{
 			return reinterpret_cast<int(*)(unsigned int, int, int)> //
 				(SELECT_VALUE(0x42CAD0, 0x52BCC0))(classnum, entnum, offset);
-		}
-
-		void Scr_AddString(const char* value)
-		{
-			reinterpret_cast<void(*)(const char*)> (SELECT_VALUE(0x4A5600, 0x56AC00))(value);
-		}
-
-		void Scr_AddInt(int value)
-		{
-			IncInParam();
-
-			scr_VmPub->top->type = SCRIPT_INTEGER;
-			scr_VmPub->top->u.intValue = value;
 		}
 
 		const char* SL_ConvertToString(const unsigned int stringValue)
@@ -723,11 +721,18 @@ namespace game
 		native::SL_GetStringOfSize = native::SL_GetStringOfSize_t(SELECT_VALUE(0x4E13F0, 0x564650));
 
 		native::Scr_AddEntityNum = native::Scr_AddEntityNum_t(SELECT_VALUE(0x0, 0x56ABC0));
+		native::Scr_AddString = native::Scr_AddString_t(SELECT_VALUE(0x4A5600, 0x56AC00));
+		native::Scr_AddInt = native::Scr_AddInt_t(SELECT_VALUE(0x42DE20, 0x56AA20));
+		native::Scr_AddFloat = native::Scr_AddFloat_t(SELECT_VALUE(0x5349D0, 0x56AA70));
 
 		native::Scr_Notify = native::Scr_Notify_t(SELECT_VALUE(0x4895B0, 0x52B190));
 		native::Scr_NotifyLevel = native::Scr_NotifyLevel_t(SELECT_VALUE(0x445E10, 0x56B6B0));
 		native::Scr_GetNumParam = native::Scr_GetNumParam_t(SELECT_VALUE(0x4C6FE0, 0x56AA10));
 		native::Scr_GetString = native::Scr_GetString_t(SELECT_VALUE(0x497530, 0x56A3D0));
+		native::Scr_CastString = native::Scr_CastString_t(SELECT_VALUE(0x447CE0, 0x566EE0));
+		native::Scr_ErrorInternal = native::Scr_ErrorInternal_t(SELECT_VALUE(0x42B910, 0x568FD0));
+
+		native::GetObjectType = native::GetObjectType_t(SELECT_VALUE(0x4D8FE0, 0x565C60));
 
 		native::Sys_ShowConsole = native::Sys_ShowConsole_t(SELECT_VALUE(0x470AF0, 0x5CF590));
 		native::Sys_Error = native::Sys_Error_t(SELECT_VALUE(0x490D90, 0x5CC3B0));
@@ -752,6 +757,7 @@ namespace game
 		native::SV_Cmd_TokenizeString = native::SV_Cmd_TokenizeString_t(SELECT_VALUE(0x0, 0x545D40));
 		native::SV_Cmd_EndTokenizedString = native::SV_Cmd_EndTokenizedString_t(SELECT_VALUE(0x0, 0x545D70));
 		native::SV_SpawnServer = native::SV_SpawnServer_t(SELECT_VALUE(0x0, 0x575020));
+		native::SV_GetConfigstring = native::SV_GetConfigstring_t(SELECT_VALUE(0x4C6E30, 0x573D50));
 		native::mp::SV_GameSendServerCommand = native::mp::SV_GameSendServerCommand_t(0x573220);
 		native::mp::SV_GetGuid = native::mp::SV_GetGuid_t(0x573990);
 
@@ -783,6 +789,8 @@ namespace game
 
 		native::player_die = native::player_die_t(SELECT_VALUE(0x0, 0x503460));
 
+		native::LargeLocalResetToMark = native::LargeLocalResetToMark_t(SELECT_VALUE(0x524350, 0x5B7150));
+
 		native::_longjmp = reinterpret_cast<decltype(longjmp)*>(SELECT_VALUE(0x73AC20, 0x7363BC));
 
 		native::sv_cmd_args = reinterpret_cast<native::CmdArgs*>(SELECT_VALUE(0x1757218, 0x1CAA998));
@@ -792,6 +800,7 @@ namespace game
 		native::scrMemTreePub = reinterpret_cast<char**>(SELECT_VALUE(0x196FB00, 0x1E32000));
 		native::scrMemTreeGlob = reinterpret_cast<char*>(SELECT_VALUE(0x186DA00, 0x1D6FF00));
 
+		native::scr_function_stack = reinterpret_cast<native::function_stack_t*>(SELECT_VALUE(0x1BF255C, 0x20B4A5C));
 		native::scr_VarPub = reinterpret_cast<native::scrVarPub_t*>(SELECT_VALUE(0x0, 0x208E188));
 		native::scr_VmPub = reinterpret_cast<native::scrVmPub_t*>(SELECT_VALUE(0x1BF2580, 0x20B4A80));
 

@@ -90,7 +90,7 @@ game::native::gentity_s* test_clients::sv_add_test_client()
 
 	game::native::SV_ClientEnterWorld(client, &cmd);
 
-	assert(client->gentity != nullptr);
+	assert(client->gentity);
 
 	return client->gentity;
 }
@@ -99,7 +99,7 @@ void test_clients::gscr_add_test_client()
 {
 	const auto* ent = sv_add_test_client();
 
-	if (ent != nullptr)
+	if (ent)
 	{
 		game::native::Scr_AddEntityNum(ent->s.number, 0);
 	}

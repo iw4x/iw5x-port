@@ -1,13 +1,13 @@
 #include <std_include.hpp>
 #include <loader/module_loader.hpp>
+#include "game/game.hpp"
 
 #include <utils/hook.hpp>
-
-#include "game/game.hpp"
 
 #include "game_log.hpp"
 #include "scheduler.hpp"
 #include "file_system.hpp"
+#include "scripting.hpp"
 
 const game::native::dvar_t* game_log::g_log;
 const game::native::dvar_t* game_log::g_logSync;
@@ -120,9 +120,7 @@ void game_log::post_load()
 	utils::hook::set<void(*)()>(0x8AC858, gscr_log_print);
 
 	utils::hook(0x50D135, g_init_game_stub, HOOK_CALL).install()->quick();
-
-	utils::hook(0x573C82, g_shutdown_game_stub, HOOK_CALL).install()->quick();
-	utils::hook(0x573D3A, g_shutdown_game_stub, HOOK_CALL).install()->quick();
+	scripting::on_shutdown(g_shutdown_game_stub);
 
 	utils::hook(0x50D5F4, exit_level_stub, HOOK_JUMP).install()->quick();
 

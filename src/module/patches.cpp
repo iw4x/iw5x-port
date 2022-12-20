@@ -73,7 +73,7 @@ private:
 
 	static __declspec(noreturn) void long_jump_stub(jmp_buf buf, const int value) noexcept(false)
 	{
-#ifdef DEBUG
+#ifdef _DEBUG
 		{
 			printf("Unwinding the stack...\n");
 		}

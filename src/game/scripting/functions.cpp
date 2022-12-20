@@ -1,4 +1,6 @@
 #include <std_include.hpp>
+#include "game/game.hpp"
+
 #include "functions.hpp"
 
 #include <utils/string.hpp>
@@ -70,20 +72,20 @@ namespace scripting
 		return game::native::SL_GetCanonicalString(name.data());
 	}
 
-	game::native::scr_call_t get_function_by_index(const std::uint32_t index)
+	game::native::BuiltinFunction get_function_by_index(const std::uint32_t index)
 	{
 		static const auto function_table = SELECT_VALUE(0x186C68C, 0x1D6EB34);
 		static const auto method_table = SELECT_VALUE(0x184CDB0, 0x1D4F258);
 
 		if (index < 0x1C7)
 		{
-			return reinterpret_cast<game::native::scr_call_t*>(function_table)[index - 1];
+			return reinterpret_cast<game::native::BuiltinFunction*>(function_table)[index - 1];
 		}
 
-		return reinterpret_cast<game::native::scr_call_t*>(method_table)[index];
+		return reinterpret_cast<game::native::BuiltinFunction*>(method_table)[index];
 	}
 
-	game::native::scr_call_t find_function(const std::string& name, const bool prefer_global)
+	game::native::BuiltinFunction find_function(const std::string& name, const bool prefer_global)
 	{
 		const auto index = find_function_index(name, prefer_global);
 		if (index < 0) return nullptr;

@@ -6,7 +6,6 @@
 #pragma warning(push)
 #pragma warning(disable: 4244)
 #pragma warning(disable: 4458)
-#pragma warning(disable: 4702)
 #pragma warning(disable: 6297)
 #pragma warning(disable: 6385)
 #pragma warning(disable: 6386)
@@ -44,11 +43,13 @@
 #include <filesystem>
 #include <format>
 #include <fstream>
+#include <functional>
 #include <map>
 #include <mutex>
 #include <queue>
 #include <regex>
 #include <thread>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -61,8 +62,6 @@
 #include <gsl/gsl>
 
 #include <udis86.h>
-
-#include <chaiscript/chaiscript.hpp>
 
 #pragma comment(lib, "gdiplus.lib")
 #pragma comment(lib, "ws2_32.lib")

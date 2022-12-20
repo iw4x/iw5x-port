@@ -1,13 +1,10 @@
 #include <std_include.hpp>
 #include <loader/module_loader.hpp>
+#include "game/game.hpp"
+
 #include <utils/hook.hpp>
-#include <utils/io.hpp>
 
-#include "game/scripting/context.hpp"
 #include "game/scripting/functions.hpp"
-
-#include "scheduler.hpp"
-#include "scripting.hpp"
 
 #include "gsc/script_loading.hpp"
 
@@ -129,171 +126,13 @@ namespace scripting
 	public:
 		void post_load() override
 		{
-			start_hook_.initialize(SELECT_VALUE(0x50C575, 0x50D4F2), &start_execution_stub, HOOK_CALL) //
-				->install() //
-				->quick();
-
-			stop_hook_.initialize(SELECT_VALUE(0x528B04, 0x569E46), &stop_execution_stub, HOOK_CALL) //
-				->install() //
-				->quick();
-
-			utils::hook(SELECT_VALUE(0x4F9706, 0x5772A0), &frame_stub, HOOK_CALL).install()->quick();
-			utils::hook(SELECT_VALUE(0x4FFA48, 0x5774AB), &frame_stub, HOOK_CALL).install()->quick();
-			// Only relevant one?
-
-			utils::hook(SELECT_VALUE(0x6109F3, 0x56B637), &vm_notify_stub, HOOK_CALL).install()->quick();
-			utils::hook(SELECT_VALUE(0x6128BE, 0x56D541), &vm_notify_stub, HOOK_CALL).install()->quick();
-
-			if (game::is_sp())
-			{
-				utils::hook(0x50C57E, &frame_stub, HOOK_CALL).install()->quick();
-				utils::hook(0x6523A3, &frame_stub, HOOK_CALL).install()->quick();
-				utils::hook(0x5145D2, &frame_stub, HOOK_CALL).install()->quick();
-
-				utils::hook(0x610970, &vm_notify_stub, HOOK_JUMP).install()->quick();
-			}
-
 			utils::hook(SELECT_VALUE(0x44690A, 0x56B1EA), &scr_set_thread_position, HOOK_CALL).install()->quick();
 			utils::hook(SELECT_VALUE(0x4232A8, 0x561748), &process_script, HOOK_CALL).install()->quick();
 
 			utils::hook(SELECT_VALUE(0x651E1B, 0x573C82), &g_shutdown_game_stub, HOOK_CALL).install()->quick();
 			utils::hook(SELECT_VALUE(0x651ECC, 0x573D3A), &g_shutdown_game_stub, HOOK_CALL).install()->quick();
 		}
-
-		void pre_destroy() override
-		{
-			this->scripts_.clear();
-		}
-
-	private:
-		std::vector<std::unique_ptr<game::scripting::context>> scripts_;
-
-		void load_scripts()
-		{
-			const auto script_dir = "userraw/scripts/"s;
-
-			if (!utils::io::directory_exists(script_dir))
-			{
-				return;
-			}
-
-			const auto scripts = utils::io::list_files(script_dir);
-
-			for (const auto& script : scripts)
-			{
-				if (script.substr(script.find_last_of('.') + 1) == "chai")
-				{
-					try
-					{
-						auto context = std::make_unique<game::scripting::context>();
-						context->get_chai()->eval_file(script);
-						this->scripts_.push_back(std::move(context));
-					}
-					catch (chaiscript::exception::eval_error& e)
-					{
-						throw std::runtime_error(e.pretty_print());
-					}
-				}
-			}
-		}
-
-		void start_execution()
-		{
-			try
-			{
-				this->load_scripts();
-			}
-			catch (std::exception& e)
-			{
-				propagate_error(e);
-			}
-		}
-
-		void stop_execution()
-		{
-			this->scripts_.clear();
-		}
-
-		void run_frame() const
-		{
-			for (const auto& script : this->scripts_)
-			{
-				script->get_scheduler()->run_frame();
-			}
-		}
-
-		void dispatch(game::scripting::event* event) const
-		{
-			for (const auto& script : this->scripts_)
-			{
-				script->get_event_handler()->dispatch(event);
-			}
-		}
-
-		static utils::hook start_hook_;
-		static utils::hook stop_hook_;
-
-		static void propagate_error(const std::exception& e)
-		{
-			printf("\n******* Script execution error *******\n");
-			printf("%s\n", e.what());
-			printf("**************************************\n\n");
-
-			scheduler::once([]
-			{
-				game::native::Com_Error(game::native::errorParm_t::ERR_SCRIPT, "Script execution error\n(see console for actual details)\n");
-			}, scheduler::pipeline::main);
-		}
-
-		static void start_execution_stub()
-		{
-			module_loader::get<scripting_class>()->start_execution();
-			static_cast<void(*)()>(start_hook_.get_original())();
-		}
-
-		static void stop_execution_stub()
-		{
-			module_loader::get<scripting_class>()->stop_execution();
-			static_cast<void(*)()>(stop_hook_.get_original())();
-		}
-
-		static void vm_notify_stub(const unsigned int notify_id, const unsigned short type,
-			game::native::VariableValue* stack)
-		{
-			try
-			{
-				game::scripting::event e;
-				e.name = game::native::SL_ConvertToString(type);
-				e.entity_id = notify_id;
-
-				if (e.name == "touch") return; // Skip that for now
-
-				for (auto* value = stack; value->type != game::native::SCRIPT_END; --value)
-				{
-					e.arguments.emplace_back(*value);
-				}
-
-				module_loader::get<scripting_class>()->dispatch(&e);
-			}
-			catch (std::exception& e)
-			{
-				propagate_error(e);
-			}
-
-			game::native::VM_Notify(notify_id, type, stack);
-		}
-
-		static int frame_stub(const int a1, const int a2)
-		{
-			module_loader::get<scripting_class>()->run_frame();
-			return game::native::G_RunFrame(a1, a2);
-		}
 	};
-
-	utils::hook scripting_class::start_hook_;
-	utils::hook scripting_class::stop_hook_;
 }
-
-
 
 REGISTER_MODULE(scripting::scripting_class)

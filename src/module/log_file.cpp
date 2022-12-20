@@ -79,6 +79,8 @@ void log_file::info(const char* fmt, ...)
 	{
 		com_log_print_message(msg);
 	}
+
+	printf("%s", msg);
 }
 
 void log_file::post_load()
@@ -86,7 +88,7 @@ void log_file::post_load()
 	// The game closes the logfile handle in Com_Quit_f
 
 	com_logfile = game::native::Dvar_RegisterInt("logfile", 1,
-		0, 2, 0, "Write to log file - 0 = disabled, 1 = async file write, 2 = Sync every write");
+		0, 2, game::native::DVAR_NONE, "Write to log file - 0 = disabled, 1 = async file write, 2 = Sync every write");
 
 	log_file_name = SELECT_VALUE("console_sp.log", "console_mp.log");
 }

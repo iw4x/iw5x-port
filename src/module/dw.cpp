@@ -412,7 +412,13 @@ namespace demonware
 	void dw::bd_logger_stub(int /*type*/, const char* const /*channelName*/, const char*, const char* const /*file*/,
 	                        const char* const function, const unsigned int /*line*/, const char* const msg, ...)
 	{
-		char buffer[2048];
+		static const auto* bd_logger_enabled = game::native::Dvar_RegisterBool("bd_logger_enabled", false, game::native::DVAR_NONE, "Enable bdLogger");
+		if (!bd_logger_enabled->current.enabled)
+		{
+			return;
+		}
+
+		char buffer[2048]{};
 
 		va_list ap;
 		va_start(ap, msg);

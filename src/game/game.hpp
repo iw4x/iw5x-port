@@ -70,7 +70,7 @@ namespace game
 		typedef void* (*MT_AllocIndex_t)(int numBytes, int type);
 		extern MT_AllocIndex_t MT_AllocIndex;
 
-		typedef void (*RemoveRefToValue_t)(scriptType_e type, VariableUnion u);
+		typedef void (*RemoveRefToValue_t)(int type, VariableUnion u);
 		extern RemoveRefToValue_t RemoveRefToValue;
 
 		typedef unsigned int (*SL_GetStringOfSize_t)(const char* str, unsigned int user, unsigned int len, int type);
@@ -78,6 +78,15 @@ namespace game
 
 		typedef void (*Scr_AddEntityNum_t)(int entnum, unsigned int classnum);
 		extern Scr_AddEntityNum_t Scr_AddEntityNum;
+
+		typedef void (*Scr_AddString_t)(const char* value);
+		extern Scr_AddString_t Scr_AddString;
+
+		typedef void (*Scr_AddInt_t)(int value);
+		extern Scr_AddInt_t Scr_AddInt;
+
+		typedef void (*Scr_AddFloat_t)(float value);
+		extern Scr_AddFloat_t Scr_AddFloat;
 
 		typedef void (*Scr_Notify_t)(gentity_s* ent, scr_string_t, unsigned int paramcount);
 		extern Scr_Notify_t Scr_Notify;
@@ -90,6 +99,15 @@ namespace game
 
 		typedef const char* (*Scr_GetString_t)(unsigned int index);
 		extern Scr_GetString_t Scr_GetString;
+
+		typedef bool (*Scr_CastString_t)(VariableValue* value);
+		extern Scr_CastString_t Scr_CastString;
+
+		typedef void (*Scr_ErrorInternal_t)();
+		extern Scr_ErrorInternal_t Scr_ErrorInternal;
+
+		typedef unsigned int(*GetObjectType_t)(unsigned int id);
+		extern GetObjectType_t GetObjectType;
 
 		typedef void (*Sys_ShowConsole_t)();
 		extern Sys_ShowConsole_t Sys_ShowConsole;
@@ -139,6 +157,9 @@ namespace game
 		typedef void (*SV_SpawnServer_t)(const char* server, int mapIsPreloaded, int savegame);
 		extern SV_SpawnServer_t SV_SpawnServer;
 
+		typedef void (*SV_GetConfigstring_t)(int index, char* buffer, int bufferSize);
+		extern SV_GetConfigstring_t SV_GetConfigstring;
+
 		typedef void (*XUIDToString_t)(const unsigned __int64* xuid, char* str);
 		extern XUIDToString_t XUIDToString;
 
@@ -182,6 +203,9 @@ namespace game
 		typedef void (*player_die_t)(gentity_s* self, const gentity_s* inflictor, gentity_s* attacker, int damage, int meansOfDeath, const Weapon* iWeapon, bool isAlternate, const float* vDir, const hitLocation_t hitLoc, int psTimeOffset);
 		extern player_die_t player_die;
 
+		typedef void (*LargeLocalResetToMark_t)(int markPos);
+		extern LargeLocalResetToMark_t LargeLocalResetToMark;
+
 		extern decltype(longjmp)* _longjmp;
 
 		constexpr auto CMD_MAX_NESTING = 8;
@@ -192,6 +216,7 @@ namespace game
 		extern char** scrMemTreePub;
 		extern char* scrMemTreeGlob;
 
+		extern function_stack_t* scr_function_stack;
 		extern scrVarPub_t* scr_VarPub;
 		extern scrVmPub_t* scr_VmPub;
 
@@ -293,8 +318,6 @@ namespace game
 		scr_entref_t Scr_GetEntityIdRef(unsigned int id);
 		void Scr_NotifyId(unsigned int id, unsigned int stringValue, unsigned int paramcount);
 		int Scr_SetObjectField(unsigned int classnum, int entnum, int offset);
-		void Scr_AddString(const char* value);
-		void Scr_AddInt(int value);
 
 		const char* SL_ConvertToString(unsigned int stringValue);
 		unsigned int SL_GetString(const char* str, unsigned int user);
