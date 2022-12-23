@@ -248,13 +248,13 @@ namespace gsc
 		{
 			if (!scr_get_int(0))
 			{
-				scr_error(utils::string::va("Assert fail: %s", game::native::Scr_GetString(1)));
+				scr_error(va("Assert fail: %s", game::native::Scr_GetString(1)));
 			}
 		}
 
 		void assert_msg_cmd()
 		{
-			scr_error(utils::string::va("Assert fail: %s", game::native::Scr_GetString(0)));
+			scr_error(va("Assert fail: %s", game::native::Scr_GetString(0)));
 		}
 	}
 
