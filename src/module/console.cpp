@@ -2,10 +2,11 @@
 #include <loader/module_loader.hpp>
 #include "game/game.hpp"
 
-#include <utils/concurrency.hpp>
-
 #include "console.hpp"
 #include "scheduler.hpp"
+
+
+#include <utils/concurrency.hpp>
 
 namespace
 {
