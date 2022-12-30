@@ -183,12 +183,12 @@ namespace gsc
 		{
 			assert(error_string);
 
-			char fx_name[0x400]{};
+			char fx_name[1024]{};
 
 			if (fx_id)
 			{
 				const auto index = SELECT_VALUE(game::native::sp::CS_EFFECT_NAMES, game::native::mp::CS_EFFECT_NAMES);
-				game::native::SV_GetConfigstring(fx_id + index, fx_name, 1024);
+				game::native::SV_GetConfigstring(fx_id + index, fx_name, sizeof(fx_name));
 			}
 			else
 			{
@@ -449,6 +449,11 @@ namespace gsc
 	class error final : public module
 	{
 	public:
+		void post_start() override
+		{
+			ZeroMemory(gsc_error_msg, sizeof(gsc_error_msg));
+		}
+
 		void post_load() override
 		{
 			scr_emit_function_hook.create(SELECT_VALUE(0x40DCB0, 0x561400), &scr_emit_function_stub);
