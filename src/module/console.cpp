@@ -18,9 +18,9 @@ public:
 
 	void post_start() override
 	{
-		scheduler::loop(std::bind(&log_messages, this), scheduler::pipeline::main);
+		scheduler::loop(std::bind(&console::log_messages, this), scheduler::pipeline::main);
 
-		this->console_runner_ = std::thread(std::bind(&runner, this));
+		this->console_runner_ = std::thread(std::bind(&console::runner, this));
 	}
 
 	void pre_destroy() override
