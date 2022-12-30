@@ -6,17 +6,44 @@
 
 #include <utils/hook.hpp>
 
-static __declspec(naked) void db_load_stub_client(game::native::XZoneInfo*, unsigned int, int)
+namespace
 {
-	__asm
-	{
-		sub esp, 0Ch
-		mov eax, [esp + 18h]
+	utils::hook::detour db_find_x_asset_header_hook;
 
-		mov ecx, game::native::DB_LoadXAssets
-		add ecx, 7h
-		push ecx
-		ret
+	__declspec(naked) void db_load_stub_client(game::native::XZoneInfo*, unsigned int, int)
+	{
+		__asm
+		{
+			sub esp, 0Ch
+			mov eax, [esp + 18h]
+
+			mov ecx, game::native::DB_LoadXAssets
+			add ecx, 7h
+			push ecx
+			ret
+		}
+	}
+
+	game::native::XAssetHeader db_find_x_asset_header_stub(game::native::XAssetType type, const char* name, int allow_create_default)
+	{
+		const auto start = game::native::Sys_Milliseconds();
+		const auto result = db_find_x_asset_header_hook.invoke<game::native::XAssetHeader>(type, name, allow_create_default);
+		const auto diff = game::native::Sys_Milliseconds() - start;
+
+		if (diff > 100)
+		{
+			console::print(
+				result.data == nullptr
+				? console::con_type_error
+				: console::con_type_warning,
+				"Waited %i msec for asset '%s' of type '%s'.\n",
+				diff,
+				name,
+				game::native::g_assetNames[type]
+			);
+		}
+
+		return result;
 	}
 }
 
@@ -26,6 +53,8 @@ public:
 	void post_load() override
 	{
 		utils::hook(game::native::DB_LoadXAssets, db_load_stub, HOOK_JUMP).install()->quick();
+
+		db_find_x_asset_header_hook.create(game::native::DB_FindXAssetHeader, &db_find_x_asset_header_stub);
 	}
 
 private:

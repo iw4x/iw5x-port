@@ -8,6 +8,8 @@ namespace game
 		Cmd_AddCommand_t Cmd_AddCommand;
 		Cmd_RemoveCommand_t Cmd_RemoveCommand;
 
+		Cbuf_AddText_t Cbuf_AddText;
+
 		Com_Error_t Com_Error;
 		Com_Filter_t Com_Filter;
 
@@ -148,6 +150,8 @@ namespace game
 		dvar_t** sortedDvars;
 
 		FastCriticalSection* db_hashCritSect;
+
+		const char** g_assetNames;
 
 		int Vec4Compare(const float* a, const float* b)
 		{
@@ -451,12 +455,6 @@ namespace game
 			addr->type = type;
 		}
 
-		void Cbuf_AddText(LocalClientNum_t localClientNum, const char* text)
-		{
-			reinterpret_cast<void(*)(LocalClientNum_t, const char*)> //
-				(SELECT_VALUE(0x457C90, 0x545680))(localClientNum, text);
-		}
-
 		void TeleportPlayer(gentity_s* player, float* origin, float* angles)
 		{
 			if (is_mp())
@@ -690,6 +688,8 @@ namespace game
 		native::Cmd_AddCommand = native::Cmd_AddCommand_t(SELECT_VALUE(0x558820, 0x545DF0));
 		native::Cmd_RemoveCommand = native::Cmd_RemoveCommand_t(SELECT_VALUE(0x443A30, 0x545E20));
 
+		native::Cbuf_AddText = native::Cbuf_AddText_t(SELECT_VALUE(0x457C90, 0x545680));
+
 		native::Com_Error = native::Com_Error_t(SELECT_VALUE(0x425540, 0x555450));
 		native::Com_Filter = native::Com_Filter_t(SELECT_VALUE(0x44EFF0, 0x5B7C30));
 
@@ -845,5 +845,7 @@ namespace game
 		native::sortedDvars = reinterpret_cast<native::dvar_t**>(SELECT_VALUE(0x1C423C0, 0x59CCE00));
 
 		native::db_hashCritSect = reinterpret_cast<native::FastCriticalSection*>(SELECT_VALUE(0xFA9E7C, 0x18596E4));
+
+		native::g_assetNames = reinterpret_cast<const char**>(SELECT_VALUE(0x92A688, 0x8AAB30));
 	}
 }

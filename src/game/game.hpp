@@ -17,6 +17,9 @@ namespace game
 		typedef void (*Cmd_RemoveCommand_t)(const char* cmdName);
 		extern Cmd_RemoveCommand_t Cmd_RemoveCommand;
 
+		typedef void (*Cbuf_AddText_t)(LocalClientNum_t localClientNum, const char* text);
+		extern Cbuf_AddText_t Cbuf_AddText;
+
 		typedef void (*Com_Error_t)(errorParm_t code, const char* fmt, ...);
 		extern Com_Error_t Com_Error;
 
@@ -258,6 +261,8 @@ namespace game
 
 		extern FastCriticalSection* db_hashCritSect;
 
+		extern const char** g_assetNames;
+
 		// Global Definitions & Functions
 		constexpr auto JUMP_LAND_SLOWDOWN_TIME = 1800;
 
@@ -333,8 +338,6 @@ namespace game
 		int GetProtocolVersion();
 
 		void NetAdr_SetType(netadr_s* addr, netadrtype_t type);
-
-		void Cbuf_AddText(LocalClientNum_t localClientNum, const char* text);
 
 		void TeleportPlayer(gentity_s* player, float* origin, float* angles);
 
