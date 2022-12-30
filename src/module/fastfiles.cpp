@@ -2,6 +2,8 @@
 #include <loader/module_loader.hpp>
 #include "game/game.hpp"
 
+#include "console.hpp"
+
 #include <utils/hook.hpp>
 
 static __declspec(naked) void db_load_stub_client(game::native::XZoneInfo*, unsigned int, int)
@@ -14,7 +16,7 @@ static __declspec(naked) void db_load_stub_client(game::native::XZoneInfo*, unsi
 		mov ecx, game::native::DB_LoadXAssets
 		add ecx, 7h
 		push ecx
-		retn
+		ret
 	}
 }
 
@@ -33,7 +35,7 @@ private:
 		{
 			if (zone_info[i].name)
 			{
-				printf("Loading FastFile: %s (0x%X | 0x%X)\n", zone_info[i].name, zone_info[i].allocFlags, zone_info[i].freeFlags);
+				console::info("Loading FastFile: %s (0x%X | 0x%X)\n", zone_info[i].name, zone_info[i].allocFlags, zone_info[i].freeFlags);
 			}
 		}
 

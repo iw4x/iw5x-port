@@ -6,6 +6,7 @@
 #include <utils/hook.hpp>
 
 #include "command.hpp"
+#include "console.hpp"
 
 
 static utils::memory::allocator allocator;
@@ -231,7 +232,7 @@ void command::add_sp_commands()
 		ent->client->flags ^= 1;
 
 		const auto* msg = (ent->client->flags & 1) ? "GAME_NOCLIPON" : "GAME_NOCLIPOFF";
-		printf("%s\n", game::native::SEH_LocalizeTextMessage(msg, "noclip print", game::native::LOCMSG_SAFE));
+		console::info("%s\n", game::native::SEH_LocalizeTextMessage(msg, "noclip print", game::native::LOCMSG_SAFE));
 	});
 
 	add("ufo", []
@@ -248,7 +249,7 @@ void command::add_sp_commands()
 		ent->client->flags ^= 2;
 
 		const auto* msg = (ent->client->flags & 2) ? "GAME_UFOON" : "GAME_UFOOFF";
-		printf("%s\n", game::native::SEH_LocalizeTextMessage(msg, "ufo print", game::native::LOCMSG_SAFE));
+		console::info("%s\n", game::native::SEH_LocalizeTextMessage(msg, "ufo print", game::native::LOCMSG_SAFE));
 	});
 
 	add("god", []
@@ -265,7 +266,7 @@ void command::add_sp_commands()
 		ent->flags ^= game::native::FL_GODMODE;
 
 		const auto* msg = (ent->flags & game::native::FL_GODMODE) ? "GAME_GODMODE_ON" : "GAME_GODMODE_OFF";
-		printf("%s\n", game::native::SEH_LocalizeTextMessage(msg, "god print", game::native::LOCMSG_SAFE));
+		console::info("%s\n", game::native::SEH_LocalizeTextMessage(msg, "god print", game::native::LOCMSG_SAFE));
 	});
 
 	add("demigod", []
@@ -282,7 +283,7 @@ void command::add_sp_commands()
 		ent->flags ^= game::native::FL_DEMI_GODMODE;
 
 		const auto* msg = (ent->flags & game::native::FL_DEMI_GODMODE) ? "GAME_DEMI_GODMODE_ON" : "GAME_DEMI_GODMODE_OFF";
-		printf("%s\n", game::native::SEH_LocalizeTextMessage(msg, "demigod print", game::native::LOCMSG_SAFE));
+		console::info("%s\n", game::native::SEH_LocalizeTextMessage(msg, "demigod print", game::native::LOCMSG_SAFE));
 	});
 
 	add("notarget", []
@@ -299,7 +300,7 @@ void command::add_sp_commands()
 		ent->flags ^= game::native::FL_NOTARGET;
 
 		const auto* msg = (ent->flags & game::native::FL_NOTARGET) ? "GAME_NOTARGETON" : "GAME_NOTARGETOFF";
-		printf("%s\n", game::native::SEH_LocalizeTextMessage(msg, "notarget print", game::native::LOCMSG_SAFE));
+		console::info("%s\n", game::native::SEH_LocalizeTextMessage(msg, "notarget print", game::native::LOCMSG_SAFE));
 	});
 
 	add("setviewpos", [](const params& params)
@@ -318,7 +319,7 @@ void command::add_sp_commands()
 
 		if (params.size() < 4 || params.size() > 6)
 		{
-			printf("setviewpos x y z [yaw] [pitch]\n");
+			console::info("setviewpos x y z [yaw] [pitch]\n");
 			return;
 		}
 

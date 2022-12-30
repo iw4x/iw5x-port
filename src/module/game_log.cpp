@@ -8,6 +8,7 @@
 #include "scheduler.hpp"
 #include "file_system.hpp"
 #include "scripting.hpp"
+#include "console.hpp"
 
 const game::native::dvar_t* game_log::g_log;
 const game::native::dvar_t* game_log::g_logSync;
@@ -60,15 +61,15 @@ void game_log::gscr_log_print()
 
 void game_log::g_init_game_stub()
 {
-	printf("------- Game Initialization -------\n");
-	printf("gamename: %s\n", reinterpret_cast<const char*>(0x7FFC68));
-	printf("gamedate: %s\n", __DATE__);
+	console::info("------- Game Initialization -------\n");
+	console::info("gamename: %s\n", reinterpret_cast<const char*>(0x7FFC68));
+	console::info("gamedate: %s\n", __DATE__);
 
 	const auto* log = g_log->current.string;
 
 	if (*log == '\0')
 	{
-		printf("Not logging to disk.\n");
+		console::info("Not logging to disk.\n");
 	}
 	else
 	{
@@ -76,11 +77,11 @@ void game_log::g_init_game_stub()
 
 		if (!log_file)
 		{
-			printf("WARNING: Couldn't open logfile: %s\n", log);
+			console::info("WARNING: Couldn't open logfile: %s\n", log);
 		}
 		else
 		{
-			printf("Logging to disk: '%s'.\n", log);
+			console::info("Logging to disk: '%s'.\n", log);
 			g_log_printf("------------------------------------------------------------\n");
 			g_log_printf("InitGame\n");
 		}
@@ -91,7 +92,7 @@ void game_log::g_init_game_stub()
 
 void game_log::g_shutdown_game_stub(int free_scripts)
 {
-	printf("==== ShutdownGame (%d) ====\n", free_scripts);
+	console::info("==== ShutdownGame (%d) ====\n", free_scripts);
 
 	if (log_file)
 	{

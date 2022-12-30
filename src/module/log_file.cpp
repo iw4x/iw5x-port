@@ -1,11 +1,11 @@
 #include <std_include.hpp>
 #include <loader/module_loader.hpp>
-
 #include "game/game.hpp"
 #include "game/engine/scoped_critical_section.hpp"
 
 #include "log_file.hpp"
 #include "file_system.hpp"
+#include "console.hpp"
 
 const char* log_file::log_file_name;
 
@@ -80,7 +80,7 @@ void log_file::info(const char* fmt, ...)
 		com_log_print_message(msg);
 	}
 
-	printf("%s", msg);
+	console::info("%s", msg);
 }
 
 void log_file::post_load()
