@@ -3,7 +3,6 @@
 #include "game/game.hpp"
 
 #include "scheduler.hpp"
-#include "log_file.hpp"
 
 class console final : public module
 {
@@ -15,16 +14,13 @@ public:
 		(void)_pipe(this->handles_, 1024, _O_TEXT);
 		(void)_dup2(this->handles_[1], 1);
 		(void)_dup2(this->handles_[1], 2);
-
-		//setvbuf(stdout, nullptr, _IONBF, 0);
-		//setvbuf(stderr, nullptr, _IONBF, 0);
 	}
 
 	void post_start() override
 	{
-		scheduler::loop(std::bind(&console::log_messages, this), scheduler::pipeline::main);
+		scheduler::loop(std::bind(&log_messages, this), scheduler::pipeline::main);
 
-		this->console_runner_ = std::thread(std::bind(&console::runner, this));
+		this->console_runner_ = std::thread(std::bind(&runner, this));
 	}
 
 	void pre_destroy() override
@@ -86,17 +82,17 @@ private:
 
 	static void log_message(const std::string& message)
 	{
+#ifdef _DEBUG
 		OutputDebugStringA(message.data());
-		log_file::com_log_print_message(message);
+#endif
 		game::native::Conbuf_AppendText(message.data());
 	}
 
 	void runner()
 	{
-		char buffer[1024];
-
 		while (!this->terminate_runner_ && this->handles_[0])
 		{
+			char buffer[1024];
 			const auto len = _read(this->handles_[0], buffer, sizeof(buffer));
 			if (len > 0)
 			{

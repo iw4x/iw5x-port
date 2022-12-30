@@ -11,7 +11,7 @@ static char* com_get_build_version_stub()
 
 	const auto version_number = SELECT_VALUE(0x1CD, 0x5EC0E);
 
-	_snprintf_s(buf, _TRUNCATE, "%d %s", version_number, __DATE__);
+	sprintf_s(buf, _TRUNCATE, "%d %s", version_number, __DATE__);
 
 	return buf;
 }
