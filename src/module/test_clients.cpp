@@ -1,6 +1,7 @@
 #include <std_include.hpp>
 #include <loader/module_loader.hpp>
 #include "game/game.hpp"
+#include "game/dvars.hpp"
 
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
@@ -34,8 +35,8 @@ game::native::gentity_s* test_clients::sv_add_test_client()
 		return nullptr;
 	}
 
-	assert(game::native::Dvar_FindVar("sv_running")->current.enabled);
-	assert(game::native::Dvar_FindVar("sv_maxclients")->current.integer <= *game::native::svs_clientCount);
+	assert((*dvars::com_sv_running)->current.enabled);
+	assert((*dvars::sv_maxclients)->current.integer <= *game::native::svs_clientCount);
 
 	static auto bot_port = 0;
 	char user_info[1024] = {0};

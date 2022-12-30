@@ -1,5 +1,6 @@
 #include <std_include.hpp>
 #include "game.hpp"
+#include "dvars.hpp"
 
 namespace game
 {
@@ -684,6 +685,8 @@ namespace game
 	void initialize(const launcher::mode _mode)
 	{
 		mode = _mode;
+
+		dvars::initialize();
 
 		native::Cmd_AddCommand = native::Cmd_AddCommand_t(SELECT_VALUE(0x558820, 0x545DF0));
 		native::Cmd_RemoveCommand = native::Cmd_RemoveCommand_t(SELECT_VALUE(0x443A30, 0x545E20));

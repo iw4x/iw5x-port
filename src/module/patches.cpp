@@ -41,6 +41,9 @@ private:
 		utils::hook::set<std::uint8_t>(0x4296F9, game::native::DVAR_ARCHIVE);
 
 		utils::hook(0x44C640, &live_get_local_client_name_stub, HOOK_JUMP).install()->quick();
+
+		// Some whitelist
+		utils::hook::nop(0x605F3C, 2);
 	}
 
 	void patch_mp() const
@@ -59,6 +62,9 @@ private:
 		// Allow any IWD file to be loaded
 		utils::hook::nop(0x5B090F, 6);
 		utils::hook::nop(0x5B092C, 6);
+
+		// Some whitelist
+		utils::hook::nop(0x54641D, 2);
 	}
 
 	void patch_dedi() const
