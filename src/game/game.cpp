@@ -14,6 +14,7 @@ namespace game
 		Com_Error_t Com_Error;
 		Com_Filter_t Com_Filter;
 
+		DB_GetXAssetName_t DB_GetXAssetName;
 		DB_LoadXAssets_t DB_LoadXAssets;
 		DB_FindXAssetHeader_t DB_FindXAssetHeader;
 		DB_IsXAssetDefault_t DB_IsXAssetDefault;
@@ -696,6 +697,7 @@ namespace game
 		native::Com_Error = native::Com_Error_t(SELECT_VALUE(0x425540, 0x555450));
 		native::Com_Filter = native::Com_Filter_t(SELECT_VALUE(0x44EFF0, 0x5B7C30));
 
+		native::DB_GetXAssetName = native::DB_GetXAssetName_t(0x4B7C10);
 		native::DB_LoadXAssets = native::DB_LoadXAssets_t(SELECT_VALUE(0x48A8E0, 0x4CD020));
 		native::DB_FindXAssetHeader = native::DB_FindXAssetHeader_t(SELECT_VALUE(0x4FF000, 0x4CA620));
 		native::DB_IsXAssetDefault = native::DB_IsXAssetDefault_t(SELECT_VALUE(0x4868E0, 0x4CA800));

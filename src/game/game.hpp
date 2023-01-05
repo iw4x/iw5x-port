@@ -26,6 +26,9 @@ namespace game
 		typedef bool (*Com_Filter_t)(const char* filter, const char* name, int casesensitive);
 		extern Com_Filter_t Com_Filter;
 
+		typedef const char* (*DB_GetXAssetName_t)(const XAsset* a1);
+		extern DB_GetXAssetName_t DB_GetXAssetName;
+
 		typedef void (*DB_LoadXAssets_t)(XZoneInfo* zoneInfo, unsigned int zoneCount, int sync);
 		extern DB_LoadXAssets_t DB_LoadXAssets;
 
