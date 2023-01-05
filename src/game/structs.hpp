@@ -535,6 +535,73 @@ namespace game
 			void* data;
 		};
 
+		struct GfxImageLoadDef
+		{
+			char levelCount;
+			char pad[3];
+			int flags;
+			int format;
+			int resourceSize;
+			char data[1];
+		};
+
+		struct Picmip
+		{
+			char platform[2];
+		};
+
+		struct CardMemory
+		{
+			int platform[2];
+		};
+
+		union GfxTexture
+		{
+			// IDirect3DBaseTexture9* basemap;
+			// IDirect3DTexture9* map;
+			// IDirect3DVolumeTexture9* volmap;
+			// IDirect3DCubeTexture9* cubemap;
+			GfxImageLoadDef* loadDef;
+		};
+
+		struct GfxImageStreamData
+		{
+			unsigned short width;
+			unsigned short height;
+			unsigned int pixelSize;
+		};
+
+		enum GfxImageCategory : unsigned char
+		{
+			IMG_CATEGORY_UNKNOWN = 0x0,
+			IMG_CATEGORY_AUTO_GENERATED = 0x1,
+			IMG_CATEGORY_LIGHTMAP = 0x2,
+			IMG_CATEGORY_LOAD_FROM_FILE = 0x3,
+			IMG_CATEGORY_RAW = 0x4,
+			IMG_CATEGORY_FIRST_UNMANAGED = 0x5,
+			IMG_CATEGORY_WATER = 0x5,
+			IMG_CATEGORY_RENDERTARGET = 0x6,
+			IMG_CATEGORY_TEMP = 0x7,
+		};
+
+		struct GfxImage
+		{
+			GfxTexture texture;
+			int format;
+			unsigned char mapType;
+			unsigned char semantic;
+			unsigned char category;
+			GfxImageCategory flags;
+			CardMemory cardMemory;
+			unsigned short width;
+			unsigned short height;
+			unsigned short depth;
+			unsigned char levelCount;
+			unsigned char cached;
+			unsigned char* pixels;
+			GfxImageStreamData streams[4];
+			const char* name;
+		};
 
 		struct MaterialArgumentCodeConst
 		{
