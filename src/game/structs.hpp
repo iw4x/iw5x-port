@@ -587,20 +587,65 @@ namespace game
 		struct GfxImage
 		{
 			GfxTexture texture;
-			int format;
-			unsigned char mapType;
-			unsigned char semantic;
-			unsigned char category;
-			GfxImageCategory flags;
+			char mapType;
+			char semantic;
+			char category;
+			unsigned char flags;
+			Picmip picmip;
+			bool noPicmip;
+			char track;
 			CardMemory cardMemory;
 			unsigned short width;
 			unsigned short height;
 			unsigned short depth;
 			unsigned char levelCount;
-			unsigned char cached;
-			unsigned char* pixels;
-			GfxImageStreamData streams[4];
 			const char* name;
+		};
+
+		enum MaterialTechniqueType
+		{
+			TECHNIQUE_DEPTH_PREPASS = 0x0,
+			TECHNIQUE_BUILD_FLOAT_Z = 0x1,
+			TECHNIQUE_BUILD_SHADOWMAP_DEPTH = 0x2,
+			TECHNIQUE_BUILD_SHADOWMAP_COLOR = 0x3,
+			TECHNIQUE_UNLIT = 0x4,
+			TECHNIQUE_EMISSIVE = 0x5,
+			TECHNIQUE_EMISSIVE_DFOG = 0x6,
+			TECHNIQUE_EMISSIVE_SHADOW = 0x7,
+			TECHNIQUE_EMISSIVE_SHADOW_DFOG = 0x8,
+			TECHNIQUE_LIT_BEGIN = 0x9,
+			TECHNIQUE_LIT = 0x9,
+			TECHNIQUE_LIT_DFOG = 0xA,
+			TECHNIQUE_LIT_SUN = 0xB,
+			TECHNIQUE_LIT_SUN_DFOG = 0xC,
+			TECHNIQUE_LIT_SUN_SHADOW = 0xD,
+			TECHNIQUE_LIT_SUN_SHADOW_DFOG = 0xE,
+			TECHNIQUE_LIT_SPOT = 0xF,
+			TECHNIQUE_LIT_SPOT_DFOG = 0x10,
+			TECHNIQUE_LIT_SPOT_SHADOW = 0x11,
+			TECHNIQUE_LIT_SPOT_SHADOW_DFOG = 0x12,
+			TECHNIQUE_LIT_SPOT_SHADOW_CUCOLORIS = 0x13,
+			TECHNIQUE_LIT_SPOT_SHADOW_CUCOLORIS_DFOG = 0x14,
+			TECHNIQUE_LIT_OMNI = 0x15,
+			TECHNIQUE_LIT_OMNI_DFOG = 0x16,
+			TECHNIQUE_LIT_OMNI_SHADOW = 0x17,
+			TECHNIQUE_LIT_OMNI_SHADOW_DFOG = 0x18,
+			TECHNIQUE_LIT_END = 0x19,
+			TECHNIQUE_LIGHT_SPOT = 0x19,
+			TECHNIQUE_LIGHT_OMNI = 0x1A,
+			TECHNIQUE_LIGHT_SPOT_SHADOW = 0x1B,
+			TECHNIQUE_LIGHT_SPOT_SHADOW_CUCOLORIS = 0x1C,
+			TECHNIQUE_FAKELIGHT_NORMAL = 0x1D,
+			TECHNIQUE_FAKELIGHT_VIEW = 0x1E,
+			TECHNIQUE_SUNLIGHT_PREVIEW = 0x1F,
+			TECHNIQUE_CASE_TEXTURE = 0x20,
+			TECHNIQUE_WIREFRAME_SOLID = 0x21,
+			TECHNIQUE_WIREFRAME_SHADED = 0x22,
+			TECHNIQUE_THERMAL = 0x23,
+			TECHNIQUE_DEBUG_BUMPMAP = 0x24,
+			TECHNIQUE_COUNT = 0x25,
+			TECHNIQUE_TOTAL_COUNT = 0x26,
+			TECHNIQUE_NONE = 0x27,
 		};
 
 		struct MaterialArgumentCodeConst
@@ -652,6 +697,110 @@ namespace game
 			unsigned char unused[2];
 			MaterialTechniqueSet* remappedTechniqueSet;
 			MaterialTechnique* techniques[54];
+		};
+		struct GfxDrawSurfFields
+		{
+			unsigned long long unused : 1;
+			unsigned long long primarySortKey : 6;
+			unsigned long long surfType : 4;
+			unsigned long long viewModelRender : 1;
+			unsigned long long sceneLightIndex : 8;
+			unsigned long long useHeroLighting : 1;
+			unsigned long long prepass : 2;
+			unsigned long long materialSortedIndex : 12;
+			unsigned long long customIndex : 5;
+			unsigned long long hasGfxEntIndex : 1;
+			unsigned long long reflectionProbeIndex : 8;
+			unsigned long long objectId : 15;
+		};
+
+		union GfxDrawSurf
+		{
+			GfxDrawSurfFields fields;
+			unsigned long long packed;
+		};
+
+		struct MaterialInfo
+		{
+			const char* name;
+			unsigned char gameFlags;
+			unsigned char sortKey;
+			unsigned char textureAtlasRowCount;
+			unsigned char textureAtlasColumnCount;
+			GfxDrawSurf drawSurf;
+			unsigned int surfaceTypeBits;
+		};
+
+		struct WaterWritable
+		{
+			float floatTime;
+		};
+
+		struct complex_s
+		{
+			float real;
+			float imag;
+		};
+
+		struct water_t
+		{
+			WaterWritable writable;
+			complex_s* H0;
+			float* wTerm;
+			int M;
+			int N;
+			float Lx;
+			float Lz;
+			float gravity;
+			float windvel;
+			float winddir[2];
+			float amplitude;
+			float codeConstant[4];
+			GfxImage* image;
+		};
+
+		union MaterialTextureDefInfo
+		{
+			GfxImage* image;
+			water_t* water;
+		};
+
+		struct MaterialTextureDef
+		{
+			unsigned int nameHash;
+			char nameStart;
+			char nameEnd;
+			unsigned char samplerState;
+			unsigned char semantic;
+			MaterialTextureDefInfo u;
+		};
+
+		struct MaterialConstantDef
+		{
+			unsigned int nameHash;
+			char name[12];
+			float literal[4];
+		};
+
+		struct GfxStateBits
+		{
+			unsigned int loadBits[2];
+		};
+
+		struct Material
+		{
+			MaterialInfo info;
+			unsigned char stateBitsEntry[54];
+			unsigned char textureCount;
+			unsigned char constantCount;
+			unsigned char stateBitsCount;
+			unsigned char stateFlags;
+			unsigned char cameraRegion;
+			MaterialTechniqueSet* techniqueSet;
+			MaterialTextureDef* textureTable;
+			MaterialConstantDef* constantTable;
+			GfxStateBits* stateBitsTable;
+			const char** subMaterials;
 		};
 
 		struct XAsset

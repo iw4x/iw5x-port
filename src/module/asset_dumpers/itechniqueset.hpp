@@ -6,11 +6,17 @@
 #include "loader\module.hpp"
 #include "../asset_dumper.hpp"
 
+#include <unordered_map>
+
 namespace asset_dumpers
 {
-	struct igfximage : asset_dumper
+	struct itechniqueset : asset_dumper
 	{
-		igfximage();
+		itechniqueset();
+
+	public:
+		static const std::string techset_suffix;
+		const static std::unordered_map<game::native::MaterialTechniqueType, iw4::native::MaterialTechniqueType> techniques_from_iw5_to_iw4;
 
 	protected:
 		void convert(const game::native::XAssetHeader& header, iw4::native::XAssetHeader& out) override;

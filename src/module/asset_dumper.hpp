@@ -1,15 +1,29 @@
 #pragma once
 
-class asset_dumper final : public module
+#include "game/structs.iw4.hpp"
+
+class asset_dumper : public module
 {
 
+#define RAPIDJSON_STR(str) (str == nullptr ? rapidjson::Value(rapidjson::kNullType) : static_cast<rapidjson::Value>(rapidjson::StringRef(str)))
+
 public:
-	inline static const std::string export_path = "out";
+
 	asset_dumper();
 
-	void post_load() override;
+	void dump(game::native::XAssetHeader header)
+	{
+		iw4::native::XAssetHeader out{};
+		convert(header, out);
+		write(out);
+	}
 
-private:
-	const std::function<void(game::native::XAssetType, game::native::XAssetHeader)> dumpers[game::native::ASSET_TYPE_COUNT]{};
+protected:
+	std::string export_path() {
+		return "out";
+	};
+
+	virtual void convert(const game::native::XAssetHeader& header, iw4::native::XAssetHeader& out) = 0;
+	virtual void write(const iw4::native::XAssetHeader& header) = 0;
 };
 

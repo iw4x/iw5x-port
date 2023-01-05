@@ -11,12 +11,5 @@
 
 asset_dumper::asset_dumper()
 {
-	//dumpers[game::native::XAssetType::ASSET_TYPE_IMAGE] = asset_dumpers::igfximage::dump;
 }
 
-void asset_dumper::post_load()
-{
-	new asset_dumpers::igfximage();
-}
-
-REGISTER_MODULE(asset_dumper)

@@ -1,4 +1,7 @@
+#pragma once
+
 #include <game\structs.hpp>
+
 namespace iw4::native
 {
 	enum StaticModelFlag : char
@@ -1457,25 +1460,17 @@ namespace iw4::native
 
 	struct Material
 	{
-		const char* name;
-		MaterialGameFlags gameFlags;
-		char sortKey;
-		char textureAtlasRowCount;
-		char textureAtlasColumnCount;
-		GfxDrawSurf drawSurf;
-		int surfaceTypeBits;
-		unsigned __int16 hashIndex;
-		unsigned __int16 pad;
-		char stateBitsEntry[48];
-		char textureCount;
-		char constantCount;
-		char stateBitsCount;
-		StateFlags stateFlags;
-		char cameraRegion;
+		game::native::MaterialInfo info;
+		unsigned char stateBitsEntry[48];
+		unsigned char textureCount;
+		unsigned char constantCount;
+		unsigned char stateBitsCount;
+		unsigned char stateFlags;
+		unsigned char cameraRegion; // GfxCameraRegionType
 		struct MaterialTechniqueSet* techniqueSet;
-		MaterialTextureDef* textureTable;
-		MaterialConstantDef* constantTable;
-		GfxStateBits* stateBitTable;
+		struct MaterialTextureDef* textureTable;
+		struct MaterialConstantDef* constantTable;
+		GfxStateBits* stateBitsTable;
 	};
 
 
@@ -1988,4 +1983,45 @@ namespace iw4::native
 		FxElemDef* elemDefs;
 	};
 
+	union XAssetHeader
+	{
+		PhysPreset* physPreset;
+		PhysCollmap* physCollmap;
+		XAnimParts* parts;
+		XModelSurfs* modelSurfs;
+		XModel* model;
+		Material* material;
+		MaterialPixelShader* pixelShader;
+		MaterialVertexShader* vertexShader;
+		MaterialVertexDeclaration* vertexDecl;
+		MaterialTechniqueSet* techniqueSet;
+		GfxImage* image;
+		//snd_alias_list_t* sound;
+		//SndCurve* sndCurve;
+		//LoadedSound* loadSnd;
+		clipMap_t* clipMap;
+		//ComWorld* comWorld;
+		//GameWorldSp* gameWorldSp;
+		GameWorldMp* gameWorldMp;
+		MapEnts* mapEnts;
+		//FxWorld* fxWorld;
+		GfxWorld* gfxWorld;
+		//GfxLightDef* lightDef;
+		//Font_s* font;
+		//MenuList* menuList;
+		//menuDef_t* menu;
+		//LocalizeEntry* localize;
+		//WeaponCompleteDef* weapon;
+		//SndDriverGlobals* sndDriverGlobals;
+		FxEffectDef* fx;
+		//FxImpactTable* impactFx;
+		//RawFile* rawfile;
+		//StringTable* stringTable;
+		//LeaderboardDef* leaderboardDef;
+		//StructuredDataDefSet* structuredDataDefSet;
+		//TracerDef* tracerDef;
+		//VehicleDef* vehDef;
+		//AddonMapEnts* addonMapEnts;
+		void* data;
+	};
 }

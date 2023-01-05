@@ -8,9 +8,9 @@
 
 namespace asset_dumpers
 {
-	struct igfximage : asset_dumper
+	struct imaterial : asset_dumper
 	{
-		igfximage();
+		imaterial();
 
 	protected:
 		void convert(const game::native::XAssetHeader& header, iw4::native::XAssetHeader& out) override;

@@ -5,10 +5,17 @@
 #include <utils/hook.hpp>
 #include <module/command.hpp>
 
+#include <module\asset_dumpers\igfximage.hpp>
+#include <module\asset_dumpers\imaterial.hpp>
+#include <module\asset_dumpers\itechniqueset.hpp>
+
 #include "exporter.hpp"
 #include <module\scheduler.hpp>
 #include <module\log_file.hpp>
 #include <module/console.hpp>
+#include "asset_dumper.hpp"
+
+asset_dumper* exporter::asset_dumpers[game::native::ASSET_TYPE_COUNT]{};
 
 DEFINE_OG_FUNCTION(Com_EventLoop, 0x555880);
 
@@ -170,10 +177,35 @@ void exporter::load_common_zones()
 	console::info("done!\n");
 }
 
+void exporter::initialize_exporters()
+{
+	asset_dumpers[game::native::XAssetType::ASSET_TYPE_IMAGE] = new asset_dumpers::igfximage();
+	asset_dumpers[game::native::XAssetType::ASSET_TYPE_MATERIAL] = new asset_dumpers::imaterial();
+	asset_dumpers[game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET] = new asset_dumpers::itechniqueset();
+}
+
+bool exporter::exporter_exists(game::native::XAssetType assetType)
+{
+	return asset_dumpers[assetType];
+}
+
+void exporter::dump(game::native::XAssetType type, game::native::XAssetHeader header)
+{
+	if (exporter_exists(type))
+	{
+		asset_dumpers[type]->dump(header);
+	}
+	else
+	{
+		console::warn("Cannot dump type %s, no asset dumper found\n", game::native::g_assetNames[type]);
+	}
+}
+
 void DB_AddXAsset_Hk(game::native::XAssetType type, game::native::XAssetHeader* header)
 {
-	if (header == reinterpret_cast<void*>(- 1))
+	if (reinterpret_cast<void*>(-1) == header)
 	{
+		// ???
 		return;
 	}
 
@@ -232,6 +264,7 @@ void exporter::post_load()
 	utils::hook(0x5CCED8, event_loop, HOOK_CALL).install()->quick();
 	utils::hook(0x5CCE4E, &perform_common_initialization, HOOK_CALL).install()->quick();
 
+	initialize_exporters();
 	add_commands();
 }
 

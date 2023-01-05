@@ -1,4 +1,4 @@
-#include <std_include.hpp>
+﻿#include <std_include.hpp>
 
 #include "igfximage.hpp"
 #include "../asset_dumper.hpp"
@@ -14,16 +14,17 @@
 namespace asset_dumpers
 {
 
-	void igfximage::dump(game::native::XAssetType type, game::native::XAssetHeader header)
+	void igfximage::convert(const game::native::XAssetHeader& header, iw4::native::XAssetHeader& out)
 	{
-		assert(type == game::native::XAssetType::ASSET_TYPE_IMAGE);
-		dump(header.image);
+		assert(header.image);
+		out.image = reinterpret_cast<iw4::native::GfxImage*>(header.image);
+
+		out.image->delayLoadPixels = false; // 🤔
 	}
 
-
-	void igfximage::dump(game::native::GfxImage* image)
+	void igfximage::write(const iw4::native::XAssetHeader& header)
 	{
-		if (!image) return;
+		auto image = header.image;
 		std::string name = image->name;
 
 		if (image->category != game::native::GfxImageCategory::IMG_CATEGORY_LOAD_FROM_FILE && image->texture.loadDef)
@@ -40,13 +41,13 @@ namespace asset_dumpers
 			buffer.saveObject(image->texture.loadDef->resourceSize);
 			buffer.save(image->texture.loadDef, 16 + image->texture.loadDef->resourceSize);
 
-			utils::io::write_file(std::format("{}/images/{}.iw4xImage", asset_dumper::export_path, name), buffer.toBuffer());
+			utils::io::write_file(std::format("{}/images/{}.iw4xImage", export_path(), name), buffer.toBuffer());
 		}
 		else
 		{
 			char* buffer = nullptr;
 			auto size = game::native::FS_ReadFile(std::format("images/{}.iwi", image->name).data(), &buffer);
-			
+
 			if (size <= 0)
 			{
 				// Ignore that
@@ -60,7 +61,7 @@ namespace asset_dumpers
 
 			if (size > 0)
 			{
-				utils::io::write_file(std::format("{}/images/{}.iwi", asset_dumper::export_path, image->name), std::string(buffer, size));
+				utils::io::write_file(std::format("{}/images/{}.iwi", export_path(), image->name), std::string(buffer, size));
 			}
 			else
 			{
@@ -93,15 +94,23 @@ namespace asset_dumpers
 
 	igfximage::igfximage()
 	{
-		command::add("dumpGfxImage", [](const command::params& params)
+		command::add("dumpGfxImage", [&](const command::params& params)
 			{
 				if (params.size() < 2) return;
 
-				game::native::GfxImage image;
-				image.name = params[1];
-				image.texture.loadDef = nullptr;
+				auto name = params[1];
 
-				igfximage::dump(&image);
+				auto header = game::native::DB_FindXAssetHeader(game::native::XAssetType::ASSET_TYPE_IMAGE, name, false);
+
+				if (header.data)
+				{
+					dump(header);
+					console::info("successfullly dumped image %s!\n", name);
+				}
+				else
+				{
+					console::info("could not dump image %s from the database (cannot find it)\n", name);
+				}
 			});
 
 	//	Utils::Hook(0x616E80, igfximage::StoreTexture, HOOK_JUMP).install()->quick();
