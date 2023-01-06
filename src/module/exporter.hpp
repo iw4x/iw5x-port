@@ -23,5 +23,7 @@ private:
 	static void add_commands();
 
 	static class asset_dumper* asset_dumpers[game::native::ASSET_TYPE_COUNT];
+	static bool ready;
+	static const game::native::dvar_t* export_path_dvar;
 };
 

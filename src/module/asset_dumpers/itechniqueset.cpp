@@ -375,7 +375,7 @@ namespace asset_dumpers
 		rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buff);
 		output.Accept(writer);
 
-		utils::io::write_file(std::format("{}/techsets/{}.iw4x.json", export_path(), techset->name), buff.GetString());
+		utils::io::write_file(std::format("{}/techsets/{}.iw4x.json", get_export_path(), techset->name), buff.GetString());
 	}
 
 	iw4::native::MaterialTechnique* itechniqueset::dump(const game::native::MaterialTechnique* native_technique)
@@ -548,7 +548,7 @@ namespace asset_dumpers
 		rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buff);
 		output.Accept(writer);
 
-		utils::io::write_file(std::format("{}/techniques/{}.iw4x.json", export_path(), iw4_technique->name), buff.GetString());
+		utils::io::write_file(std::format("{}/techniques/{}.iw4x.json", get_export_path(), iw4_technique->name), buff.GetString());
 
 		return iw4_technique;
 	}
@@ -586,7 +586,7 @@ namespace asset_dumpers
 			buffer.saveString(iw4_decl->name);
 		}
 
-		utils::io::write_file(std::format("{}/decl/{}.iw4xDECL", export_path(), iw4_decl->name), buffer.toBuffer());
+		utils::io::write_file(std::format("{}/decl/{}.iw4xDECL", get_export_path(), iw4_decl->name), buffer.toBuffer());
 
 		return iw4_decl;
 	}
@@ -608,7 +608,7 @@ namespace asset_dumpers
 		utils::stream buffer;
 		buffer.saveArray(vs->prog.loadDef.program, vs->prog.loadDef.programSize);
 
-		utils::io::write_file(std::format("{}/vs/{}.cso", export_path(), name.data()), buffer.toBuffer());
+		utils::io::write_file(std::format("{}/vs/{}.cso", get_export_path(), name.data()), buffer.toBuffer());
 
 		return vs_copy;
 	}
@@ -630,7 +630,7 @@ namespace asset_dumpers
 		utils::stream buffer;
 		buffer.saveArray(ps->prog.loadDef.program, ps->prog.loadDef.programSize);
 
-		utils::io::write_file(std::format("{}/ps/{}.cso", export_path(), name.data()), buffer.toBuffer());
+		utils::io::write_file(std::format("{}/ps/{}.cso", get_export_path(), name.data()), buffer.toBuffer());
 
 		return ps_copy;
 	}

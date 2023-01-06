@@ -291,7 +291,7 @@ namespace asset_dumpers
 		rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buff);
 		output.Accept(writer);
 
-		utils::io::write_file(std::format("{}/materials/{}.iw4x.json", export_path(), asset->info.name), buff.GetString());
+		utils::io::write_file(std::format("{}/materials/{}.iw4x.json", get_export_path(), asset->info.name), buff.GetString());
 
 	}
 

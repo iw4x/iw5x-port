@@ -41,7 +41,7 @@ namespace asset_dumpers
 			buffer.saveObject(image->texture.loadDef->resourceSize);
 			buffer.save(image->texture.loadDef, 16 + image->texture.loadDef->resourceSize);
 
-			utils::io::write_file(std::format("{}/images/{}.iw4xImage", export_path(), name), buffer.toBuffer());
+			utils::io::write_file(std::format("{}/images/{}.iw4xImage", get_export_path(), name), buffer.toBuffer());
 		}
 		else
 		{
@@ -63,7 +63,7 @@ namespace asset_dumpers
 
 			if (contents.size() > 0)
 			{
-				utils::io::write_file(std::format("{}/images/{}.iwi", export_path(), image->name), contents);
+				utils::io::write_file(std::format("{}/images/{}.iwi", get_export_path(), image->name), contents);
 			}
 			else
 			{
@@ -105,7 +105,6 @@ namespace asset_dumpers
 				if (name == "*"s)
 				{
 					std::vector<game::native::XAssetHeader> headers{};
-					bool isDone = false;
 
 					game::native::DB_EnumXAssets(game::native::XAssetType::ASSET_TYPE_IMAGE, [](game::native::XAssetHeader header, void* data) {
 						auto headers = reinterpret_cast<std::vector<game::native::XAssetHeader>*>(data);

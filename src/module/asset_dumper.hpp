@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/structs.iw4.hpp"
+#include "loader/module.hpp"
 #include <utils/memory.hpp>
 
 class asset_dumper : public module
@@ -43,11 +44,14 @@ protected:
 	utils::memory::allocator local_allocator;
 	std::unordered_map<void*, void*> converted_assets{};
 
-	std::string export_path() {
-		return "out";
+	std::string get_export_path() {
+		return export_path_dvar->current.string;
 	};
 
 	virtual void convert(const game::native::XAssetHeader& header, iw4::native::XAssetHeader& out) = 0;
 	virtual void write(const iw4::native::XAssetHeader& header) = 0;
+
+private:
+	game::native::dvar_t* export_path_dvar;
 };
 

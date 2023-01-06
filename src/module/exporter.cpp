@@ -9,6 +9,7 @@
 #include <module/asset_dumpers/igfximage.hpp>
 #include <module/asset_dumpers/imaterial.hpp>
 #include <module/asset_dumpers/itechniqueset.hpp>
+#include <module/asset_dumpers/igfxworld.hpp>
 
 #include "exporter.hpp"
 #include <module/scheduler.hpp>
@@ -16,11 +17,17 @@
 #include <module/console.hpp>
 #include "asset_dumper.hpp"
 
+const game::native::dvar_t* exporter::export_path_dvar;
 asset_dumper* exporter::asset_dumpers[game::native::ASSET_TYPE_COUNT]{};
+bool exporter::ready = false;
+
 
 DEFINE_OG_FUNCTION(Com_EventLoop, 0x555880);
 
-typedef void (*Cbuf_Execute_t)(int localClient, int controllerIndex); 
+typedef bool (*DB_Update_t)();
+DB_Update_t DB_Update = (DB_Update_t)0x4CDA40;
+
+typedef void (*Cbuf_Execute_t)(int localClient, int controllerIndex);
 Cbuf_Execute_t Cbuf_Execute = (Cbuf_Execute_t)0x546590;
 
 DEFINE_OG_FUNCTION(R_RegisterDvars, 0X6678F0);
@@ -62,7 +69,11 @@ void exporter::event_loop()
 	{
 		Com_Frame();
 		Com_EventLoop();
-		Cbuf_Execute(0, 0);
+
+		if (ready)
+		{
+			Cbuf_Execute(0, 0);
+		}
 
 		Sleep(1u);
 	}
@@ -122,32 +133,49 @@ void exporter::perform_common_initialization()
 void exporter::dump_map(const command::params& params)
 {
 	if (params.size() < 2) return;
-	std::string mapName = params[1];
+	std::string map_name = params[1];
 
-	command::execute(std::format("loadzone {}", mapName), true);
+	console::info("dumping %s...\n", map_name.c_str());
+
+	auto out_path = std::format("iw5xport_out/{}", map_name);
+	game::native::Dvar_SetString(export_path_dvar, out_path.c_str());
+
+	command::execute(std::format("loadzone {}", map_name), true);
+	
+	while (!DB_Update())
+	{
+		Sleep(1u);
+	}
+
+	command::execute("dumpGfxWorld", true);
+
+	console::info("done!\n");
+
+	// Clear memory of everybody
+	initialize_exporters();
 }
 
 void exporter::add_commands()
 {
-command::add("test", []()
-	{
-		game::native::Conbuf_AppendText("hello!");
-	});
+	command::add("test", []()
+		{
+			game::native::Conbuf_AppendText("hello!");
+		});
 
-command::add("dumpmap", dump_map);
+	command::add("dumpmap", dump_map);
 
-command::add("loadzone", [](const command::params& params)
-	{
-		if (params.size() < 2) return;
-		std::string zone = params[1];
+	command::add("loadzone", [](const command::params& params)
+		{
+			if (params.size() < 2) return;
+			std::string zone = params[1];
 
-		game::native::XZoneInfo info;
-		info.name = zone.data();
-		info.allocFlags = 0;
-		info.freeFlags = 0;
+			game::native::XZoneInfo info;
+			info.name = zone.data();
+			info.allocFlags = 0;
+			info.freeFlags = 0;
 
-		game::native::DB_LoadXAssets(&info, 1, 0);
-	});
+			game::native::DB_LoadXAssets(&info, 1, 0);
+		});
 }
 
 void exporter::load_common_zones()
@@ -180,9 +208,18 @@ void exporter::load_common_zones()
 
 void exporter::initialize_exporters()
 {
+	for (auto dumper : asset_dumpers)
+	{
+		if (dumper)
+		{
+			delete dumper;
+		}
+	}
+
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_IMAGE] = new asset_dumpers::igfximage();
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_MATERIAL] = new asset_dumpers::imaterial();
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET] = new asset_dumpers::itechniqueset();
+	asset_dumpers[game::native::XAssetType::ASSET_TYPE_GFXWORLD] = new asset_dumpers::igfxworld();
 }
 
 bool exporter::exporter_exists(game::native::XAssetType assetType)
@@ -240,12 +277,12 @@ void __declspec(naked) DB_AddXAsset_stub()
 	{
 		pushad
 
-			push ecx
-			push[esp + 0x20 + 8]
+		push ecx
+		push[esp + 0x20 + 8]
 
-			call DB_AddXAsset_Hk
+		call DB_AddXAsset_Hk
 
-			add esp,8
+		add esp, 8
 
 		popad
 
@@ -290,8 +327,15 @@ void exporter::post_load()
 	utils::hook(0x5CCED8, event_loop, HOOK_CALL).install()->quick();
 	utils::hook(0x5CCE4E, &perform_common_initialization, HOOK_CALL).install()->quick();
 
-	initialize_exporters();
-	add_commands();
+	scheduler::once([]() {
+
+		export_path_dvar = game::native::Dvar_RegisterString("export_path", "iw5xport_out", game::native::DVAR_NONE, "export path for iw5xport");
+		
+		initialize_exporters();
+		add_commands();
+		console::info("ready!");
+		ready = true;
+		}, scheduler::pipeline::main);
 }
 
 REGISTER_MODULE(exporter)

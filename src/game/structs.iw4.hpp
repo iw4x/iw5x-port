@@ -269,23 +269,11 @@ namespace iw4::native
 		float radiusSquared;
 	};
 
-	struct srfTriangles_t
-	{
-		unsigned int vertexLayerData;
-		unsigned int firstVertex;
-		unsigned short vertexCount;
-		unsigned short triCount;
-		unsigned int baseIndex;
-	};
-
 	struct GfxSurface
 	{
-		srfTriangles_t tris;
+		game::native::srfTriangles_t tris;
 		struct Material* material;
-		unsigned char lightmapIndex;
-		unsigned char reflectionProbeIndex;
-		unsigned char primaryLightIndex;
-		unsigned char flags;
+		game::native::GfxSurfaceLightingAndFlags laf;
 	};
 
 	struct GfxPortal;
@@ -325,22 +313,9 @@ namespace iw4::native
 	};
 
 #pragma pack(push, 4)
-	struct GfxPackedPlacement
-	{
-		float origin[3];
-		game::native::vec3_t axis[3];
-		float scale;
-	};
-
-	union GfxColor
-	{
-		unsigned int packed;
-		unsigned char array[4];
-	};
-
 	struct GfxStaticModelDrawInst
 	{
-		GfxPackedPlacement placement;
+		game::native::GfxPackedPlacement placement;
 		struct XModel* model;
 		unsigned __int16 cullDist;
 		unsigned __int16 lightingHandle;
@@ -348,24 +323,10 @@ namespace iw4::native
 		unsigned char primaryLightIndex;
 		unsigned char flags;
 		unsigned char firstMtlSkinIndex;
-		GfxColor groundLighting;
+		game::native::GfxColor groundLighting;
 		unsigned __int16 cacheId[4];
 	};
 
-	struct GfxBrushModelWritable
-	{
-		game::native::Bounds bounds;
-	};
-
-	struct GfxBrushModel
-	{
-		GfxBrushModelWritable writable;
-		game::native::Bounds bounds;
-		float radius;
-		unsigned short surfaceCount;
-		unsigned short startSurfIndex;
-		unsigned short surfaceCountNoDecal;
-	};
 
 	struct SunLightParseParams
 	{
@@ -441,21 +402,15 @@ namespace iw4::native
 		GfxImage* secondary;
 	};
 
-	union PackedUnitVec
-	{
-		unsigned int packed;
-		char array[4];
-	};
-
 	struct GfxWorldVertex
 	{
 		float xyz[3];
 		float binormalSign;
-		GfxColor color;
+		game::native::GfxColor color;
 		float texCoord[2];
 		float lmapCoord[2];
-		PackedUnitVec normal;
-		PackedUnitVec tangent;
+		game::native::PackedUnitVec normal;
+		game::native::PackedUnitVec tangent;
 	};
 
 	struct GfxWorldVertexData
@@ -497,74 +452,18 @@ namespace iw4::native
 		int skySamplerState;
 	};
 
+
 	struct GfxHeroOnlyLight
 	{
 		char type;
 		char unused[3];
 		float color[3];
 		float dir[3];
-		float up[3];
-		//float origin[3];
+		float origin[3];
 		float radius;
 		float cosHalfFovOuter;
 		float cosHalfFovInner;
 		int exponent;
-	};
-
-	struct GfxAabbTree
-	{
-		game::native::Bounds bounds;
-		unsigned __int16 childCount;
-		unsigned __int16 surfaceCount;
-		unsigned __int16 startSurfIndex;
-		unsigned __int16 surfaceCountNoDecal;
-		unsigned __int16 startSurfIndexNoDecal;
-		unsigned __int16 smodelIndexCount;
-		unsigned __int16* smodelIndexes;
-		int childrenOffset;
-	};
-
-	struct GfxCellTree
-	{
-		GfxAabbTree* aabbTree;
-	};
-
-	struct GfxCellTreeCount
-	{
-		int aabbTreeCount;
-	};
-
-	struct GfxStaticModelInst
-	{
-		game::native::Bounds bounds;
-		float lightingOrigin[3];
-	};
-
-	struct GfxSurfaceBounds
-	{
-		game::native::Bounds bounds;
-	};
-
-
-	struct GfxDrawSurfFields
-	{
-		unsigned __int64 objectId : 16;
-		unsigned __int64 reflectionProbeIndex : 8;
-		unsigned __int64 hasGfxEntIndex : 1;
-		unsigned __int64 customIndex : 5;
-		unsigned __int64 materialSortedIndex : 12;
-		unsigned __int64 prepass : 2;
-		unsigned __int64 useHeroLighting : 1;
-		unsigned __int64 sceneLightIndex : 8;
-		unsigned __int64 surfType : 4;
-		unsigned __int64 primarySortKey : 6;
-		unsigned __int64 unused : 1;
-	};
-
-	union GfxDrawSurf
-	{
-		GfxDrawSurfFields fields;
-		unsigned long long packed;
 	};
 
 	struct GfxWorldDpvsStatic
@@ -585,68 +484,13 @@ namespace iw4::native
 		char* smodelVisData[3];
 		char* surfaceVisData[3];
 		unsigned __int16* sortedSurfIndex;
-		GfxStaticModelInst* smodelInsts;
+		game::native::GfxStaticModelInst* smodelInsts;
 		GfxSurface* surfaces;
-		GfxSurfaceBounds* surfacesBounds;
+		game::native::GfxSurfaceBounds* surfacesBounds;
 		GfxStaticModelDrawInst* smodelDrawInsts;
-		GfxDrawSurf* surfaceMaterials;
+		game::native::GfxDrawSurf* surfaceMaterials;
 		unsigned int* surfaceCastsSunShadow;
 		volatile int usageCount;
-	};
-
-	struct cplane_s
-	{
-		float normal[3];
-		float dist;
-		char type;
-		char pad[3];
-	};
-
-	struct cbrushside_t
-	{
-		cplane_s* plane;
-		unsigned short materialNum;
-		char firstAdjacentSideOffset;
-		char edgeCount;
-	};
-
-	struct cbrushWrapper_t
-	{
-		unsigned short numsides;
-		unsigned short glassPieceIndex;
-		cbrushside_t* sides;
-		unsigned char* baseAdjacentSide;
-		unsigned short axialMaterialNum[2][3];
-		unsigned char firstAdjacentSideOffsets[2][3];
-		unsigned char edgeCount[2][3];
-	};
-
-	struct BrushWrapper
-	{
-		game::native::Bounds bounds;
-		cbrushWrapper_t brush;
-		int totalEdgeCount;
-		cplane_s* planes;
-	};
-
-	struct GfxWorldDpvsPlanes
-	{
-		int cellCount;
-		cplane_s* planes;
-		unsigned short* nodes;
-		unsigned int* sceneEntCellBits;
-	};
-
-	struct GfxLightGridEntry
-	{
-		unsigned short colorsIndex;
-		char primaryLightIndex;
-		char needsTrace;
-	};
-
-	struct GfxLightGridColors
-	{
-		unsigned char rgb[56][3];
 	};
 
 	struct GfxLightGrid
@@ -661,9 +505,9 @@ namespace iw4::native
 		unsigned int rawRowDataSize;
 		char* rawRowData;
 		unsigned int entryCount;
-		GfxLightGridEntry* entries;
+		game::native::GfxLightGridEntry* entries;
 		unsigned int colorCount;
-		GfxLightGridColors* colors;
+		game::native::GfxLightGridColors* colors;
 	};
 
 	struct MaterialMemory
@@ -698,68 +542,6 @@ namespace iw4::native
 		float sunFxPosition[3];
 	};
 
-	struct BModelDrawInfo
-	{
-		unsigned short surfId;
-	};
-
-	struct GfxSceneDynBrush
-	{
-		BModelDrawInfo info;
-		unsigned short dynEntId;
-	};
-
-	struct XModelDrawInfo
-	{
-		unsigned char hasGfxEntIndex;
-		unsigned char lod;
-		unsigned short surfId;
-	};
-
-	struct GfxSceneDynModel
-	{
-		XModelDrawInfo info;
-		unsigned short dynEntId;
-	};
-
-
-	struct GfxShadowGeometry
-	{
-		unsigned short  surfaceCount;
-		unsigned short  smodelCount;
-		unsigned short* sortedSurfIndex;
-		unsigned short* smodelIndex;
-	};
-
-	struct GfxLightRegionAxis
-	{
-		float dir[3];
-		float midPoint;
-		float halfSize;
-	};
-
-	struct GfxLightRegionHull
-	{
-		float kdopMidPoint[9];
-		float kdopHalfSize[9];
-		unsigned int axisCount;
-		GfxLightRegionAxis* axis;
-	};
-
-	struct GfxLightRegion
-	{
-		unsigned int hullCount;
-		GfxLightRegionHull* hulls;
-	};
-
-	struct GfxWorldDpvsDynamic
-	{
-		unsigned int dynEntClientWordCount[2];
-		unsigned int dynEntClientCount[2];
-		unsigned int* dynEntCellBits[2];
-		char* dynEntVisData[2][3];
-	};
-
 	struct GfxWorld
 	{
 		const char* name;
@@ -775,14 +557,14 @@ namespace iw4::native
 		unsigned int sortKeyEffectDecal;
 		unsigned int sortKeyEffectAuto;
 		unsigned int sortKeyDistortion;
-		GfxWorldDpvsPlanes dpvsPlanes;
-		GfxCellTreeCount* aabbTreeCounts;
-		GfxCellTree* aabbTrees;
+		game::native::GfxWorldDpvsPlanes dpvsPlanes;
+		game::native::GfxCellTreeCount* aabbTreeCounts;
+		game::native::GfxCellTree* aabbTrees;
 		GfxCell* cells;
 		GfxWorldDraw draw;
 		GfxLightGrid lightGrid;
 		int modelCount;
-		GfxBrushModel* models;
+		game::native::GfxBrushModel* models;
 		game::native::Bounds bounds;
 		unsigned int checksum;
 		int materialMemoryCount;
@@ -792,15 +574,15 @@ namespace iw4::native
 		GfxImage* outdoorImage;
 		unsigned int* cellCasterBits;
 		unsigned int* cellHasSunLitSurfsBits;
-		GfxSceneDynModel* sceneDynModel;
-		GfxSceneDynBrush* sceneDynBrush;
+		game::native::GfxSceneDynModel* sceneDynModel;
+		game::native::GfxSceneDynBrush* sceneDynBrush;
 		unsigned int* primaryLightEntityShadowVis;
 		unsigned int* primaryLightDynEntShadowVis[2];
 		char* nonSunPrimaryLightForModelDynEnt;
-		GfxShadowGeometry* shadowGeom;
-		GfxLightRegion* lightRegion;
+		game::native::GfxShadowGeometry* shadowGeom;
+		game::native::GfxLightRegion* lightRegion;
 		GfxWorldDpvsStatic dpvs;
-		GfxWorldDpvsDynamic dpvsDyn;
+		game::native::GfxWorldDpvsDynamic dpvsDyn;
 		unsigned int mapVtxChecksum;
 		unsigned int heroOnlyLightCount;
 		GfxHeroOnlyLight* heroOnlyLights;
@@ -887,36 +669,11 @@ namespace iw4::native
 	{
 		unsigned __int16 numsides;
 		unsigned __int16 glassPieceIndex;
-		cbrushside_t* sides;
+		game::native::cbrushside_t* sides;
 		char* baseAdjacentSide;
 		__int16 axialMaterialNum[2][3];
 		char firstAdjacentSideOffsets[2][3];
 		char edgeCount[2][3];
-	};
-
-	struct PhysGeomInfo
-	{
-		BrushWrapper* brush;
-		int type;
-		float orientation[3][3];
-		float offset[3];
-		float halfLengths[3];
-	};
-
-	struct PhysMass
-	{
-		float centerOfMass[3];
-		float momentsOfInertia[3];
-		float productsOfInertia[3];
-	};
-
-	struct PhysCollmap
-	{
-		const char* name;
-		unsigned int count;
-		PhysGeomInfo* geoms;
-		PhysMass mass;
-		game::native::Bounds bounds;
 	};
 
 	struct XSurfaceVertexInfo
@@ -934,10 +691,10 @@ namespace iw4::native
 	{
 		float xyz[3];
 		float binormalSign;
-		GfxColor color;
+		game::native::GfxColor color;
 		PackedTexCoords texCoord;
-		PackedUnitVec normal;
-		PackedUnitVec tangent;
+		game::native::PackedUnitVec normal;
+		game::native::PackedUnitVec tangent;
 	};
 
 	struct XSurfaceCollisionAabb
@@ -1087,7 +844,7 @@ namespace iw4::native
 		int memUsage;
 		bool bad;
 		PhysPreset* physPreset;
-		PhysCollmap* physCollmap;
+		game::native::PhysCollmap* physCollmap;
 	};
 
 	struct cStaticModel_t
@@ -1147,7 +904,7 @@ namespace iw4::native
 
 	struct cNode_t
 	{
-		cplane_s* plane;
+		game::native::cplane_s* plane;
 		unsigned short children[2];
 	};
 
@@ -1211,7 +968,7 @@ namespace iw4::native
 		struct FxEffectDef* destroyFx;
 		PhysPreset* physPreset;
 		int health;
-		PhysMass mass;
+		game::native::PhysMass mass;
 		int contents;
 	};
 
@@ -1220,13 +977,13 @@ namespace iw4::native
 		const char* name;
 		int isInUse; // +8
 		int numCPlanes; // +8
-		cplane_s* cPlanes; // sizeof 20, +12
+		game::native::cplane_s* cPlanes; // sizeof 20, +12
 		int numStaticModels; // +16
 		cStaticModel_t* staticModelList; // sizeof 76, +20
 		int numMaterials; // +24
 		dmaterial_t* materials; // sizeof 12 with a string (possibly name?), +28
 		int numCBrushSides; // +32
-		cbrushside_t* cBrushSides; // sizeof 8, +36
+		game::native::cbrushside_t* cBrushSides; // sizeof 8, +36
 		int numCBrushEdges; // +40
 		char* cBrushEdges; // +44
 		int numCNodes; // +48
@@ -1911,7 +1668,7 @@ namespace iw4::native
 	{
 		void* data;
 		PhysPreset* physPreset;
-		PhysCollmap* physCollmap;
+		game::native::PhysCollmap* physCollmap;
 		XAnimParts* parts;
 		XModelSurfs* modelSurfs;
 		XModel* model;

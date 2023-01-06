@@ -1021,6 +1021,7 @@ namespace game
 			MaterialTechniqueSet* remappedTechniqueSet;
 			MaterialTechnique* techniques[54];
 		};
+
 		struct GfxDrawSurfFields
 		{
 			unsigned long long unused : 1;
@@ -2113,6 +2114,494 @@ namespace game
 		};
 
 		static_assert(sizeof(fileHandleData_t) == 0x11C);
+
+		struct GfxSky
+		{
+			int skySurfCount;
+			int* skyStartSurfs;
+			GfxImage* skyImage;
+			unsigned char skySamplerState;
+		};
+
+		struct cplane_s
+		{
+			float normal[3];
+			float dist;
+			unsigned char type;
+			unsigned char pad[3];
+		};
+
+		struct cbrushside_t
+		{
+			cplane_s* plane;
+			unsigned short materialNum;
+			unsigned char firstAdjacentSideOffset;
+			unsigned char edgeCount;
+		};
+
+		typedef unsigned char cbrushedge_t;
+
+		struct cbrushWrapper_t
+		{
+			unsigned short numsides;
+			unsigned short glassPieceIndex;
+			cbrushside_t* sides;
+			cbrushedge_t* baseAdjacentSide;
+			short axialMaterialNum[2][3];
+			unsigned char firstAdjacentSideOffsets[2][3];
+			unsigned char edgeCount[2][3];
+		};
+
+		struct BrushWrapper
+		{
+			Bounds bounds;
+			cbrushWrapper_t brush;
+			int totalEdgeCount;
+			cplane_s* planes;
+		};
+
+		struct GfxWorldDpvsPlanes
+		{
+			int cellCount;
+			cplane_s* planes;
+			unsigned short* nodes;
+			unsigned int* sceneEntCellBits;
+		};
+
+		struct GfxAabbTree
+		{
+			Bounds bounds;
+			unsigned short childCount;
+			unsigned short surfaceCount;
+			unsigned short startSurfIndex;
+			unsigned short surfaceCountNoDecal;
+			unsigned short startSurfIndexNoDecal;
+			unsigned short smodelIndexCount;
+			unsigned short* smodelIndexes;
+			int childrenOffset;
+		};
+
+		struct GfxCellTree
+		{
+			GfxAabbTree* aabbTree;
+		};
+
+		struct PhysMass
+		{
+			float centerOfMass[3];
+			float momentsOfInertia[3];
+			float productsOfInertia[3];
+		};
+
+		struct GfxCellTreeCount
+		{
+			int aabbTreeCount;
+		};
+
+		struct GfxPortalWritable
+		{
+			bool isQueued;
+			bool isAncestor;
+			unsigned char recursionDepth;
+			unsigned char hullPointCount;
+			float(*hullPoints)[2];
+			struct GfxPortal* queuedParent;
+		};
+
+		struct DpvsPlane
+		{
+			float coeffs[4];
+		};
+
+		struct GfxPortal
+		{
+			GfxPortalWritable writable;
+			DpvsPlane plane;
+			vec3_t* vertices;
+			unsigned short cellIndex;
+			unsigned char vertexCount;
+			float hullAxis[2][3];
+		};
+
+		struct GfxCell
+		{
+			Bounds bounds;
+			int portalCount;
+			GfxPortal* portals;
+			unsigned char reflectionProbeCount;
+			unsigned char* reflectionProbes;
+			unsigned char reflectionProbeReferenceCount;
+			unsigned char* reflectionProbeReferences;
+		};
+
+		struct GfxReflectionProbe
+		{
+			float origin[3];
+		};
+
+		struct GfxReflectionProbeReferenceOrigin
+		{
+			float origin[3];
+		};
+
+		struct GfxReflectionProbeReference
+		{
+			unsigned char index;
+		};
+
+		struct GfxLightmapArray
+		{
+			GfxImage* primary;
+			GfxImage* secondary;
+		};
+
+		union PackedUnitVec
+		{
+			unsigned int packed;
+			char array[4];
+		};
+
+		union GfxColor
+		{
+			unsigned int packed;
+			unsigned char array[4];
+		};
+
+		struct GfxPackedPlacement
+		{
+			float origin[3];
+			float axis[3][3];
+			float scale;
+		};
+
+		struct GfxWorldVertex
+		{
+			float xyz[3];
+			float binormalSign;
+			GfxColor color;
+			float texCoord[2];
+			float lmapCoord[2];
+			PackedUnitVec normal;
+			PackedUnitVec tangent;
+		};
+
+		struct GfxWorldVertexData
+		{
+			GfxWorldVertex* vertices;
+			void* worldVb;
+		};
+
+		struct GfxWorldVertexLayerData
+		{
+			unsigned char* data;
+			void* layerVb;
+		};
+
+		struct GfxWorldDraw
+		{
+			unsigned int reflectionProbeCount;
+			GfxImage** reflectionProbes;
+			GfxReflectionProbe* reflectionProbeOrigins;
+			GfxTexture* reflectionProbeTextures;
+			unsigned int reflectionProbeReferenceCount;
+			GfxReflectionProbeReferenceOrigin* reflectionProbeReferenceOrigins;
+			GfxReflectionProbeReference* reflectionProbeReferences;
+			int lightmapCount;
+			GfxLightmapArray* lightmaps;
+			GfxTexture* lightmapPrimaryTextures;
+			GfxTexture* lightmapSecondaryTextures;
+			GfxImage* lightmapOverridePrimary;
+			GfxImage* lightmapOverrideSecondary;
+			unsigned int vertexCount;
+			GfxWorldVertexData vd;
+			unsigned int vertexLayerDataSize;
+			GfxWorldVertexLayerData vld;
+			unsigned int indexCount;
+			unsigned short* indices;
+		};
+
+		struct GfxLightGridEntry
+		{
+			unsigned short colorsIndex;
+			unsigned char primaryLightIndex;
+			unsigned char needsTrace;
+		};
+
+		struct GfxLightGridColors
+		{
+			unsigned char rgb[56][3];
+		};
+
+		struct GfxLightGrid
+		{
+			bool hasLightRegions;
+			bool useSkyForLowZ;
+			unsigned int lastSunPrimaryLightIndex;
+			unsigned short mins[3];
+			unsigned short maxs[3];
+			unsigned int rowAxis;
+			unsigned int colAxis;
+			unsigned short* rowDataStart;
+			unsigned int rawRowDataSize;
+			unsigned char* rawRowData;
+			unsigned int entryCount;
+			GfxLightGridEntry* entries;
+			unsigned int colorCount;
+			GfxLightGridColors* colors;
+		};
+
+		struct GfxBrushModelWritable
+		{
+			game::native::Bounds bounds;
+		};
+
+		struct GfxBrushModel
+		{
+			GfxBrushModelWritable writable;
+			game::native::Bounds bounds;
+			float radius;
+			unsigned short surfaceCount;
+			unsigned short startSurfIndex;
+			unsigned short surfaceCountNoDecal;
+		};
+
+		struct MaterialMemory
+		{
+			Material* material;
+			int memory;
+		};
+
+		struct sunflare_t
+		{
+			bool hasValidData;
+			Material* spriteMaterial;
+			Material* flareMaterial;
+			float spriteSize;
+			float flareMinSize;
+			float flareMinDot;
+			float flareMaxSize;
+			float flareMaxDot;
+			float flareMaxAlpha;
+			int flareFadeInTime;
+			int flareFadeOutTime;
+			float blindMinDot;
+			float blindMaxDot;
+			float blindMaxDarken;
+			int blindFadeInTime;
+			int blindFadeOutTime;
+			float glareMinDot;
+			float glareMaxDot;
+			float glareMaxLighten;
+			int glareFadeInTime;
+			int glareFadeOutTime;
+			float sunFxPosition[3];
+		};
+
+		struct BModelDrawInfo
+		{
+			unsigned short surfId;
+		};
+
+		struct GfxSceneDynBrush
+		{
+			BModelDrawInfo info;
+			unsigned short dynEntId;
+		};
+
+		struct XModelDrawInfo
+		{
+			unsigned char hasGfxEntIndex;
+			unsigned char lod;
+			unsigned short surfId;
+		};
+
+		struct GfxSceneDynModel
+		{
+			XModelDrawInfo info;
+			unsigned short dynEntId;
+		};
+
+		struct GfxShadowGeometry
+		{
+			unsigned short  surfaceCount;
+			unsigned short  smodelCount;
+			unsigned short* sortedSurfIndex;
+			unsigned short* smodelIndex;
+		};
+
+		struct GfxLightRegionAxis
+		{
+			float dir[3];
+			float midPoint;
+			float halfSize;
+		};
+
+		struct GfxLightRegionHull
+		{
+			float kdopMidPoint[9];
+			float kdopHalfSize[9];
+			unsigned int axisCount;
+			GfxLightRegionAxis* axis;
+		};
+
+		struct GfxLightRegion
+		{
+			unsigned int hullCount;
+			GfxLightRegionHull* hulls;
+		};
+
+		struct GfxWorldDpvsDynamic
+		{
+			unsigned int dynEntClientWordCount[2];
+			unsigned int dynEntClientCount[2];
+			unsigned int* dynEntCellBits[2];
+			char* dynEntVisData[2][3];
+		};
+
+		struct GfxStaticModelDrawInst
+		{
+			game::native::GfxPackedPlacement placement;
+			XModel* model;
+			unsigned short cullDist;
+			unsigned short lightingHandle;
+			unsigned char reflectionProbeIndex;
+			unsigned char primaryLightIndex;
+			unsigned char flags;
+			unsigned char firstMtlSkinIndex;
+			game::native::GfxColor groundLighting;
+			unsigned short cacheId[4];
+		};
+
+		struct GfxStaticModelInst
+		{
+			Bounds bounds;
+			float lightingOrigin[3];
+		};
+
+
+		struct srfTriangles_t
+		{
+			unsigned int vertexLayerData;
+			unsigned int firstVertex;
+			unsigned short vertexCount;
+			unsigned short triCount;
+			unsigned int baseIndex;
+		};
+
+		struct GfxSurfaceLightingAndFlagsFields
+		{
+			unsigned char lightmapIndex;
+			unsigned char reflectionProbeIndex;
+			unsigned char primaryLightIndex;
+			unsigned char flags;
+		};
+
+		union GfxSurfaceLightingAndFlags
+		{
+			GfxSurfaceLightingAndFlagsFields fields;
+			unsigned int packed;
+		};
+
+		struct GfxSurface
+		{
+			srfTriangles_t tris;
+			Material* material;
+			GfxSurfaceLightingAndFlags laf;
+		};
+
+		struct GfxSurfaceBounds
+		{
+			Bounds bounds;
+		};
+
+		struct GfxWorldDpvsStatic
+		{
+			unsigned int smodelCount;
+			unsigned int staticSurfaceCount;
+			unsigned int staticSurfaceCountNoDecal;
+			unsigned int litOpaqueSurfsBegin;
+			unsigned int litOpaqueSurfsEnd;
+			unsigned int litTransSurfsBegin;
+			unsigned int litTransSurfsEnd;
+			unsigned int shadowCasterSurfsBegin;
+			unsigned int shadowCasterSurfsEnd;
+			unsigned int emissiveSurfsBegin;
+			unsigned int emissiveSurfsEnd;
+			unsigned int smodelVisDataCount;
+			unsigned int surfaceVisDataCount;
+			char* smodelVisData[3];
+			char* surfaceVisData[3];
+			unsigned short* sortedSurfIndex;
+			GfxStaticModelInst* smodelInsts;
+			GfxSurface* surfaces;
+			GfxSurfaceBounds* surfacesBounds;
+			GfxStaticModelDrawInst* smodelDrawInsts;
+			GfxDrawSurf* surfaceMaterials;
+			unsigned int* surfaceCastsSunShadow;
+			volatile int usageCount;
+		};
+
+		struct GfxWorld
+		{
+			const char* name;
+			const char* baseName;
+			int planeCount;
+			int nodeCount;
+			unsigned int surfaceCount;
+			int skyCount;
+			GfxSky* skies;
+			unsigned int lastSunPrimaryLightIndex;
+			unsigned int primaryLightCount;
+			unsigned int sortKeyLitDecal;
+			unsigned int sortKeyEffectDecal;
+			unsigned int sortKeyEffectAuto;
+			unsigned int sortKeyDistortion;
+			GfxWorldDpvsPlanes dpvsPlanes;
+			GfxCellTreeCount* aabbTreeCounts;
+			GfxCellTree* aabbTrees;
+			GfxCell* cells;
+			GfxWorldDraw draw;
+			GfxLightGrid lightGrid;
+			int modelCount;
+			GfxBrushModel* models;
+			Bounds bounds;
+			unsigned int checksum;
+			int materialMemoryCount;
+			MaterialMemory* materialMemory;
+			sunflare_t sun;
+			float outdoorLookupMatrix[4][4];
+			GfxImage* outdoorImage;
+			unsigned int* cellCasterBits;
+			unsigned int* cellHasSunLitSurfsBits;
+			GfxSceneDynModel* sceneDynModel;
+			GfxSceneDynBrush* sceneDynBrush;
+			unsigned int* primaryLightEntityShadowVis;
+			unsigned int* primaryLightDynEntShadowVis[2];
+			unsigned char* nonSunPrimaryLightForModelDynEnt;
+			GfxShadowGeometry* shadowGeom;
+			GfxLightRegion* lightRegion;
+			GfxWorldDpvsStatic dpvs;
+			GfxWorldDpvsDynamic dpvsDyn;
+			unsigned int mapVtxChecksum;
+			unsigned int heroOnlyLightCount;
+			struct GfxHeroOnlyLight* heroOnlyLights;
+			unsigned char fogTypesAllowed;
+		};
+
+
+		struct GfxHeroOnlyLight
+		{
+			unsigned char type;
+			unsigned char unused[3];
+			float color[3];
+			float dir[3];
+			float up[3];
+			float origin[3];
+			float radius;
+			float cosHalfFovOuter;
+			float cosHalfFovInner;
+			int exponent;
+		};
 
 		namespace mp
 		{
