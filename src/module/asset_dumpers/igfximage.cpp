@@ -45,10 +45,11 @@ namespace asset_dumpers
 		}
 		else
 		{
-			char* buffer = nullptr;
-			auto size = game::native::FS_ReadFile(std::format("images/{}.iwi", image->name).data(), &buffer);
+			const auto iwi = std::format("images/{}.iwi", image->name);
+			// > 10MB cannot use FS_FileRead (breaks hunk)
+			auto contents = game::native::filesystem_read_big_file(iwi.data(), game::native::FS_THREAD_DATABASE);
 
-			if (size <= 0)
+			if (contents.empty())
 			{
 				// Ignore that
 				if (std::string(image->name).starts_with("watersetup")) {
@@ -56,12 +57,13 @@ namespace asset_dumpers
 				}
 
 				console::info("Image %s not found, mapping to normalmap!\n", name.data());
-				size = game::native::FS_ReadFile("images/$identitynormalmap.iwi", &buffer);
+
+				contents = game::native::filesystem_read_big_file("images/$identitynormalmap.iwi", game::native::FS_THREAD_DATABASE);
 			}
 
-			if (size > 0)
+			if (contents.size() > 0)
 			{
-				utils::io::write_file(std::format("{}/images/{}.iwi", export_path(), image->name), std::string(buffer, size));
+				utils::io::write_file(std::format("{}/images/{}.iwi", export_path(), image->name), contents);
 			}
 			else
 			{
@@ -100,16 +102,36 @@ namespace asset_dumpers
 
 				auto name = params[1];
 
-				auto header = game::native::DB_FindXAssetHeader(game::native::XAssetType::ASSET_TYPE_IMAGE, name, false);
-
-				if (header.data)
+				if (name == "*"s)
 				{
-					dump(header);
-					console::info("successfullly dumped image %s!\n", name);
+					std::vector<game::native::XAssetHeader> headers{};
+					bool isDone = false;
+
+					game::native::DB_EnumXAssets(game::native::XAssetType::ASSET_TYPE_IMAGE, [](game::native::XAssetHeader header, void* data) {
+						auto headers = reinterpret_cast<std::vector<game::native::XAssetHeader>*>(data);
+						
+						headers->push_back(header);
+
+					}, &headers, false);
+
+					for (auto header : headers)
+					{
+						dump(header);
+					}
 				}
 				else
 				{
-					console::info("could not dump image %s from the database (cannot find it)\n", name);
+					auto header = game::native::DB_FindXAssetHeader(game::native::XAssetType::ASSET_TYPE_IMAGE, name, false);
+
+					if (header.data)
+					{
+						dump(header);
+						console::info("successfullly dumped image %s!\n", name);
+					}
+					else
+					{
+						console::info("could not dump image %s from the database (cannot find it)\n", name);
+					}
 				}
 			});
 

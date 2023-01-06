@@ -18,6 +18,7 @@ namespace game
 		DB_LoadXAssets_t DB_LoadXAssets;
 		DB_FindXAssetHeader_t DB_FindXAssetHeader;
 		DB_IsXAssetDefault_t DB_IsXAssetDefault;
+		DB_EnumXAssets_t DB_EnumXAssets;
 
 		Dvar_RegisterBool_t Dvar_RegisterBool;
 		Dvar_RegisterString_t Dvar_RegisterString;
@@ -99,6 +100,9 @@ namespace game
 
 		FS_Printf_t FS_Printf;
 		FS_ReadFile_t FS_ReadFile;
+		FS_FreeFile_t FS_FreeFile;
+		FS_Read_t FS_Read;
+		FS_FCloseHandle_t FS_FCloseHandle;
 
 		player_die_t player_die;
 
@@ -628,6 +632,38 @@ namespace game
 			assert(*fs_searchpaths);
 		}
 
+		std::string filesystem_read_big_file(const char* filename, FsThread thread)
+		{
+			std::string file_buffer{};
+
+			int handle;
+			game::native::FS_FOpenFileReadForThread(filename, &handle, game::native::FsThread::FS_THREAD_DATABASE);
+
+			if (handle > 0)
+			{
+				constexpr unsigned int BUFF_SIZE = 1024;
+
+				while (true)
+				{
+					char buffer[BUFF_SIZE];
+					auto size_read = game::native::FS_Read(buffer, BUFF_SIZE, handle);
+
+					file_buffer.append(buffer, size_read);
+
+					if (size_read < BUFF_SIZE)
+					{
+						// We're done!
+						break;
+					}
+				}
+
+
+				game::native::FS_FCloseHandle(handle);
+			}
+
+			return file_buffer;
+		}
+
 		XAssetEntry* db_find_x_asset_entry(XAssetType type_, const char* name)
 		{
 			static DWORD func = SELECT_VALUE(0x585400, 0x4CA450);
@@ -701,6 +737,7 @@ namespace game
 		native::DB_LoadXAssets = native::DB_LoadXAssets_t(SELECT_VALUE(0x48A8E0, 0x4CD020));
 		native::DB_FindXAssetHeader = native::DB_FindXAssetHeader_t(SELECT_VALUE(0x4FF000, 0x4CA620));
 		native::DB_IsXAssetDefault = native::DB_IsXAssetDefault_t(SELECT_VALUE(0x4868E0, 0x4CA800));
+		native::DB_EnumXAssets = native::DB_EnumXAssets_t(0x5B6A60);
 
 		native::Dvar_RegisterBool = native::Dvar_RegisterBool_t(SELECT_VALUE(0x4914D0, 0x5BE9F0));
 		native::Dvar_RegisterString = native::Dvar_RegisterString_t(SELECT_VALUE(0x5197F0, 0x5BEC90));
@@ -791,6 +828,9 @@ namespace game
 
 		native::FS_Printf = native::FS_Printf_t(SELECT_VALUE(0x421E90, 0x5AF7C0));
 		native::FS_ReadFile = native::FS_ReadFile_t(SELECT_VALUE(0x4D8DF0, 0x5B1FB0));
+		native::FS_FreeFile = native::FS_FreeFile_t(0x5AF990);
+		native::FS_Read = native::FS_Read_t(0x5AF650);
+		native::FS_FCloseHandle = native::FS_FCloseHandle_t(0x5AF170);
 
 		native::player_die = native::player_die_t(SELECT_VALUE(0x0, 0x503460));
 

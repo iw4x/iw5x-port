@@ -16,7 +16,7 @@ namespace asset_dumpers
 
 	public:
 		static const std::string techset_suffix;
-		const static std::unordered_map<game::native::MaterialTechniqueType, iw4::native::MaterialTechniqueType> techniques_from_iw5_to_iw4;
+		const static std::unordered_map<iw4::native::MaterialTechniqueType, game::native::MaterialTechniqueType> techniques_from_iw5_to_iw4;
 
 	protected:
 		void convert(const game::native::XAssetHeader& header, iw4::native::XAssetHeader& out) override;

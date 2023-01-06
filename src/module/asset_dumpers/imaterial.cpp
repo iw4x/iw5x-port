@@ -8,6 +8,7 @@
 #include "utils/io.hpp"
 #include "utils/stream.hpp"
 #include "utils/string.hpp"
+#include "utils/json.hpp"
 
 #include "module/console.hpp"
 #include "module/command.hpp"
@@ -38,30 +39,46 @@ namespace asset_dumpers
 
 
 		// copy techniques to correct spots
-#if false
-		for (size_t i = 0; i < game::native::TECHNIQUE_COUNT; i++)
+		for (size_t i = 0; i < iw4::native::TECHNIQUE_COUNT; i++)
 		{
-			game::native::MaterialTechniqueType technique = static_cast<game::native::MaterialTechniqueType>(i);
-
 			[[maybe_unused]] const auto count = itechniqueset::techniques_from_iw5_to_iw4.size();
-			assert(count == game::native::TECHNIQUE_COUNT);
+			assert(count >= iw4::native::TECHNIQUE_COUNT);
 
-			if (itechniqueset::techniques_from_iw5_to_iw4.contains(technique))
-			{
-				iw4_material->stateBitsEntry[technique] = native_material->stateBitsEntry[itechniqueset::techniques_from_iw5_to_iw4.at(technique)];
-			}
+			auto destinationTechnique = static_cast<iw4::native::MaterialTechniqueType>(i);
+			auto originTechnique = itechniqueset::techniques_from_iw5_to_iw4.at(destinationTechnique);
+
+
+			iw4_material->stateBitsEntry[destinationTechnique] = native_material->stateBitsEntry[originTechnique];
 		}
-#endif
 
 		iw4_material->textureCount = native_material->textureCount;
 		iw4_material->constantCount = native_material->constantCount;
 		iw4_material->stateBitsCount = native_material->stateBitsCount;
 		iw4_material->stateFlags = native_material->stateFlags;
 
-		iw4_material->cameraRegion = std::clamp(native_material->cameraRegion, (unsigned char)0, (unsigned char)4); // CAMERA_REGION_LIGHT_MAP_OPAQUE => CAMERA_REGION_NONE
+		iw4_material->cameraRegion = std::clamp(
+			native_material->cameraRegion, 
+			static_cast<unsigned char>(iw4::native::CAMERA_REGION_LIT_OPAQUE), 
+			static_cast<unsigned char>(iw4::native::CAMERA_REGION_COUNT) // CAMERA_REGION_LIGHT_MAP_OPAQUE => CAMERA_REGION_NONE
+		);
 
-		iw4_material->techniqueSet = nullptr;
-		iw4_material->textureTable = nullptr;
+		auto nativeTechset = native_material->techniqueSet;
+		iw4_material->techniqueSet = 
+			exporter::dump(game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, game::native::XAssetHeader{ nativeTechset }).techniqueSet;
+
+		iw4_material->textureTable = utils::memory::allocate_array<iw4::native::MaterialTextureDef>(iw4_material->textureCount);
+		for (auto i = 0; i < iw4_material->textureCount; i++)
+		{
+			auto tex = &iw4_material->textureTable[i];
+			std::memcpy(tex, &native_material->textureTable[i], sizeof(iw4_material->textureTable[i]));
+			
+			if (tex->semantic > iw4::native::TS_WATER_MAP)
+			{
+				// DISPLACEMENT_MAP is not in iw4
+				tex->semantic = iw4::native::TS_UNUSED_2;
+			}
+		}
+
 		iw4_material->constantTable = nullptr;
 		iw4_material->stateBitsTable = nullptr;
 	}
@@ -70,7 +87,7 @@ namespace asset_dumpers
 	{
 		auto asset = header.material;
 
-		utils::memory::allocator strDuplicator;
+		utils::memory::allocator str_duplicator;
 		rapidjson::Document output(rapidjson::kObjectType);
 		auto& allocator = output.GetAllocator();
 
@@ -107,12 +124,11 @@ namespace asset_dumpers
 
 		rapidjson::Value textureTable(rapidjson::kArrayType);
 
-#if false
 		if (asset->textureTable)
 		{
 			for (char i = 0; i < asset->textureCount; ++i)
 			{
-				Game::IW3::MaterialTextureDef* textureDef = &asset->textureTable[i];
+				auto textureDef = &asset->textureTable[i];
 				rapidjson::Value textureJson(rapidjson::kObjectType);
 
 				textureJson.AddMember("nameStart", textureDef->nameStart, allocator);
@@ -121,11 +137,9 @@ namespace asset_dumpers
 				textureJson.AddMember("samplerState", textureDef->samplerState, allocator); // $6961E030A9677F7C86FC6FF9B5901495
 				textureJson.AddMember("semantic", textureDef->semantic, allocator);
 
-				if (textureDef->semantic == TS_WATER_MAP)
+				if (textureDef->semantic == iw4::native::TS_WATER_MAP)
 				{
-					AssertSize(Game::IW3::water_t, 68);
-
-					Game::IW3::water_t* water = textureDef->u.water;
+					auto water = textureDef->u.water;
 
 					if (water)
 					{
@@ -134,16 +148,23 @@ namespace asset_dumpers
 						if (water->image)
 						{
 							waterJson.AddMember("image", RAPIDJSON_STR(water->image->name), allocator);
-							AssetHandler::Dump(Game::XAssetType::ASSET_TYPE_IMAGE, { water->image });
+							exporter::dump(game::native::XAssetType::ASSET_TYPE_IMAGE, { water->image });
 						}
+
+						constexpr unsigned long BUFF_SIZE = 1024;
 
 						// Save_water_t
 						if (water->H0)
 						{
 							auto ptr = reinterpret_cast<uint8_t*>(water->H0);
-							auto buffer = std::vector<uint8_t>(ptr, ptr + water->M * water->N * sizeof(Game::IW3::complex_s));
+							auto buffer = std::vector<uint8_t>(ptr, ptr + water->M * water->N * sizeof(game::native::complex_s));
+							
+							unsigned long buffLength = BUFF_SIZE;
+							char b64[BUFF_SIZE];
+							base64_encode(&buffer.front(), buffer.size(), b64, &buffLength);
+							assert(buffLength < BUFF_SIZE);
 
-							waterJson.AddMember("H0", RAPIDJSON_STR(strDuplicator.duplicateString(Utils::Base64::Encode(buffer))), allocator);
+							waterJson.AddMember("H0", RAPIDJSON_STR(str_duplicator.duplicate_string(b64)), allocator);
 						}
 
 						if (water->wTerm)
@@ -151,7 +172,12 @@ namespace asset_dumpers
 							auto ptr = reinterpret_cast<uint8_t*>(water->wTerm);
 							auto buffer = std::vector<uint8_t>(ptr, ptr + water->M * water->N * sizeof(float));
 
-							waterJson.AddMember("wTerm", RAPIDJSON_STR(strDuplicator.duplicateString(Utils::Base64::Encode(buffer))), allocator);
+							unsigned long buffLength = BUFF_SIZE;
+							char b64[BUFF_SIZE];
+							base64_encode(&buffer.front(), buffer.size(), b64, &buffLength);
+							assert(buffLength < BUFF_SIZE);
+
+							waterJson.AddMember("wTerm", RAPIDJSON_STR(str_duplicator.duplicate_string(b64)), allocator);
 						}
 
 #define SAME_NAME_WATER_MEMBER(x) waterJson.AddMember(#x, water->x, allocator)
@@ -162,10 +188,10 @@ namespace asset_dumpers
 						SAME_NAME_WATER_MEMBER(Lz);
 						SAME_NAME_WATER_MEMBER(gravity);
 						SAME_NAME_WATER_MEMBER(windvel);
-						waterJson.AddMember("winddir", Utils::MakeJsonArray(water->winddir, 2, allocator), allocator);
+						waterJson.AddMember("winddir", utils::json::make_json_array(water->winddir, 2, allocator), allocator);
 
 						SAME_NAME_WATER_MEMBER(amplitude);
-						waterJson.AddMember("codeConstant", Utils::MakeJsonArray(water->codeConstant, 4, allocator), allocator);
+						waterJson.AddMember("codeConstant", utils::json::make_json_array(water->codeConstant, 4, allocator), allocator);
 
 
 						textureJson.AddMember("water", waterJson, allocator);
@@ -174,7 +200,7 @@ namespace asset_dumpers
 				else if (textureDef->u.image)
 				{
 					textureJson.AddMember("image", RAPIDJSON_STR(textureDef->u.image->name), allocator);
-					AssetHandler::Dump(Game::XAssetType::ASSET_TYPE_IMAGE, { textureDef->u.image });
+					exporter::dump(game::native::XAssetType::ASSET_TYPE_IMAGE, { textureDef->u.image });
 				}
 
 				textureTable.PushBack(textureJson, allocator);
@@ -182,10 +208,9 @@ namespace asset_dumpers
 		}
 
 		output.AddMember("textureTable", textureTable, allocator);
-
 		rapidjson::Value gfxDrawSurface(rapidjson::kObjectType);
 
-#define SAME_NAME_GFXDRAWSURF_MEMBER(x) gfxDrawSurface.AddMember(#x, asset->drawSurf.fields.##x##, allocator)
+#define SAME_NAME_GFXDRAWSURF_MEMBER(x) gfxDrawSurface.AddMember(#x, asset->info.drawSurf.fields.##x##, allocator)
 
 		SAME_NAME_GFXDRAWSURF_MEMBER(objectId);
 		SAME_NAME_GFXDRAWSURF_MEMBER(reflectionProbeIndex);
@@ -201,7 +226,7 @@ namespace asset_dumpers
 
 		output.AddMember("gfxDrawSurface", gfxDrawSurface, allocator);
 
-		SAME_NAME_JSON_MEMBER(hashIndex);
+		output.AddMember("hashIndex", 0, allocator);
 
 		rapidjson::Value stateBitsEntry(rapidjson::kArrayType);
 		for (size_t i = 0; i < 48; i++)
@@ -210,13 +235,13 @@ namespace asset_dumpers
 		}
 
 		output.AddMember("stateBitsEntry", stateBitsEntry, allocator);
-
-		SAME_NAME_JSON_MEMBER(cameraRegion);
+		output.AddMember("cameraRegion", asset->cameraRegion, allocator);
 
 		if (asset->constantTable)
 		{
 			rapidjson::Value constantTable(rapidjson::kArrayType);
 
+#if 0
 			for (char i = 0; i < asset->constantCount; ++i)
 			{
 				Game::IW3::MaterialConstantDef constantDef;
@@ -250,15 +275,18 @@ namespace asset_dumpers
 
 				constantTable.PushBack(constantDefJson, allocator);
 			}
+#endif
 
 			output.AddMember("constantTable", constantTable, allocator);
 		}
 
-		if (asset->stateBitTable)
+		if (asset->stateBitsTable)
 		{
-			output.AddMember("stateBitsTable", StateBitsToJsonArray(asset->stateBitTable, asset->stateBitsCount, allocator), allocator);
-		}
+#if 0
+			output.AddMember("stateBitsTable", StateBitsToJsonArray(asset->stateBitsTable, asset->stateBitsCount, allocator), allocator);
 #endif
+		}
+
 		rapidjson::StringBuffer buff;
 		rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buff);
 		output.Accept(writer);
@@ -275,16 +303,31 @@ namespace asset_dumpers
 
 				auto name = params[1];
 
-				auto header = game::native::DB_FindXAssetHeader(game::native::XAssetType::ASSET_TYPE_MATERIAL, name, false);
-
-				if (header.data)
+				if (name == "*"s)
 				{
-					dump(header);
-					console::info("successfullly dumped material %s!\n", name);
+					static std::mutex m{};
+					game::native::DB_EnumXAssets(game::native::XAssetType::ASSET_TYPE_MATERIAL, [](game::native::XAssetHeader header, void* data) {
+						m.lock();
+						auto asset_dmper = reinterpret_cast<asset_dumper*>(data);
+
+						asset_dmper->dump(header);
+						m.unlock();
+
+						}, this, false);
 				}
 				else
 				{
-					console::info("could not dump material %s from the database (cannot find it)\n", name);
+					auto header = game::native::DB_FindXAssetHeader(game::native::XAssetType::ASSET_TYPE_MATERIAL, name, false);
+
+					if (header.data)
+					{
+						dump(header);
+						console::info("successfullly dumped material %s!\n", name);
+					}
+					else
+					{
+						console::info("could not dump material %s from the database (cannot find it)\n", name);
+					}
 				}
 			});
 	}

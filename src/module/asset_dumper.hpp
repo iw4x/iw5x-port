@@ -11,11 +11,14 @@ public:
 
 	asset_dumper();
 
-	void dump(game::native::XAssetHeader header)
+	iw4::native::XAssetHeader dump(game::native::XAssetHeader header)
 	{
 		iw4::native::XAssetHeader out{};
+
 		convert(header, out);
 		write(out);
+
+		return out;
 	}
 
 protected:

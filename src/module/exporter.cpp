@@ -128,14 +128,14 @@ void exporter::dump_map(const command::params& params)
 
 void exporter::add_commands()
 {
-	command::add("test", []()
+command::add("test", []()
 	{
 		game::native::Conbuf_AppendText("hello!");
 	});
 
-	command::add("dumpmap", dump_map);
+command::add("dumpmap", dump_map);
 
-	command::add("loadzone", [](const command::params& params)
+command::add("loadzone", [](const command::params& params)
 	{
 		if (params.size() < 2) return;
 		std::string zone = params[1];
@@ -189,15 +189,16 @@ bool exporter::exporter_exists(game::native::XAssetType assetType)
 	return asset_dumpers[assetType];
 }
 
-void exporter::dump(game::native::XAssetType type, game::native::XAssetHeader header)
+iw4::native::XAssetHeader exporter::dump(game::native::XAssetType type, game::native::XAssetHeader header)
 {
 	if (exporter_exists(type))
 	{
-		asset_dumpers[type]->dump(header);
+		return asset_dumpers[type]->dump(header);
 	}
 	else
 	{
 		console::warn("Cannot dump type %s, no asset dumper found\n", game::native::g_assetNames[type]);
+		return iw4::native::XAssetHeader{};
 	}
 }
 
@@ -213,10 +214,23 @@ void DB_AddXAsset_Hk(game::native::XAssetType type, game::native::XAssetHeader* 
 	auto asset = game::native::XAsset{ type, *header };
 	auto assetName = game::native::DB_GetXAssetName(&asset);
 
+	///
 	if (type == game::native::XAssetType::ASSET_TYPE_GFXWORLD)
 	{
 		console::info("loading %s %s\n", name, assetName);
 	}
+
+	if (type == game::native::XAssetType::ASSET_TYPE_MATERIAL)
+	{
+		for (auto i = 0; i < header->material->textureCount; i++)
+		{
+			if (header->material->textureTable[i].semantic == 0xB)
+			{
+				printf("");
+			}
+		}
+	}
+	///
 }
 
 void __declspec(naked) DB_AddXAsset_stub()
@@ -244,6 +258,14 @@ void __declspec(naked) DB_AddXAsset_stub()
 	}
 }
 
+void Sys_Error_Hk(LPCSTR str)
+{
+	std::string err = str;
+
+	printf("");
+}
+
+
 void exporter::post_load()
 {
 	// OnFindAsset
@@ -260,6 +282,9 @@ void exporter::post_load()
 
 	// Return on com_frame_try_block
 	utils::hook::set(0x556470, 0xC3);
+
+	// catch sys_error
+	utils::hook(0x5CC43E, Sys_Error_Hk, HOOK_CALL).install()->quick();
 
 	utils::hook(0x5CCED8, event_loop, HOOK_CALL).install()->quick();
 	utils::hook(0x5CCE4E, &perform_common_initialization, HOOK_CALL).install()->quick();

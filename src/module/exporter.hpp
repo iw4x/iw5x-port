@@ -10,12 +10,12 @@ typedef void (*##name##_t)();\
 
 public:
 	void post_load() override;
+	static iw4::native::XAssetHeader dump(game::native::XAssetType type, game::native::XAssetHeader header);
 
 private:
 	static void load_common_zones();
 	static void initialize_exporters();
 	static bool exporter_exists(game::native::XAssetType assetType);
-	static void dump(game::native::XAssetType type, game::native::XAssetHeader header);
 	static void event_loop();
 	static void perform_common_initialization();
 	static void dump_map(const command::params& params);

@@ -38,6 +38,9 @@ namespace game
 		typedef int (*DB_IsXAssetDefault_t)(XAssetType type, const char* name);
 		extern DB_IsXAssetDefault_t DB_IsXAssetDefault;
 
+		typedef void (*DB_EnumXAssets_t)(XAssetType type, void(__cdecl* callback)(XAssetHeader, void*), void* userdata, bool overrides);
+		extern DB_EnumXAssets_t DB_EnumXAssets;
+
 		typedef const dvar_t* (*Dvar_RegisterBool_t)(const char* dvarName, bool value,
 			unsigned __int16 flags, const char* description);
 		extern Dvar_RegisterBool_t Dvar_RegisterBool;
@@ -206,6 +209,15 @@ namespace game
 		typedef int (*FS_ReadFile_t)(const char* qpath, char** buffer);
 		extern FS_ReadFile_t FS_ReadFile;
 
+		typedef int (*FS_FreeFile_t)(void* buffer);
+		extern FS_FreeFile_t FS_FreeFile;
+
+		typedef void (*FS_FCloseHandle_t)(int handle);
+		extern FS_FCloseHandle_t FS_FCloseHandle;
+
+		typedef int (*FS_Read_t)(void* buffer, int len, int handle);
+		extern FS_Read_t FS_Read;
+
 		typedef void (*player_die_t)(gentity_s* self, const gentity_s* inflictor, gentity_s* attacker, int damage, int meansOfDeath, const Weapon* iWeapon, bool isAlternate, const float* vDir, const hitLocation_t hitLoc, int psTimeOffset);
 		extern player_die_t player_die;
 
@@ -361,6 +373,7 @@ namespace game
 		int FS_FOpenFileReadForThread(const char* filename, int* file, FsThread thread);
 		int FS_CreatePath(char* OSPath);
 		void FS_CheckFileSystemStarted();
+		std::string filesystem_read_big_file(const char* filename, FsThread thread);
 
 		XAssetEntry* DB_FindXAssetEntry(XAssetType type, const char* name);
 		int DB_XAssetExists(XAssetType type, const char* name);

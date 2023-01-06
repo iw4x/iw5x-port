@@ -1402,38 +1402,37 @@ namespace iw4::native
 		unsigned char packed;
 	};
 
-	struct complex_s
+	enum GfxCameraRegionType
 	{
-		float real;
-		float imag;
+		CAMERA_REGION_LIT_OPAQUE = 0x0,
+		CAMERA_REGION_LIT_TRANS = 0x1,
+		CAMERA_REGION_EMISSIVE = 0x2,
+		CAMERA_REGION_DEPTH_HACK = 0x3,
+		CAMERA_REGION_COUNT = 0x4,
+		CAMERA_REGION_NONE = 0x4,
 	};
 
-	struct WaterWritable
+	enum TextureSemantic
 	{
-		float floatTime;
-	};
-
-	struct water_t
-	{
-		WaterWritable writable;
-		complex_s* H0;
-		float* wTerm;
-		int M;
-		int N;
-		float Lx;
-		float Lz;
-		float gravity;
-		float windvel;
-		float winddir[2];
-		float amplitude;
-		float codeConstant[4];
-		GfxImage* image;
+		TS_2D = 0x0,
+		TS_FUNCTION = 0x1,
+		TS_COLOR_MAP = 0x2,
+		TS_DETAIL_MAP = 0x3,
+		TS_UNUSED_2 = 0x4,
+		TS_NORMAL_MAP = 0x5,
+		TS_UNUSED_3 = 0x6,
+		TS_UNUSED_4 = 0x7,
+		TS_SPECULAR_MAP = 0x8,
+		TS_UNUSED_5 = 0x9,
+		TS_UNUSED_6 = 0xA,
+		TS_WATER_MAP = 0xB,
+		TS_DISPLACEMENT_MAP = 0xC
 	};
 
 	union MaterialTextureDefInfo
 	{
 		GfxImage* image;
-		water_t* water;
+		game::native::water_t* water;
 	};
 
 	struct MaterialConstantDef
