@@ -116,7 +116,7 @@ namespace asset_dumpers
 
 					for (auto header : headers)
 					{
-						dump(header);
+						dump(header, true);
 					}
 				}
 				else
@@ -125,7 +125,7 @@ namespace asset_dumpers
 
 					if (header.data)
 					{
-						dump(header);
+						dump(header, true);
 						console::info("successfullly dumped image %s!\n", name);
 					}
 					else

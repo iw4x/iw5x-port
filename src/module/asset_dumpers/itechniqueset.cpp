@@ -10,6 +10,7 @@
 #include <module/console.hpp>
 #include <utils/io.hpp>
 #include <unordered_set>
+#include <utils\stream.hpp>
 
 #define IW4X_TECHSET_VERSION 1
 
@@ -400,7 +401,7 @@ namespace asset_dumpers
 		output.AddMember("name", rapidjson::Value(iw4_technique->name, allocator), allocator);
 
 		// We complete these later
-		rapidjson::Value passArray(rapidjson::kArrayType);
+		rapidjson::Value pass_array(rapidjson::kArrayType);
 
 		for (int i = 0; i < native_technique->passCount; i++)
 		{
@@ -408,31 +409,30 @@ namespace asset_dumpers
 			auto iw4_pass = local_allocator.allocate<iw4::native::MaterialPass>();
 			//iw4_technique->passArray[i] = iw4_pass;
 
-			rapidjson::Value jsonPass(rapidjson::kObjectType);
+			rapidjson::Value json_pass(rapidjson::kObjectType);
 
-#if 0
+
 			if (native_pass->vertexDecl)
 			{
 				iw4_pass->vertexDecl = dump(native_pass->vertexDecl);
-				jsonPass.AddMember("vertexDeclaration", rapidjson::Value(iw4_pass->vertexDecl->name, allocator), allocator);
+				json_pass.AddMember("vertexDeclaration", rapidjson::Value(iw4_pass->vertexDecl->name, allocator), allocator);
 			}
 
 			if (native_pass->vertexShader)
 			{
 				iw4_pass->vertexShader = dump(native_pass->vertexShader);
-				jsonPass.AddMember("vertexShader", rapidjson::Value(iw4_pass->vertexShader->name, allocator), allocator);
+				json_pass.AddMember("vertexShader", rapidjson::Value(iw4_pass->vertexShader->name, allocator), allocator);
 			}
 
 			if (native_pass->pixelShader)
 			{
 				iw4_pass->pixelShader = dump(native_pass->pixelShader);
-				jsonPass.AddMember("pixelShader", rapidjson::Value(iw4_pass->pixelShader->name, allocator), allocator);
+				json_pass.AddMember("pixelShader", rapidjson::Value(iw4_pass->pixelShader->name, allocator), allocator);
 			}
-#endif
 
 			// Prepass to detect incompatible arguments
 			std::unordered_set<int> skipped_args{};
-			auto perObjArgCount = native_pass->perObjArgCount;
+			auto per_obj_arg_count = native_pass->perObjArgCount;
 			for (int k = 0; k < native_pass->perPrimArgCount + native_pass->perObjArgCount + native_pass->stableArgCount; ++k)
 			{
 				const game::native::MaterialShaderArgument* native_arg = &native_pass->args[k];
@@ -440,17 +440,17 @@ namespace asset_dumpers
 				{
 					console::info("Unable to map argument type %d for technique '%s'!\n", native_arg->type, native_technique->name);
 					skipped_args.emplace(k);
-					perObjArgCount--;
-					assert(perObjArgCount >= 0);
+					per_obj_arg_count--;
+					assert(per_obj_arg_count >= 0);
 				}
 			}
 
-			jsonPass.AddMember("perPrimArgCount", native_pass->perPrimArgCount, allocator);
-			jsonPass.AddMember("perObjArgCount", perObjArgCount, allocator);
-			jsonPass.AddMember("stableArgCount", native_pass->stableArgCount, allocator);
-			jsonPass.AddMember("customSamplerFlags", native_pass->customSamplerFlags, allocator);
+			json_pass.AddMember("perPrimArgCount", native_pass->perPrimArgCount, allocator);
+			json_pass.AddMember("perObjArgCount", per_obj_arg_count, allocator);
+			json_pass.AddMember("stableArgCount", native_pass->stableArgCount, allocator);
+			json_pass.AddMember("customSamplerFlags", native_pass->customSamplerFlags, allocator);
 
-			rapidjson::Value argumentsArray(rapidjson::kArrayType);
+			rapidjson::Value arguments_array(rapidjson::kArrayType);
 
 			for (int k = 0; k < native_pass->perPrimArgCount + native_pass->perObjArgCount + native_pass->stableArgCount; ++k)
 			{
@@ -464,10 +464,10 @@ namespace asset_dumpers
 
 				iw4_arg->type = iw5_argument_type_map.at(native_arg->type);
 
-				rapidjson::Value argJson(rapidjson::kObjectType);
+				rapidjson::Value arg_json(rapidjson::kObjectType);
 
-				argJson.AddMember("type", iw4_arg->type, allocator);
-				argJson.AddMember("dest", iw4_arg->dest, allocator); // Does not need conversion
+				arg_json.AddMember("type", iw4_arg->type, allocator);
+				arg_json.AddMember("dest", iw4_arg->dest, allocator); // Does not need conversion
 
 				if (native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_LITERAL_VERTEX_CONST ||
 					native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_LITERAL_PIXEL_CONST)
@@ -481,7 +481,7 @@ namespace asset_dumpers
 						literalsArray.PushBack(*cons, allocator);
 					}
 
-					argJson.AddMember("literals", literalsArray, allocator);
+					arg_json.AddMember("literals", literalsArray, allocator);
 				}
 				else if (native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_CODE_VERTEX_CONST
 					|| native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_CODE_PIXEL_CONST)
@@ -495,35 +495,35 @@ namespace asset_dumpers
 
 					unsigned short val = (unsigned short)newIndex->second;
 
-					rapidjson::Value codeConst(rapidjson::kObjectType);
+					rapidjson::Value code_const(rapidjson::kObjectType);
 
-					codeConst.AddMember("index", val, allocator);
-					codeConst.AddMember("firstRow", native_arg->u.codeConst.firstRow, allocator);
-					codeConst.AddMember("rowCount", native_arg->u.codeConst.rowCount, allocator);
+					code_const.AddMember("index", val, allocator);
+					code_const.AddMember("firstRow", native_arg->u.codeConst.firstRow, allocator);
+					code_const.AddMember("rowCount", native_arg->u.codeConst.rowCount, allocator);
 
-					argJson.AddMember("codeConst", codeConst, allocator);
+					arg_json.AddMember("codeConst", code_const, allocator);
 				}
 				else if (native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_MATERIAL_PIXEL_SAMPLER
 					|| native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_MATERIAL_VERTEX_CONST
 					|| native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_MATERIAL_PIXEL_CONST)
 				{
-					argJson.AddMember("nameHash", native_arg->u.nameHash, allocator);
+					arg_json.AddMember("nameHash", native_arg->u.nameHash, allocator);
 				}
 				else if (native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_CODE_PIXEL_SAMPLER)
 				{
-					iw4::native::MaterialTextureSource codeSampler{};
+					iw4::native::MaterialTextureSource code_sampler{};
 
 					if (!iw5_sampler_table.contains(static_cast<game::native::MaterialTextureSource>(native_arg->u.codeSampler)))
 					{
 						console::warn("Unmapped sampler %i! This normally never happens, or should be very unusual! Mapping to black.\n");
-						codeSampler = iw4::native::MaterialTextureSource::TEXTURE_SRC_CODE_BLACK;
+						code_sampler = iw4::native::MaterialTextureSource::TEXTURE_SRC_CODE_BLACK;
 					}
 					else
 					{
-						codeSampler = static_cast<iw4::native::MaterialTextureSource>(iw5_sampler_table.at(native_arg->u.codeSampler));
+						code_sampler = static_cast<iw4::native::MaterialTextureSource>(iw5_sampler_table.at(native_arg->u.codeSampler));
 					}
 
-					argJson.AddMember("codeSampler", codeSampler, allocator);
+					arg_json.AddMember("codeSampler", code_sampler, allocator);
 				}
 				else
 				{
@@ -531,18 +531,18 @@ namespace asset_dumpers
 				}
 
 
-				argumentsArray.PushBack(argJson, allocator);
+				arguments_array.PushBack(arg_json, allocator);
 			}
 
-			jsonPass.AddMember("arguments", argumentsArray, allocator);
+			json_pass.AddMember("arguments", arguments_array, allocator);
 
-			passArray.PushBack(jsonPass, allocator);
+			pass_array.PushBack(json_pass, allocator);
 		}
 
 		const auto flags = std::format("{:016b}", iw4_technique->flags); // no conversion?
 		output.AddMember("flags", RAPIDJSON_STR(flags.c_str()), allocator);
 
-		output.AddMember("passArray", passArray, allocator);
+		output.AddMember("passArray", pass_array, allocator);
 
 		rapidjson::StringBuffer buff;
 		rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buff);
@@ -553,19 +553,86 @@ namespace asset_dumpers
 		return iw4_technique;
 	}
 
-	iw4::native::MaterialVertexDeclaration* itechniqueset::dump(const game::native::MaterialVertexDeclaration* decl)
+	iw4::native::MaterialVertexDeclaration* itechniqueset::dump(const game::native::MaterialVertexDeclaration* native_decl)
 	{
-		return nullptr;
+		if (!native_decl) return nullptr;
+
+		iw4::native::MaterialVertexDeclaration* iw4_decl = local_allocator.allocate<iw4::native::MaterialVertexDeclaration>();
+
+		iw4_decl->name = local_allocator.duplicate_string(native_decl->name);
+		iw4_decl->hasOptionalSource = native_decl->hasOptionalSource;
+		iw4_decl->streamCount = native_decl->streamCount;
+
+		// There's a problem here: we have to make 21 decl fit into 16 slots... Not sure which one to discard
+		memcpy(&iw4_decl->routing, &native_decl->routing, sizeof(iw4::native::MaterialVertexStreamRouting));
+
+		for (int i = 0; i < iw4_decl->streamCount; i++)
+		{
+			if (iw4_decl->routing.data[i].dest >= game::native::MaterialStreamRoutingDestination::STREAM_DST_COUNT
+				|| iw4_decl->routing.data[i].source >= game::native::MaterialStreamRoutingSource::STREAM_SRC_COUNT)
+			{
+				assert(false);
+			}
+		}
+
+		utils::stream buffer;
+		buffer.saveArray("IW4xDECL", 8);
+		buffer.saveObject(static_cast<char>(IW4X_TECHSET_VERSION));
+
+		buffer.saveObject(*iw4_decl);
+
+		if (iw4_decl->name)
+		{
+			buffer.saveString(iw4_decl->name);
+		}
+
+		utils::io::write_file(std::format("{}/decl/{}.iw4xDECL", export_path(), iw4_decl->name), buffer.toBuffer());
+
+		return iw4_decl;
 	}
 
-	iw4::native::MaterialVertexShader* itechniqueset::dump(const game::native::MaterialVertexShader* vs)
+	game::native::MaterialVertexShader* itechniqueset::dump(const game::native::MaterialVertexShader* vs)
 	{
-		return nullptr;
+		if (!vs) return nullptr;
+
+		auto vs_copy = local_allocator.allocate<game::native::MaterialVertexShader>();
+		memcpy_s(vs_copy, sizeof(game::native::MaterialVertexShader), vs, sizeof(game::native::MaterialVertexShader));
+
+		std::string name{};
+		if (vs->name)
+		{
+			name = std::format("{}{}", vs->name, itechniqueset::techset_suffix);
+			vs_copy->name = local_allocator.duplicate_string(name);
+		}
+
+		utils::stream buffer;
+		buffer.saveArray(vs->prog.loadDef.program, vs->prog.loadDef.programSize);
+
+		utils::io::write_file(std::format("{}/vs/{}.cso", export_path(), name.data()), buffer.toBuffer());
+
+		return vs_copy;
 	}
 
-	iw4::native::MaterialPixelShader* itechniqueset::dump(const game::native::MaterialPixelShader* technique)
+	game::native::MaterialPixelShader* itechniqueset::dump(const game::native::MaterialPixelShader* ps)
 	{
-		return nullptr;
+		if (!ps) return nullptr;
+
+		auto ps_copy = local_allocator.allocate<game::native::MaterialPixelShader>();
+		memcpy_s(ps_copy, sizeof(game::native::MaterialPixelShader), ps, sizeof(game::native::MaterialPixelShader));
+
+		std::string name{};
+		if (ps->name)
+		{
+			name = std::format("{}{}", ps->name, itechniqueset::techset_suffix);
+			ps_copy->name = local_allocator.duplicate_string(name);
+		}
+
+		utils::stream buffer;
+		buffer.saveArray(ps->prog.loadDef.program, ps->prog.loadDef.programSize);
+
+		utils::io::write_file(std::format("{}/ps/{}.cso", export_path(), name.data()), buffer.toBuffer());
+
+		return ps_copy;
 	}
 
 	itechniqueset::itechniqueset()

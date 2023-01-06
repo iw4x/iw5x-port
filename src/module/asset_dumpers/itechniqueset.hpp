@@ -29,7 +29,7 @@ namespace asset_dumpers
 
 		iw4::native::MaterialTechnique* dump(const game::native::MaterialTechnique* technique);
 		iw4::native::MaterialVertexDeclaration* dump(const game::native::MaterialVertexDeclaration* decl);
-		iw4::native::MaterialVertexShader* dump(const game::native::MaterialVertexShader* vs);
-		iw4::native::MaterialPixelShader* dump(const game::native::MaterialPixelShader* ps);
+		game::native::MaterialVertexShader* dump(const game::native::MaterialVertexShader* vs);
+		game::native::MaterialPixelShader* dump(const game::native::MaterialPixelShader* ps);
 	};
 }

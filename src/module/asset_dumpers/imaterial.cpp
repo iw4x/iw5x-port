@@ -310,7 +310,7 @@ namespace asset_dumpers
 						m.lock();
 						auto asset_dmper = reinterpret_cast<asset_dumper*>(data);
 
-						asset_dmper->dump(header);
+						asset_dmper->dump(header, true);
 						m.unlock();
 
 						}, this, false);
@@ -321,7 +321,7 @@ namespace asset_dumpers
 
 					if (header.data)
 					{
-						dump(header);
+						dump(header, true);
 						console::info("successfullly dumped material %s!\n", name);
 					}
 					else
