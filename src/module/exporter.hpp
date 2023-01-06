@@ -1,4 +1,5 @@
 #pragma once
+#include <module/command.hpp>
 
 
 class exporter final : public module

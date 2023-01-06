@@ -79,8 +79,8 @@ namespace asset_dumpers
 			}
 		}
 
-		iw4_material->constantTable = nullptr;
-		iw4_material->stateBitsTable = nullptr;
+		iw4_material->constantTable = native_material->constantTable;
+		iw4_material->stateBitsTable = native_material->stateBitsTable;
 	}
 
 	void imaterial::write(const iw4::native::XAssetHeader& header)

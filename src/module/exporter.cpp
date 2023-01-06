@@ -1,17 +1,18 @@
 #include <std_include.hpp>
 #include <loader/module_loader.hpp>
+
 #include "game/game.hpp"
 
 #include <utils/hook.hpp>
 #include <module/command.hpp>
 
-#include <module\asset_dumpers\igfximage.hpp>
-#include <module\asset_dumpers\imaterial.hpp>
-#include <module\asset_dumpers\itechniqueset.hpp>
+#include <module/asset_dumpers/igfximage.hpp>
+#include <module/asset_dumpers/imaterial.hpp>
+#include <module/asset_dumpers/itechniqueset.hpp>
 
 #include "exporter.hpp"
-#include <module\scheduler.hpp>
-#include <module\log_file.hpp>
+#include <module/scheduler.hpp>
+#include <module/log_file.hpp>
 #include <module/console.hpp>
 #include "asset_dumper.hpp"
 

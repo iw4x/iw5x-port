@@ -1435,13 +1435,6 @@ namespace iw4::native
 		game::native::water_t* water;
 	};
 
-	struct MaterialConstantDef
-	{
-		unsigned int nameHash;
-		char name[12];
-		float literal[4];
-	};
-
 	struct MaterialTextureDef
 	{
 		unsigned int nameHash;
@@ -1452,9 +1445,19 @@ namespace iw4::native
 		MaterialTextureDefInfo u;
 	};
 
-	struct GfxStateBits
+	enum MaterialShaderArgumentType
 	{
-		unsigned int loadBits[2];
+		MTL_ARG_MATERIAL_VERTEX_CONST = 0x0,
+		MTL_ARG_LITERAL_VERTEX_CONST = 0x1,
+		MTL_ARG_MATERIAL_PIXEL_SAMPLER = 0x2,
+		MTL_ARG_CODE_PRIM_BEGIN = 0x3,
+		MTL_ARG_CODE_VERTEX_CONST = 0x3,
+		MTL_ARG_CODE_PIXEL_SAMPLER = 0x4,
+		MTL_ARG_CODE_PIXEL_CONST = 0x5,
+		MTL_ARG_CODE_PRIM_END = 0x6,
+		MTL_ARG_MATERIAL_PIXEL_CONST = 0x6,
+		MTL_ARG_LITERAL_PIXEL_CONST = 0x7,
+		MLT_ARG_COUNT = 0x8,
 	};
 
 	struct Material
@@ -1468,8 +1471,8 @@ namespace iw4::native
 		unsigned char cameraRegion; // GfxCameraRegionType
 		struct MaterialTechniqueSet* techniqueSet;
 		struct MaterialTextureDef* textureTable;
-		struct MaterialConstantDef* constantTable;
-		GfxStateBits* stateBitsTable;
+		game::native::MaterialConstantDef* constantTable;
+		game::native::GfxStateBits* stateBitsTable;
 	};
 
 
@@ -1638,7 +1641,7 @@ namespace iw4::native
 		unsigned __int16* inds;
 	};
 
-	enum ShaderCodeConstants
+	enum ShaderCodeConstants : uint32_t
 	{
 		CONST_SRC_CODE_MAYBE_DIRTY_PS_BEGIN = 0x0,
 		CONST_SRC_CODE_LIGHT_POSITION = 0x0,
@@ -1984,6 +1987,7 @@ namespace iw4::native
 
 	union XAssetHeader
 	{
+		void* data;
 		PhysPreset* physPreset;
 		PhysCollmap* physCollmap;
 		XAnimParts* parts;
@@ -2021,6 +2025,5 @@ namespace iw4::native
 		//TracerDef* tracerDef;
 		//VehicleDef* vehDef;
 		//AddonMapEnts* addonMapEnts;
-		void* data;
 	};
 }
