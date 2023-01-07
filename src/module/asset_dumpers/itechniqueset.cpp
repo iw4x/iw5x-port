@@ -103,6 +103,7 @@ namespace asset_dumpers
 		{ game::native::CONST_SRC_CODE_COLOR_MATRIX_R, iw4::native::CONST_SRC_CODE_COLOR_MATRIX_R },
 		{ game::native::CONST_SRC_CODE_COLOR_MATRIX_G, iw4::native::CONST_SRC_CODE_COLOR_MATRIX_G },
 		{ game::native::CONST_SRC_CODE_COLOR_MATRIX_B, iw4::native::CONST_SRC_CODE_COLOR_MATRIX_B },
+		{ game::native::CONST_SRC_CODE_SHADOWMAP_POLYGON_OFFSET, iw4::native::CONST_SRC_CODE_SHADOWMAP_POLYGON_OFFSET },
 		{ game::native::CONST_SRC_CODE_RENDER_TARGET_SIZE, iw4::native::CONST_SRC_CODE_RENDER_TARGET_SIZE },
 
 		{ game::native::CONST_SRC_CODE_RENDER_SOURCE_SIZE, iw4::native::CONST_SRC_CODE_RENDER_TARGET_SIZE }, // Wrong
@@ -122,7 +123,7 @@ namespace asset_dumpers
 		{ game::native::CONST_SRC_CODE_DEBUG_BUMPMAP, iw4::native::CONST_SRC_CODE_DEBUG_BUMPMAP },
 		{ game::native::CONST_SRC_CODE_MATERIAL_COLOR, iw4::native::CONST_SRC_CODE_MATERIAL_COLOR },
 		{ game::native::CONST_SRC_CODE_FOG, iw4::native::CONST_SRC_CODE_FOG },
-		{ game::native::CONST_SRC_CODE_FOG_COLOR_LINEAR, iw4::native::CONST_SRC_CODE_FOG_COLOR_LINEAR },
+		//{ game::native::CONST_SRC_CODE_FOG_COLOR_LINEAR, iw4::native::CONST_SRC_CODE_FOG_COLOR_LINEAR },
 		{ game::native::CONST_SRC_CODE_FOG_COLOR_GAMMA, iw4::native::CONST_SRC_CODE_FOG_COLOR_GAMMA },
 		{ game::native::CONST_SRC_CODE_FOG_SUN_CONSTS, iw4::native::CONST_SRC_CODE_FOG_SUN_CONSTS },
 		{ game::native::CONST_SRC_CODE_FOG_SUN_COLOR_LINEAR, iw4::native::CONST_SRC_CODE_FOG_SUN_COLOR_LINEAR },
@@ -164,8 +165,6 @@ namespace asset_dumpers
 		{ game::native::CONST_SRC_CODE_DEPTH_FROM_CLIP, iw4::native::CONST_SRC_CODE_DEPTH_FROM_CLIP },
 		{ game::native::CONST_SRC_CODE_CODE_MESH_ARG_0, iw4::native::CONST_SRC_CODE_CODE_MESH_ARG_0 },
 		{ game::native::CONST_SRC_CODE_CODE_MESH_ARG_1, iw4::native::CONST_SRC_CODE_CODE_MESH_ARG_1 },
-		{ game::native::CONST_SRC_CODE_CODE_MESH_ARG_LAST, iw4::native::CONST_SRC_CODE_CODE_MESH_ARG_LAST },
-		{ game::native::CONST_SRC_CODE_COUNT_FLOAT4, iw4::native::CONST_SRC_CODE_COUNT_FLOAT4 },
 		{ game::native::CONST_SRC_CODE_VIEW_MATRIX, iw4::native::CONST_SRC_CODE_VIEW_MATRIX },
 		{ game::native::CONST_SRC_CODE_INVERSE_VIEW_MATRIX, iw4::native::CONST_SRC_CODE_INVERSE_VIEW_MATRIX },
 		{ game::native::CONST_SRC_CODE_TRANSPOSE_VIEW_MATRIX, iw4::native::CONST_SRC_CODE_TRANSPOSE_VIEW_MATRIX },
@@ -280,6 +279,10 @@ namespace asset_dumpers
 		out.techniqueSet = utils::memory::allocate<iw4::native::MaterialTechniqueSet>();
 		auto iw4_techset = out.techniqueSet;
 
+#if DEBUG
+		std::string tech_name = native_techset->name;
+		assert(!tech_name.ends_with(techset_suffix));
+#endif
 
 		auto name = std::format("{}{}", native_techset->name, techset_suffix);
 		iw4_techset->name = local_allocator.duplicate_string(name);
@@ -463,6 +466,7 @@ namespace asset_dumpers
 				auto iw4_arg = local_allocator.allocate<iw4::native::MaterialShaderArgument>();
 
 				iw4_arg->type = iw5_argument_type_map.at(native_arg->type);
+				iw4_arg->dest = native_arg->dest;
 
 				rapidjson::Value arg_json(rapidjson::kObjectType);
 
@@ -477,8 +481,8 @@ namespace asset_dumpers
 					// always four
 					for (size_t j = 0; j < 4; j++)
 					{
-						auto cons = native_arg->u.literalConst[j];
-						literalsArray.PushBack(*cons, allocator);
+						auto cons = (*native_arg->u.literalConst)[j];
+						literalsArray.PushBack(cons, allocator);
 					}
 
 					arg_json.AddMember("literals", literalsArray, allocator);
@@ -486,18 +490,19 @@ namespace asset_dumpers
 				else if (native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_CODE_VERTEX_CONST
 					|| native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_CODE_PIXEL_CONST)
 				{
-					auto newIndex = iw5_code_const_map.find(native_arg->u.codeConst.index);
-					if (newIndex == iw5_code_const_map.end())
+					if (!iw5_code_const_map.contains(native_arg->u.codeConst.index))
 					{
+						auto native_const = static_cast<game::native::MaterialArgumentCodeConst>(native_arg->u.codeConst.index);
 						console::info("Unable to map code constant %d for technique '%s'! Not exporting technique\n", native_arg->u.codeConst.index, native_technique->name);
 						return nullptr;
 					}
 
-					unsigned short val = (unsigned short)newIndex->second;
+					auto iw4_index = iw5_code_const_map.at(native_arg->u.codeConst.index);
+					//auto iw4_index = native_arg->u.codeConst.index;
 
 					rapidjson::Value code_const(rapidjson::kObjectType);
 
-					code_const.AddMember("index", val, allocator);
+					code_const.AddMember("index", iw4_index, allocator);
 					code_const.AddMember("firstRow", native_arg->u.codeConst.firstRow, allocator);
 					code_const.AddMember("rowCount", native_arg->u.codeConst.rowCount, allocator);
 

@@ -333,7 +333,7 @@ void exporter::post_load()
 		
 		initialize_exporters();
 		add_commands();
-		console::info("ready!");
+		console::info("ready!\n");
 		ready = true;
 		}, scheduler::pipeline::main);
 }

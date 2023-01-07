@@ -1247,80 +1247,7 @@ namespace iw4::native
 		MaterialVertexStreamRouting routing;
 	};
 
-
-	struct MaterialArgumentCodeConst
-	{
-		unsigned short index;
-		unsigned char firstRow;
-		unsigned char rowCount;
-	};
-
-	union MaterialArgumentDef
-	{
-		const float(*literalConst)[4];
-		MaterialArgumentCodeConst codeConst;
-		unsigned int codeSampler;
-		unsigned int nameHash;
-	};
-
-	struct MaterialShaderArgument
-	{
-		unsigned short type;
-		unsigned short dest;
-		MaterialArgumentDef u;
-	};
-
-	struct MaterialPass
-	{
-		MaterialVertexDeclaration* vertexDecl;
-		game::native::MaterialVertexShader* vertexShader;
-		game::native::MaterialPixelShader* pixelShader;
-		unsigned char perPrimArgCount;
-		unsigned char perObjArgCount;
-		unsigned char stableArgCount;
-		unsigned char customSamplerFlags;
-		MaterialShaderArgument* args;
-	};
-
-	struct MaterialTechnique
-	{
-		const char* name;
-		unsigned short flags;
-		unsigned short passCount;
-		MaterialPass passArray[1];
-	};
-
-	struct MaterialTechniqueSet
-	{
-		const char* name;
-		char worldVertFormat;
-		bool hasBeenUploaded;
-		char unused[1];
-		MaterialTechniqueSet* remappedTechniqueSet;
-		MaterialTechnique* techniques[48];
-	};
-
-	struct FxTrailVertex
-	{
-		float pos[2];
-		float normal[2];
-		float texCoord;
-	};
-
-	struct FxTrailDef
-	{
-		int scrollTimeMsec;
-		int repeatDist;
-		float invSplitDist;
-		float invSplitArcDist;
-		float invSplitTime;
-		int vertCount;
-		FxTrailVertex* verts;
-		int indCount;
-		unsigned __int16* inds;
-	};
-
-	enum ShaderCodeConstants : uint32_t
+	enum ShaderCodeConstants : unsigned short
 	{
 		CONST_SRC_CODE_MAYBE_DIRTY_PS_BEGIN = 0x0,
 		CONST_SRC_CODE_LIGHT_POSITION = 0x0,
@@ -1385,8 +1312,6 @@ namespace iw4::native
 		CONST_SRC_CODE_POSTFX_FADE_EFFECT = 0x37,
 		CONST_SRC_CODE_VIEWPORT_DIMENSIONS = 0x38,
 		CONST_SRC_CODE_FRAMEBUFFER_READ = 0x39,
-		CONST_SRC_CODE_FIXED_PS_END = 0x3A,
-		CONST_SRC_CODE_NON_PS_BEGIN = 0x3A,
 		CONST_SRC_CODE_BASE_LIGHTING_COORDS = 0x3A,
 		CONST_SRC_CODE_LIGHT_PROBE_AMBIENT = 0x3B,
 		CONST_SRC_CODE_NEARPLANE_ORG = 0x3C,
@@ -1467,6 +1392,79 @@ namespace iw4::native
 		CONST_SRC_CODE_INVERSE_TRANSPOSE_WORLD_VIEW_PROJECTION_MATRIX2 = 0x83,
 		CONST_SRC_TOTAL_COUNT = 0x84,
 		CONST_SRC_NONE = 0x85,
+	};
+
+
+	struct MaterialArgumentCodeConst
+	{
+		ShaderCodeConstants index;
+		unsigned char firstRow;
+		unsigned char rowCount;
+	};
+
+	union MaterialArgumentDef
+	{
+		const float(*literalConst)[4];
+		MaterialArgumentCodeConst codeConst;
+		unsigned int codeSampler;
+		unsigned int nameHash;
+	};
+
+	struct MaterialShaderArgument
+	{
+		unsigned short type;
+		unsigned short dest;
+		MaterialArgumentDef u;
+	};
+
+	struct MaterialPass
+	{
+		MaterialVertexDeclaration* vertexDecl;
+		game::native::MaterialVertexShader* vertexShader;
+		game::native::MaterialPixelShader* pixelShader;
+		unsigned char perPrimArgCount;
+		unsigned char perObjArgCount;
+		unsigned char stableArgCount;
+		unsigned char customSamplerFlags;
+		MaterialShaderArgument* args;
+	};
+
+	struct MaterialTechnique
+	{
+		const char* name;
+		unsigned short flags;
+		unsigned short passCount;
+		MaterialPass passArray[1];
+	};
+
+	struct MaterialTechniqueSet
+	{
+		const char* name;
+		char worldVertFormat;
+		bool hasBeenUploaded;
+		char unused[1];
+		MaterialTechniqueSet* remappedTechniqueSet;
+		MaterialTechnique* techniques[48];
+	};
+
+	struct FxTrailVertex
+	{
+		float pos[2];
+		float normal[2];
+		float texCoord;
+	};
+
+	struct FxTrailDef
+	{
+		int scrollTimeMsec;
+		int repeatDist;
+		float invSplitDist;
+		float invSplitArcDist;
+		float invSplitTime;
+		int vertCount;
+		FxTrailVertex* verts;
+		int indCount;
+		unsigned __int16* inds;
 	};
 
 	enum FxElemType : char

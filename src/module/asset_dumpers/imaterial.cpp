@@ -109,10 +109,7 @@ namespace asset_dumpers
 		std::string techsetName;
 		if (asset->techniqueSet)
 		{
-			//exporter::dump(game::native::ASSET_TYPE_TECHNIQUE_SET, { asset->techniqueSet });
-
-			techsetName = std::format("{}{}", asset->techniqueSet->name, itechniqueset::techset_suffix);
-			output.AddMember("techniqueSet", RAPIDJSON_STR(techsetName.c_str()), allocator);
+			output.AddMember("techniqueSet", RAPIDJSON_STR(asset->techniqueSet->name), allocator);
 		}
 
 
@@ -241,50 +238,32 @@ namespace asset_dumpers
 		{
 			rapidjson::Value constantTable(rapidjson::kArrayType);
 
-#if 0
 			for (char i = 0; i < asset->constantCount; ++i)
 			{
-				Game::IW3::MaterialConstantDef constantDef;
-				std::memcpy(&constantDef, &asset->constantTable[i], sizeof Game::IW3::MaterialConstantDef);
+				game::native::MaterialConstantDef constantDef;
+				std::memcpy(&constantDef, &asset->constantTable[i], sizeof game::native::MaterialConstantDef);
 
 				rapidjson::Value constantDefJson(rapidjson::kObjectType);
 
-				if (constantDef.name == "envMapParms"s)
-				{
-					// These use the speculars to add some rimlight effects to models
-					// But since speculars are regenerated we end up with cod6 speculars with cod4 materials
-					// and cod6 speculars are a bit too bright for 
-
-					constantDef.literal[0] *= 1.2f; // envMapMin
-					constantDef.literal[1] *= 0.2f;  // envMapMax
-					constantDef.literal[2] *= 1.4f;    // engMapExponent
-					constantDef.literal[3] *= 1.2f;    // envMapIntensity
-				}
-
-				// "detailScale" might need some work too 🤔
-
 				constantDefJson.AddMember("nameHash", constantDef.nameHash, allocator);
-				constantDefJson.AddMember("literal", Utils::MakeJsonArray(constantDef.literal, 4, allocator), allocator);
+				constantDefJson.AddMember("literal", utils::json::make_json_array(constantDef.literal, 4, allocator), allocator);
 
 
 				std::string constantDefName = constantDef.name;
 				constantDefName = constantDefName.substr(0, 12);
 
-				constantDefJson.AddMember("name", RAPIDJSON_STR(strDuplicator.duplicateString(constantDefName.c_str())), allocator);
+				constantDefJson.AddMember("name", RAPIDJSON_STR(str_duplicator.duplicate_string(constantDefName.c_str())), allocator);
 
 
 				constantTable.PushBack(constantDefJson, allocator);
 			}
-#endif
 
 			output.AddMember("constantTable", constantTable, allocator);
 		}
 
 		if (asset->stateBitsTable)
 		{
-#if 0
-			output.AddMember("stateBitsTable", StateBitsToJsonArray(asset->stateBitsTable, asset->stateBitsCount, allocator), allocator);
-#endif
+			output.AddMember("stateBitsTable", statebits_to_json_array(asset->stateBitsTable, asset->stateBitsCount, allocator), allocator);
 		}
 
 		rapidjson::StringBuffer buff;
@@ -293,6 +272,114 @@ namespace asset_dumpers
 
 		utils::io::write_file(std::format("{}/materials/{}.iw4x.json", get_export_path(), asset->info.name), buff.GetString());
 
+	}
+
+
+	rapidjson::Value imaterial::statebits_to_json_array(game::native::GfxStateBits* stateBits, unsigned char count, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& allocator)
+	{
+		rapidjson::Value arr(rapidjson::kArrayType);
+
+		for (auto index = 0u; index < count; index++)
+		{
+			const auto& entry = stateBits[index];
+
+			const auto srcBlendRgb = (entry.flags.loadbit0 & game::native::GFXS0_SRCBLEND_RGB_MASK) >> game::native::GFXS0_SRCBLEND_RGB_SHIFT;
+			const auto dstBlendRgb = (entry.flags.loadbit0 & game::native::GFXS0_DSTBLEND_RGB_MASK) >> game::native::GFXS0_DSTBLEND_RGB_SHIFT;
+			const auto blendOpRgb = (entry.flags.loadbit0 & game::native::GFXS0_BLENDOP_RGB_MASK) >> game::native::GFXS0_BLENDOP_RGB_SHIFT;
+			const auto srcBlendAlpha = (entry.flags.loadbit0 & game::native::GFXS0_SRCBLEND_ALPHA_MASK) >> game::native::GFXS0_SRCBLEND_ALPHA_SHIFT;
+			const auto dstBlendAlpha = (entry.flags.loadbit0 & game::native::GFXS0_DSTBLEND_ALPHA_MASK) >> game::native::GFXS0_DSTBLEND_ALPHA_SHIFT;
+			const auto blendOpAlpha = (entry.flags.loadbit0 & game::native::GFXS0_BLENDOP_ALPHA_MASK) >> game::native::GFXS0_BLENDOP_ALPHA_SHIFT;
+			const auto depthTest = (entry.flags.loadbit1 & game::native::GFXS1_DEPTHTEST_DISABLE) ? -1 : (entry.flags.loadbit1 & game::native::GFXS1_DEPTHTEST_MASK) >> game::native::GFXS1_DEPTHTEST_SHIFT;
+			const auto polygonOffset = (entry.flags.loadbit1 & game::native::GFXS1_POLYGON_OFFSET_MASK) >> game::native::GFXS1_POLYGON_OFFSET_SHIFT;
+
+			const auto* alphaTest = "disable";
+			if ((entry.flags.loadbit0 & game::native::GFXS0_ATEST_MASK) == game::native::GFXS0_ATEST_GE_128)
+			{
+				alphaTest = ">=128";
+			}
+			else if ((entry.flags.loadbit0 & game::native::GFXS0_ATEST_MASK) == game::native::GFXS0_ATEST_GT_0)
+			{
+				alphaTest = ">0";
+			}
+			else if ((entry.flags.loadbit0 & game::native::GFXS0_ATEST_MASK) == game::native::GFXS0_ATEST_LT_128)
+			{
+				alphaTest = "<128";
+			}
+			else
+			{
+				assert(entry.flags.loadbit0 & game::native::GFXS0_ATEST_DISABLE);
+			}
+
+			const auto* cullFace = "none";
+			if ((entry.flags.loadbit0 & game::native::GFXS0_CULL_MASK) == game::native::GFXS0_CULL_BACK)
+			{
+				cullFace = "back";
+			}
+			else if ((entry.flags.loadbit0 & game::native::GFXS0_CULL_MASK) == game::native::GFXS0_CULL_FRONT)
+			{
+				cullFace = "front";
+			}
+			else
+			{
+				assert((entry.flags.loadbit0 & game::native::GFXS0_CULL_MASK) == game::native::GFXS0_CULL_NONE);
+			}
+
+			rapidjson::Value stateBitEntry(rapidjson::kObjectType);
+
+			const auto colorWriteRgb = entry.flags.loadbit0 & game::native::GFXS0_COLORWRITE_RGB ? true : false;
+			const auto colorWriteAlpha = entry.flags.loadbit0 & game::native::GFXS0_COLORWRITE_ALPHA ? true : false;
+			const auto polymodeLine = entry.flags.loadbit0 & game::native::GFXS0_POLYMODE_LINE ? true : false;
+			const auto gammaWrite = entry.flags.loadbit0 & game::native::GFXS0_GAMMAWRITE ? true : false;
+			const auto depthWrite = (entry.flags.loadbit1 & game::native::GFXS1_DEPTHWRITE) ? true : false;
+			const auto stencilFrontEnabled = (entry.flags.loadbit1 & game::native::GFXS1_STENCIL_FRONT_ENABLE) ? true : false;
+			const auto stencilBackEnabled = (entry.flags.loadbit1 & game::native::GFXS1_STENCIL_BACK_ENABLE) ? true : false;
+			const auto stencilFrontPass = (entry.flags.loadbit1 >> game::native::GFXS1_STENCIL_FRONT_PASS_SHIFT) & game::native::GFXS_STENCILOP_MASK;
+			const auto stencilFrontFail = (entry.flags.loadbit1 >> game::native::GFXS1_STENCIL_FRONT_FAIL_SHIFT) & game::native::GFXS_STENCILOP_MASK;
+			const auto stencilFrontZFail = (entry.flags.loadbit1 >> game::native::GFXS1_STENCIL_FRONT_ZFAIL_SHIFT) & game::native::GFXS_STENCILOP_MASK;
+			const auto stencilFrontFunc = (entry.flags.loadbit1 >> game::native::GFXS1_STENCIL_FRONT_FUNC_SHIFT) & game::native::GFXS_STENCILOP_MASK;
+			const auto stencilBackPass = (entry.flags.loadbit1 >> game::native::GFXS1_STENCIL_BACK_PASS_SHIFT) & game::native::GFXS_STENCILOP_MASK;
+			const auto stencilBackFail = (entry.flags.loadbit1 >> game::native::GFXS1_STENCIL_BACK_FAIL_SHIFT) & game::native::GFXS_STENCILOP_MASK;
+			const auto stencilBackZFail = (entry.flags.loadbit1 >> game::native::GFXS1_STENCIL_BACK_ZFAIL_SHIFT) & game::native::GFXS_STENCILOP_MASK;
+			const auto stencilBackFunc = (entry.flags.loadbit1 >> game::native::GFXS1_STENCIL_BACK_FUNC_SHIFT) & game::native::GFXS_STENCILOP_MASK;
+
+#define ADD_TO_JSON(x) stateBitEntry.AddMember(#x, x, allocator)
+#define ADD_TO_JSON_STR(x) stateBitEntry.AddMember(#x, RAPIDJSON_STR(x), allocator)
+
+			ADD_TO_JSON_STR(alphaTest);
+			ADD_TO_JSON(blendOpAlpha);
+			ADD_TO_JSON(blendOpRgb);
+			ADD_TO_JSON(colorWriteAlpha);
+			ADD_TO_JSON(colorWriteRgb);
+			ADD_TO_JSON_STR(cullFace);
+			ADD_TO_JSON(depthTest);
+			ADD_TO_JSON(depthWrite);
+			ADD_TO_JSON(dstBlendAlpha);
+			ADD_TO_JSON(dstBlendRgb);
+			ADD_TO_JSON(gammaWrite);
+			ADD_TO_JSON(polygonOffset);
+			ADD_TO_JSON(polymodeLine);
+			ADD_TO_JSON(srcBlendRgb);
+			ADD_TO_JSON(srcBlendAlpha);
+			ADD_TO_JSON(stencilBackEnabled);
+			ADD_TO_JSON(stencilBackFail);
+			ADD_TO_JSON(stencilBackFunc);
+			ADD_TO_JSON(stencilBackPass);
+			ADD_TO_JSON(stencilBackZFail);
+			ADD_TO_JSON(stencilFrontEnabled);
+			ADD_TO_JSON(stencilFrontFail);
+			ADD_TO_JSON(stencilFrontFunc);
+			ADD_TO_JSON(stencilFrontPass);
+			ADD_TO_JSON(stencilFrontZFail);
+
+#if DEBUG
+			stateBitEntry.AddMember("check0", entry.flags.loadbit0, allocator);
+			stateBitEntry.AddMember("check1", entry.flags.loadbit1, allocator);
+#endif
+
+			arr.PushBack(stateBitEntry, allocator);
+		}
+
+		return arr;
 	}
 
 	imaterial::imaterial()

@@ -27,6 +27,8 @@ namespace asset_dumpers
 
 	void igfxworld::write(const iw4::native::XAssetHeader& header)
 	{
+		return;
+
 		auto gfxWorld = header.gfxWorld;
 		std::string name = gfxWorld->name;
 	}
