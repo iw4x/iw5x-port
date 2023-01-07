@@ -263,12 +263,6 @@ namespace iw4::native
 		float z;
 	};
 
-	struct XBoneInfo
-	{
-		game::native::Bounds bounds;
-		float radiusSquared;
-	};
-
 	struct GfxSurface
 	{
 		game::native::srfTriangles_t tris;
@@ -676,12 +670,6 @@ namespace iw4::native
 		char edgeCount[2][3];
 	};
 
-	struct XSurfaceVertexInfo
-	{
-		unsigned short vertCount[4];
-		unsigned short* vertsBlend;
-	};
-
 	union PackedTexCoords
 	{
 		unsigned int packed;
@@ -697,44 +685,6 @@ namespace iw4::native
 		game::native::PackedUnitVec tangent;
 	};
 
-	struct XSurfaceCollisionAabb
-	{
-		unsigned short mins[3];
-		unsigned short maxs[3];
-	};
-
-	struct XSurfaceCollisionNode
-	{
-		XSurfaceCollisionAabb aabb;
-		unsigned short childBeginIndex;
-		unsigned short childCount;
-	};
-
-	struct XSurfaceCollisionLeaf
-	{
-		unsigned short triangleBeginIndex;
-	};
-
-	struct XSurfaceCollisionTree
-	{
-		float trans[3];
-		float scale[3];
-		unsigned int nodeCount;
-		XSurfaceCollisionNode* nodes;
-		unsigned int leafCount;
-		XSurfaceCollisionLeaf* leafs;
-	};
-
-	/* 1093 */
-	struct XRigidVertList
-	{
-		unsigned short boneOffset;
-		unsigned short vertCount;
-		unsigned short triOffset;
-		unsigned short triCount;
-		XSurfaceCollisionTree* collisionTree;
-	};
-
 	struct XSurface
 	{
 		unsigned char tileMode;
@@ -745,10 +695,10 @@ namespace iw4::native
 		unsigned __int16 baseTriIndex;
 		unsigned __int16 baseVertIndex;
 		unsigned __int16* triIndices;
-		XSurfaceVertexInfo vertInfo;
+		game::native::XSurfaceVertexInfo vertInfo;
 		GfxPackedVertex* verts0;
 		unsigned int vertListCount;
-		XRigidVertList* vertList;
+		game::native::XRigidVertList* vertList;
 		int partBits[6];
 	};
 
@@ -772,30 +722,6 @@ namespace iw4::native
 		char smcBaseIndexPlusOne;
 		char smcSubIndexMask;
 		char smcBucket;
-	};
-
-	struct XModelCollTri_s
-	{
-		float plane[4];
-		float svec[4];
-		float tvec[4];
-	};
-
-	struct XModelCollSurf_s
-	{
-		XModelCollTri_s* collTris;
-		int numCollTris;
-		game::native::Bounds bounds;
-		int boneIdx;
-		int contents;
-		int surfFlags;
-	};
-
-	struct DObjAnimMat
-	{
-		float quat[4];
-		float trans[3];
-		float transWeight;
 	};
 
 	struct PhysPreset
@@ -825,20 +751,20 @@ namespace iw4::native
 		unsigned int noScalePartBits[6];
 		unsigned __int16* boneNames;
 		unsigned char* parentList;
-		__int16* quats;
-		float* trans;
+		short(*quats)[4];
+		float(*trans)[3];
 		unsigned char* partClassification;
-		DObjAnimMat* baseMat;
+		game::native::DObjAnimMat* baseMat;
 		Material** materialHandles;
 		XModelLodInfo lodInfo[4];
 		char maxLoadedLod;
 		char numLods;
 		char collLod;
 		unsigned char flags;
-		XModelCollSurf_s* collSurfs;
+		game::native::XModelCollSurf_s* collSurfs;
 		int numCollSurfs;
 		int contents;
-		XBoneInfo* boneInfo;
+		game::native::XBoneInfo* boneInfo;
 		float radius;
 		game::native::Bounds bounds;
 		int memUsage;

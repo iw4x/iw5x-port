@@ -9,6 +9,8 @@
 #include <module/asset_dumpers/igfximage.hpp>
 #include <module/asset_dumpers/imaterial.hpp>
 #include <module/asset_dumpers/itechniqueset.hpp>
+#include <module/asset_dumpers/ixmodel.hpp>
+#include <module/asset_dumpers/iphyspreset.hpp>
 #include <module/asset_dumpers/igfxworld.hpp>
 
 #include "exporter.hpp"
@@ -219,6 +221,8 @@ void exporter::initialize_exporters()
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_IMAGE] = new asset_dumpers::igfximage();
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_MATERIAL] = new asset_dumpers::imaterial();
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET] = new asset_dumpers::itechniqueset();
+	asset_dumpers[game::native::XAssetType::ASSET_TYPE_PHYSPRESET] = new asset_dumpers::iphyspreset();
+	asset_dumpers[game::native::XAssetType::ASSET_TYPE_XMODEL] = new asset_dumpers::ixmodel();
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_GFXWORLD] = new asset_dumpers::igfxworld();
 }
 

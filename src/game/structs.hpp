@@ -2246,6 +2246,30 @@ namespace game
 			cplane_s* planes;
 		};
 
+		struct PhysGeomInfo
+		{
+			BrushWrapper* brushWrapper;
+			int type;
+			float orientation[3][3];
+			Bounds bounds;
+		};
+
+		struct PhysMass
+		{
+			float centerOfMass[3];
+			float momentsOfInertia[3];
+			float productsOfInertia[3];
+		};
+
+		struct PhysCollmap
+		{
+			const char* name;
+			unsigned int count;
+			PhysGeomInfo* geoms;
+			PhysMass mass;
+			Bounds bounds;
+		};
+
 		struct GfxWorldDpvsPlanes
 		{
 			int cellCount;
@@ -2270,13 +2294,6 @@ namespace game
 		struct GfxCellTree
 		{
 			GfxAabbTree* aabbTree;
-		};
-
-		struct PhysMass
-		{
-			float centerOfMass[3];
-			float momentsOfInertia[3];
-			float productsOfInertia[3];
 		};
 
 		struct GfxCellTreeCount
@@ -2542,6 +2559,227 @@ namespace game
 			unsigned int dynEntClientCount[2];
 			unsigned int* dynEntCellBits[2];
 			char* dynEntVisData[2][3];
+		};
+
+		union PackedTexCoords
+		{
+			unsigned int packed;
+		};
+
+		struct GfxQuantizedNoColorVertex
+		{
+			short xyz[3];
+			short binormalSign;
+			PackedUnitVec normal;
+			PackedUnitVec tangent;
+			PackedTexCoords texCoord;
+		};
+
+		struct GfxQuantizedVertex
+		{
+			short xyz[3];
+			short binormalSign;
+			PackedUnitVec normal;
+			PackedUnitVec tangent;
+			PackedTexCoords texCoord;
+			GfxColor color;
+		};
+
+		struct GfxPackedVertex
+		{
+			float xyz[3];
+			float binormalSign;
+			GfxColor color;
+			PackedTexCoords texCoord;
+			PackedUnitVec normal;
+			PackedUnitVec tangent;
+		};
+
+		union GfxVertexUnion0
+		{
+			GfxQuantizedNoColorVertex* quantizedNoColorVerts0;
+			GfxQuantizedVertex* quantizedVerts0;
+			GfxPackedVertex* packedVerts0;
+			void* verts0;
+		};
+
+		struct XSurfaceCollisionAabb
+		{
+			unsigned short mins[3];
+			unsigned short maxs[3];
+		};
+
+		struct XSurfaceCollisionNode
+		{
+			XSurfaceCollisionAabb aabb;
+			unsigned short childBeginIndex;
+			unsigned short childCount;
+		};
+
+		struct XSurfaceCollisionLeaf
+		{
+			unsigned short triangleBeginIndex;
+		};
+
+		struct XSurfaceCollisionTree
+		{
+			float trans[3];
+			float scale[3];
+			unsigned int nodeCount;
+			XSurfaceCollisionNode* nodes;
+			unsigned int leafCount;
+			XSurfaceCollisionLeaf* leafs;
+		};
+
+		struct XRigidVertList
+		{
+			unsigned short boneOffset;
+			unsigned short vertCount;
+			unsigned short triOffset;
+			unsigned short triCount;
+			XSurfaceCollisionTree* collisionTree;
+		};
+
+		struct XSurfaceVertexInfo
+		{
+			short vertCount[4];
+			unsigned short* vertsBlend;
+		};
+
+		struct XSurface
+		{
+			unsigned char tileMode;
+			unsigned char flags;
+			unsigned short vertCount;
+			unsigned short triCount;
+			char zoneHandle;
+			uint16_t baseTriIndex;
+			uint16_t baseVertIndex;
+			float quantizeScale;
+			unsigned short* triIndices;
+			XSurfaceVertexInfo vertInfo;
+			GfxVertexUnion0 verts0;
+			unsigned int vertListCount;
+			XRigidVertList* vertList;
+			int partBits[6];
+		};
+
+
+		enum PhysPresetScaling
+		{
+			PHYSPRESET_SCALING_LINEAR = 0x0,
+			PHYSPRESET_SCALING_QUADRATIC = 0x1,
+			PHYSPRESET_SCALING_COUNT = 0x2
+		};
+
+		struct PhysPreset
+		{
+			const char* name;
+			int type;
+			float mass;
+			float bounce;
+			float friction;
+			float bulletForceScale;
+			float explosiveForceScale;
+			const char* sndAliasPrefix;
+			float piecesSpreadFraction;
+			float piecesUpwardVelocity;
+			float minMomentum;
+			float maxMomentum;
+			float minPitch;
+			float maxPitch;
+			PhysPresetScaling volumeType;
+			PhysPresetScaling pitchType;
+			bool tempDefaultToCylinder;
+			bool perSurfaceSndAlias;
+		};
+
+
+		struct XModelSurfs
+		{
+			const char* name;
+			XSurface* surfs;
+			unsigned short numsurfs;
+			int partBits[6];
+		};
+
+		struct DObjAnimMat
+		{
+			float quat[4];
+			float trans[3];
+			float transWeight;
+		};
+
+		struct XModelLodInfo
+		{
+			float dist;
+			unsigned short numsurfs;
+			unsigned short surfIndex;
+			XModelSurfs* modelSurfs;
+			int partBits[6];
+			XSurface* surfs;
+			char lod;
+			char smcBaseIndexPlusOne;
+			char smcSubIndexMask;
+			char smcBucket;
+		};
+
+		struct XModelCollTri_s
+		{
+			float plane[4];
+			float svec[4];
+			float tvec[4];
+		};
+
+		struct XModelCollSurf_s
+		{
+			XModelCollTri_s* collTris;
+			int numCollTris;
+			Bounds bounds;
+			int boneIdx;
+			int contents;
+			int surfFlags;
+		};
+
+		struct XBoneInfo
+		{
+			Bounds bounds;
+			float radiusSquared;
+		};
+
+		
+
+		struct XModel
+		{
+			const char* name;
+			unsigned char numBones;
+			unsigned char numRootBones;
+			unsigned char numsurfs;
+			float scale;
+			unsigned int noScalePartBits[6];
+			unsigned short* boneNames;
+			unsigned char* parentList;
+			short(*quats)[4];
+			float(*trans)[3];
+			unsigned char* partClassification;
+			DObjAnimMat* baseMat;
+			Material** materialHandles;
+			XModelLodInfo lodInfo[4];
+			char maxLoadedLod;
+			unsigned char numLods;
+			unsigned char collLod;
+			unsigned char flags;
+			XModelCollSurf_s* collSurfs;
+			int numCollSurfs;
+			int contents;
+			XBoneInfo* boneInfo;
+			float radius;
+			Bounds bounds;
+			unsigned short* invHighMipRadius;
+			int memUsage;
+			PhysPreset* physPreset;
+			PhysCollmap* physCollmap;
+			float quantization;
 		};
 
 		struct GfxStaticModelDrawInst
