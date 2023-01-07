@@ -7,7 +7,10 @@
 class asset_dumper : public module
 {
 
+#define STRINGIZE_(x) #x
+#define STRINGIZE(x) STRINGIZE_(x)
 #define RAPIDJSON_STR(str) (str == nullptr ? rapidjson::Value(rapidjson::kNullType) : static_cast<rapidjson::Value>(rapidjson::StringRef(str)))
+#define AssertSize(x, size) static_assert(sizeof(x) == size, STRINGIZE(x) " structure has an invalid size.")
 
 public:
 

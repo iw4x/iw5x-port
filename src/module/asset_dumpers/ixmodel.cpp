@@ -81,8 +81,8 @@ namespace asset_dumpers
 			iw4_model->materialHandles[i] = exporter::dump(game::native::XAssetType::ASSET_TYPE_MATERIAL, { native_model->materialHandles[i] }).material;
 		}
 
-		static_assert(sizeof iw4::native::XModelLodInfo == sizeof game::native::XModelLodInfo);
-		memcpy(iw4_model->lodInfo, native_model->lodInfo, sizeof game::native::XModelLodInfo);
+		static_assert(sizeof iw4_model->lodInfo == sizeof native_model->lodInfo);
+		memcpy(iw4_model->lodInfo, native_model->lodInfo, sizeof iw4_model->lodInfo);
 
 		for (auto i = 0; i < native_model->numLods; i++)
 		{
@@ -96,8 +96,7 @@ namespace asset_dumpers
 			*iw4_lod->modelSurfs->surfaces = convert(native_lod->modelSurfs->surfs);
 			iw4_lod->modelSurfs->numSurfaces = native_lod->modelSurfs->numsurfs;
 
-			// "weapon_m320_gl" does not look okay... not okay at all
-			//assert(iw4_lod->modelSurfs->numSurfaces == iw4_lod->numsurfs);
+			assert(iw4_lod->modelSurfs->numSurfaces == iw4_lod->numsurfs);
 
 			static_assert(sizeof iw4_lod->modelSurfs->partBits == sizeof native_lod->modelSurfs->partBits);
 			memcpy(iw4_lod->modelSurfs->partBits, native_lod->modelSurfs->partBits, sizeof native_lod->modelSurfs->partBits);
@@ -139,10 +138,10 @@ namespace asset_dumpers
 		SET_MEMBER_NO_CONVERSION(bounds);
 		SET_MEMBER_NO_CONVERSION(memUsage);
 		
-		if (native_model->quantization != 0.F)
+		if (native_model->quantization != 1.F)
 		{
 			// 🤔
-			console::warn("Model %s has quantization info and might not be backported correctly! (%f)\n", native_model->name, native_model->quantization);
+			//console::warn("Model %s has quantization info and might not be backported correctly! (%f)\n", native_model->name, native_model->quantization);
 		}
 
 		iw4_model->bad = false; // good boy!
@@ -174,6 +173,13 @@ namespace asset_dumpers
 			buffer.saveString(asset->name);
 		}
 
+		///
+		if (asset->name == "foliage_tree_oak_1"s)
+		{
+			printf("");
+		}
+		///
+
 		if (asset->boneNames)
 		{
 			for (char i = 0; i < asset->numBones; ++i)
@@ -189,12 +195,12 @@ namespace asset_dumpers
 
 		if (asset->quats)
 		{
-			buffer.saveArrayIfNotExisting(asset->quats, (asset->numBones - asset->numRootBones) * 4);
+			buffer.saveArrayIfNotExisting(asset->quats, (asset->numBones - asset->numRootBones));
 		}
 
 		if (asset->trans)
 		{
-			buffer.saveArrayIfNotExisting(asset->trans, (asset->numBones - asset->numRootBones) * 3);
+			buffer.saveArrayIfNotExisting(asset->trans, (asset->numBones - asset->numRootBones));
 		}
 
 		if (asset->partClassification)

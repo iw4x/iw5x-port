@@ -177,6 +177,7 @@ void exporter::add_commands()
 			info.freeFlags = 0;
 
 			game::native::DB_LoadXAssets(&info, 1, 0);
+			console::info("successfully loaded %s!\n", info.name);
 		});
 }
 
@@ -259,7 +260,7 @@ void DB_AddXAsset_Hk(game::native::XAssetType type, game::native::XAssetHeader* 
 	///
 	if (type == game::native::XAssetType::ASSET_TYPE_GFXWORLD)
 	{
-		console::info("loading %s %s\n", name, assetName);
+		//console::info("loading %s %s\n", name, assetName);
 	}
 
 	if (type == game::native::XAssetType::ASSET_TYPE_MATERIAL)
@@ -333,7 +334,7 @@ void exporter::post_load()
 
 	scheduler::once([]() {
 
-		export_path_dvar = game::native::Dvar_RegisterString("export_path", "iw5xport_out", game::native::DVAR_NONE, "export path for iw5xport");
+		export_path_dvar = game::native::Dvar_RegisterString("export_path", "iw5xport_out/default", game::native::DVAR_NONE, "export path for iw5xport");
 		
 		initialize_exporters();
 		add_commands();

@@ -270,38 +270,11 @@ namespace iw4::native
 		game::native::GfxSurfaceLightingAndFlags laf;
 	};
 
-	struct GfxPortal;
-
-	struct GfxPortalWritable
-	{
-		char isQueued;
-		char isAncestor;
-		char recursionDepth;
-		char hullPointCount;
-		float(*hullPoints)[2];
-		GfxPortal* queuedParent;
-	};
-
-	struct DpvsPlane
-	{
-		float coeffs[4];
-	};
-
-	struct GfxPortal
-	{
-		GfxPortalWritable writable;
-		DpvsPlane plane;
-		float(*vertices)[3];
-		unsigned __int16 cellIndex;
-		char vertexCount;
-		float hullAxis[2][3];
-	};
-
 	struct GfxCell
 	{
 		game::native::Bounds bounds;
 		int portalCount;
-		GfxPortal* portals;
+		game::native::GfxPortal* portals;
 		unsigned char reflectionProbeCount;
 		unsigned char* reflectionProbes;
 	};
@@ -335,33 +308,6 @@ namespace iw4::native
 		float angles[3];
 	};
 
-	struct GfxImageLoadDef
-	{
-		unsigned char levelCount;
-		char pad[3];
-		unsigned int flags;
-		unsigned int format;
-		unsigned int resourceSize;
-		char data[1];
-	};
-
-	union GfxTexture
-	{
-		// IDirect3DBaseTexture9* basemap;
-		// IDirect3DTexture9* map;
-		// IDirect3DVolumeTexture9* volmap;
-		// IDirect3DCubeTexture9* cubemap;
-		GfxImageLoadDef* loadDef;
-		void* data;
-	};
-
-	typedef GfxTexture GfxRawTexture;
-
-	struct GfxReflectionProbe
-	{
-		float origin[3];
-	};
-
 	struct Picmip
 	{
 		char platform[2];
@@ -374,7 +320,7 @@ namespace iw4::native
 
 	struct GfxImage
 	{
-		GfxTexture texture;
+		game::native::GfxTexture texture;
 		unsigned char mapType;
 		game::native::GfxImageCategory semantic;
 		unsigned char category;
@@ -396,47 +342,27 @@ namespace iw4::native
 		GfxImage* secondary;
 	};
 
-	struct GfxWorldVertex
-	{
-		float xyz[3];
-		float binormalSign;
-		game::native::GfxColor color;
-		float texCoord[2];
-		float lmapCoord[2];
-		game::native::PackedUnitVec normal;
-		game::native::PackedUnitVec tangent;
-	};
 
-	struct GfxWorldVertexData
-	{
-		GfxWorldVertex* vertices;
-		void/*IDirect3DVertexBuffer9*/* worldVb;
-	};
-
-	struct GfxWorldVertexLayerData
-	{
-		char* data;
-		void/*IDirect3DVertexBuffer9*/* layerVb;
-	};
 	struct GfxWorldDraw
 	{
 		unsigned int reflectionProbeCount;
-		GfxImage** reflectionImages;
-		GfxReflectionProbe* reflectionProbes;
-		GfxRawTexture* reflectionProbeTextures; //Count = refelctionProbeCount
+		GfxImage** reflectionProbes;
+		game::native::GfxReflectionProbe* reflectionProbeOrigins;
+		game::native::GfxTexture* reflectionProbeTextures;
 		int lightmapCount;
 		GfxLightmapArray* lightmaps;
-		GfxRawTexture* lightmapPrimaryTextures; //Count = lightmapCount
-		GfxRawTexture* lightmapSecondaryTextures; //Count = lightmapCount
-		GfxImage* skyImage;
-		GfxImage* outdoorImage;
+		game::native::GfxTexture* lightmapPrimaryTextures;
+		game::native::GfxTexture* lightmapSecondaryTextures;
+		GfxImage* lightmapOverridePrimary;
+		GfxImage* lightmapOverrideSecondary;
 		unsigned int vertexCount;
-		GfxWorldVertexData vd;
+		game::native::GfxWorldVertexData vd;
 		unsigned int vertexLayerDataSize;
-		GfxWorldVertexLayerData vld;
-		int indexCount;
+		game::native::GfxWorldVertexLayerData vld;
+		unsigned int indexCount;
 		unsigned __int16* indices;
 	};
+
 
 	struct GfxSky
 	{
@@ -497,7 +423,7 @@ namespace iw4::native
 		unsigned int colAxis;
 		unsigned short* rowDataStart;
 		unsigned int rawRowDataSize;
-		char* rawRowData;
+		unsigned char* rawRowData;
 		unsigned int entryCount;
 		game::native::GfxLightGridEntry* entries;
 		unsigned int colorCount;
@@ -572,7 +498,7 @@ namespace iw4::native
 		game::native::GfxSceneDynBrush* sceneDynBrush;
 		unsigned int* primaryLightEntityShadowVis;
 		unsigned int* primaryLightDynEntShadowVis[2];
-		char* nonSunPrimaryLightForModelDynEnt;
+		unsigned char* nonSunPrimaryLightForModelDynEnt;
 		game::native::GfxShadowGeometry* shadowGeom;
 		game::native::GfxLightRegion* lightRegion;
 		GfxWorldDpvsStatic dpvs;
@@ -582,6 +508,7 @@ namespace iw4::native
 		GfxHeroOnlyLight* heroOnlyLights;
 		char fogTypesAllowed;
 	};
+
 #pragma pack(pop)
 
 	enum file_image_flags_t
@@ -772,6 +699,8 @@ namespace iw4::native
 		PhysPreset* physPreset;
 		game::native::PhysCollmap* physCollmap;
 	};
+
+	static_assert(sizeof iw4::native::XModel == 304);
 
 	struct cStaticModel_t
 	{

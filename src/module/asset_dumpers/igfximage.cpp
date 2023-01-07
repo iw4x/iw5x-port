@@ -6,6 +6,7 @@
 #include "utils/io.hpp"
 #include "utils/stream.hpp"
 #include "utils/string.hpp"
+#include "utils/hook.hpp"
 
 #include "module/console.hpp"
 #include "module/command.hpp"
@@ -72,27 +73,27 @@ namespace asset_dumpers
 		}
 	}
 
-	//int igfximage::StoreTexture()
-	//{
-	//	game::native::GfxImageLoadDef** loadDef = *reinterpret_cast<game::native::GfxImageLoadDef***>(0xE34814);
-	//	game::native::GfxImage* image = *reinterpret_cast<game::native::GfxImage**>(0xE346C4);
+	int igfximage::store_texture_hk()
+	{
+		game::native::GfxImageLoadDef** loadDef = *reinterpret_cast<game::native::GfxImageLoadDef***>(0x13E2940);
+		game::native::GfxImage* image = *reinterpret_cast<game::native::GfxImage**>(0X13E2410);
 
-	//	size_t size = 16 + (*loadDef)->resourceSize;
-	//	void* data = Loader::GetAlloctor()->allocate(size);
-	//	std::memcpy(data, *loadDef, size);
+		size_t size = 16 + (*loadDef)->resourceSize;
+		void* data = utils::memory::allocate(size);
+		std::memcpy(data, *loadDef, size);
 
-	//	image->texture.loadDef = reinterpret_cast<game::native::GfxImageLoadDef*>(data);
+		image->texture.loadDef = reinterpret_cast<game::native::GfxImageLoadDef*>(data);
 
-	//	return 0;
-	//}
+		return 0;
+	}
 
-	//void igfximage::ReleaseTexture(game::native::XAssetHeader header)
-	//{
-	//	if (header.image && header.image->texture.loadDef)
-	//	{
-	//		Loader::GetAlloctor()->free(header.image->texture.loadDef);
-	//	}
-	//}
+	void igfximage::release_texture_hk(game::native::XAssetHeader header)
+	{
+		if (header.image && header.image->texture.loadDef)
+		{
+			utils::memory::free(header.image->texture.loadDef);
+		}
+	}
 
 	igfximage::igfximage()
 	{
@@ -134,8 +135,8 @@ namespace asset_dumpers
 				}
 			});
 
-	//	Utils::Hook(0x616E80, igfximage::StoreTexture, HOOK_JUMP).install()->quick();
-	//	Utils::Hook(0x488C00, igfximage::ReleaseTexture, HOOK_JUMP).install()->quick();
+		utils::hook(0x66A700, igfximage::store_texture_hk, HOOK_JUMP).install()->quick();
+		utils::hook(0x66A1C0, igfximage::release_texture_hk, HOOK_JUMP).install()->quick();
 	}
 
 	//igfximage::~IGfxImage()
