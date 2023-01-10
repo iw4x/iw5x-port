@@ -784,21 +784,13 @@ namespace iw4::native
 		CollisionBorder* borders;
 	};
 
-	struct Stage
-	{
-		const char* name;
-		float origin[3];
-		unsigned short triggerIndex;
-		char sunPrimaryLightIndex;
-	};
-
 	struct MapEnts
 	{
 		const char* name;
 		char* entityString;
 		int numEntityChars;
 		MapTriggers trigger;
-		Stage* stages;
+		game::native::Stage* stages;
 		char stageCount;
 	};
 

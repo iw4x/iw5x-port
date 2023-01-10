@@ -31,7 +31,7 @@ namespace asset_dumpers
 
 		iw4_comworld->primaryLights = local_allocator.allocate_array<iw4::native::ComPrimaryLight>(iw4_comworld->primaryLightCount);
 
-		for (auto i = 0; i < iw4_comworld->primaryLightCount; i++)
+		for (size_t i = 0; i < iw4_comworld->primaryLightCount; i++)
 		{
 			auto iw4_light = &iw4_comworld->primaryLights[i];
 			auto native_light = &native_comworld->primaryLights[i];

@@ -535,7 +535,6 @@ namespace game
 			AddonMapEnts* addonMapEnts;
 		};
 
-
 		struct ComPrimaryLight
 		{
 			unsigned char type;
@@ -1679,6 +1678,78 @@ namespace game
 		{
 			float midPoint[3];
 			float halfSize[3];
+		};
+
+
+
+		struct TriggerModel
+		{
+			int contents;
+			unsigned short hullCount;
+			unsigned short firstHull;
+		};
+
+		struct TriggerHull
+		{
+			Bounds bounds;
+			int contents;
+			unsigned short slabCount;
+			unsigned short firstSlab;
+		};
+
+		struct TriggerSlab
+		{
+			float dir[3];
+			float midPoint;
+			float halfSize;
+		};
+
+		struct MapTriggers
+		{
+			unsigned int count;
+			TriggerModel* models;
+			unsigned int hullCount;
+			TriggerHull* hulls;
+			unsigned int slabCount;
+			TriggerSlab* slabs;
+		};
+
+		struct ClientTriggerAabbNode
+		{
+			Bounds bounds;
+			unsigned short firstChild;
+			unsigned short childCount;
+		};
+
+		struct ClientTriggers
+		{
+			MapTriggers trigger;
+			unsigned short numClientTriggerNodes;
+			ClientTriggerAabbNode* clientTriggerAabbTree;
+			unsigned int triggerStringLength;
+			char* triggerString;
+			unsigned short* triggerStringOffsets;
+			unsigned char* triggerType;
+			vec3_t* origins;
+			float* scriptDelay;
+			short* audioTriggers;
+		};
+
+		struct Stage
+		{
+			const char* name;
+			float origin[3];
+			unsigned short triggerIndex;
+			unsigned char sunPrimaryLightIndex;
+		};
+
+		struct MapEnts
+		{
+			const char* name;
+			char* entityString;
+			int numEntityChars;
+			MapTriggers trigger;
+			ClientTriggers clientTrigger;
 		};
 
 		enum TraceHitType

@@ -17,6 +17,7 @@
 #include <module/asset_dumpers/ilightdef.hpp>
 #include <module/asset_dumpers/iscriptfile.hpp>
 #include <module/asset_dumpers/irawfile.hpp>
+#include <module/asset_dumpers/imapents.hpp>
 
 #include "exporter.hpp"
 #include <module/scheduler.hpp>
@@ -209,6 +210,7 @@ void exporter::dump_map(const command::params& params)
 		captured_rawfiles.clear();
 		captured_scripts.clear();
 
+		// These are dumped by capture
 		//command::execute(std::format("dumpScript maps/mp/{}", map_name), true);
 		//command::execute(std::format("dumpScript maps/mp/{}_precache", map_name), true);
 		//command::execute(std::format("dumpScript maps/createart/{}_art", map_name), true);
@@ -308,6 +310,7 @@ void exporter::initialize_exporters()
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_LIGHT_DEF] = new asset_dumpers::ilightdef();
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_SCRIPTFILE] = new asset_dumpers::iscriptfile();
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_RAWFILE] = new asset_dumpers::irawfile();
+	asset_dumpers[game::native::XAssetType::ASSET_TYPE_MAP_ENTS] = new asset_dumpers::imapents();
 }
 
 bool exporter::exporter_exists(game::native::XAssetType assetType)
@@ -356,8 +359,9 @@ void exporter::DB_AddXAsset_Hk(game::native::XAssetType type, game::native::XAss
 	}
 
 	///
-	if (type == game::native::XAssetType::ASSET_TYPE_GFXWORLD)
+	if (type == game::native::XAssetType::ASSET_TYPE_MAP_ENTS)
 	{
+		dump(type, { asset.header });
 		//console::info("loading %s %s\n", name, assetName);
 	}
 }
