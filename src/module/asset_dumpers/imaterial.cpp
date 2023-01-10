@@ -18,7 +18,6 @@
 #include <rapidjson/stringbuffer.h>
 #include <module\exporter.hpp>
 
-
 #define IW4X_MAT_VERSION 1
 
 namespace asset_dumpers

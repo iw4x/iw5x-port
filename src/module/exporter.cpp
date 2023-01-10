@@ -63,7 +63,7 @@ DEFINE_OG_FUNCTION(Scr_InitVariables, 0x5650E0);
 DEFINE_OG_FUNCTION(Scr_Init, 0x568F40);
 
 DEFINE_OG_FUNCTION(CL_InitOnceForAllClients, 0x487B00);
-
+DEFINE_OG_FUNCTION(Com_AddStartupCommands, 0x5557F0);
 
 void exporter::event_loop()
 {
@@ -78,6 +78,20 @@ void exporter::event_loop()
 		}
 
 		Sleep(1u);
+	}
+}
+
+void __declspec(naked) Com_ParseCommandLine_Stub(const char* commandLineArgs)
+{
+	static const auto Com_ParseCommandLine = 0x553B60;
+
+	__asm
+	{
+		pushad
+		mov eax, commandLineArgs
+		call Com_ParseCommandLine
+		popad
+		ret
 	}
 }
 
@@ -127,9 +141,25 @@ void exporter::perform_common_initialization()
 
 	auto com_fullyInitialized = (bool*)(0x1CF0BB8);
 	*com_fullyInitialized = 1;
-
-
 	load_common_zones();
+
+
+	auto com_consoleLines = (const char**)0x01CEF598;
+	auto cmdLine = GetCommandLineA();
+	Com_ParseCommandLine_Stub(cmdLine);
+
+
+	export_path_dvar = game::native::Dvar_RegisterString("export_path", "iw5xport_out/default", game::native::DVAR_NONE, "export path for iw5xport");
+
+	initialize_exporters();
+	add_commands();
+
+
+	Com_AddStartupCommands();
+
+	DB_Update();
+	Com_EventLoop();
+	Cbuf_Execute(0, 0);
 }
 
 void exporter::dump_map(const command::params& params)
@@ -139,8 +169,8 @@ void exporter::dump_map(const command::params& params)
 
 	console::info("dumping %s...\n", map_name.c_str());
 
-	auto out_path = std::format("iw5xport_out/{}", map_name);
-	game::native::Dvar_SetString(export_path_dvar, out_path.c_str());
+	//auto out_path = std::format("iw5xport_out/{}", map_name);
+	//game::native::Dvar_SetString(export_path_dvar, out_path.c_str());
 
 	command::execute(std::format("loadzone {}", map_name), true);
 	
@@ -273,6 +303,68 @@ void DB_AddXAsset_Hk(game::native::XAssetType type, game::native::XAssetHeader* 
 			}
 		}
 	}
+
+	if (type == game::native::XAssetType::ASSET_TYPE_XMODEL)
+	{
+		if (assetName == "machinery_baggage_container_white"s)
+		{
+			printf("");
+
+			/*
+	struct XSurface
+	{
+		unsigned char tileMode;
+		bool deformed;
+		unsigned __int16 vertCount;
+		unsigned __int16 triCount;
+		char zoneHandle;
+		unsigned __int16 baseTriIndex;
+		unsigned __int16 baseVertIndex;
+		unsigned __int16* triIndices;
+		game::native::XSurfaceVertexInfo vertInfo;
+		GfxPackedVertex* verts0;
+		unsigned int vertListCount;
+		game::native::XRigidVertList* vertList;
+		int partBits[6];
+	};
+			
+			*/
+
+			std::ofstream f(std::string(assetName) + "iw5.txt");
+			auto lod = &asset.header.model->lodInfo[0];
+			f << "model " << asset.header.model->name << " with flags " << (unsigned int)asset.header.model->flags << "\n";
+			for (size_t i = 0; i < lod->numsurfs; i++)
+			{
+				auto surf = &lod->surfs[i];
+				
+				f << "surface #" << i << "\n";
+				f << "flags " << (unsigned int)surf->flags << "\n";
+				f << "vertcount " << surf->vertCount << "\n";
+				f << "tricount " << surf->triCount << "\n";
+				f << "basetriindex " << surf->baseTriIndex << "\n";
+				f << "basevertindex " << surf->baseVertIndex << "\n";
+				
+				f << "tri indices: \n";
+				for (size_t j = 0; j < surf->triCount; j++)
+				{
+					f << "    " << surf->triIndices[j];
+				}
+
+				f << "vertices: \n";
+				for (size_t j = 0; j < surf->vertCount; j++)
+				{
+					f << "    x: " << surf->verts0.packedVerts0[j].xyz[0]
+						<< " y: " << surf->verts0.packedVerts0[j].xyz[1]
+						<< " z: " << surf->verts0.packedVerts0[j].xyz[2]
+						<< "\n";
+				}
+			}
+
+			f.close();
+
+			printf("");
+		}
+	}
 	///
 }
 
@@ -318,13 +410,16 @@ void exporter::post_load()
 	utils::hook::nop(0x5CCE28, 5);
 
 	//// Return on Com_StartHunkUsers
-	utils::hook::set(0x556380, 0xC3);
+	utils::hook::set<unsigned char>(0x556380, 0xC3);
 
 	//// Return on CL_InitRenderer
-	utils::hook::set(0x48EEA0, 0xC3);
+	utils::hook::set<unsigned char>(0x48EEA0, 0xC3);
 
 	// Return on com_frame_try_block
-	utils::hook::set(0x556470, 0xC3);
+	utils::hook::set<unsigned char>(0x556470, 0xC3);
+
+	// Kill command whitelist
+	utils::hook::set<unsigned char>(0X00553BA0, 0xC3);
 
 	// catch sys_error
 	utils::hook(0x5CC43E, Sys_Error_Hk, HOOK_CALL).install()->quick();
@@ -334,10 +429,7 @@ void exporter::post_load()
 
 	scheduler::once([]() {
 
-		export_path_dvar = game::native::Dvar_RegisterString("export_path", "iw5xport_out/default", game::native::DVAR_NONE, "export path for iw5xport");
-		
-		initialize_exporters();
-		add_commands();
+
 		console::info("ready!\n");
 		ready = true;
 		}, scheduler::pipeline::main);

@@ -40,7 +40,16 @@ namespace asset_dumpers
 			buffer.saveObject(image->category);
 
 			buffer.saveObject(image->texture.loadDef->resourceSize);
-			buffer.save(image->texture.loadDef, 16 + image->texture.loadDef->resourceSize);
+
+			buffer.saveObject(image->texture.loadDef->levelCount);
+			buffer.saveObject(static_cast<unsigned char>(image->texture.loadDef->flags));
+			buffer.saveObject(image->width);
+			buffer.saveObject(image->height);
+			buffer.saveObject(image->depth);
+			buffer.saveObject(image->texture.loadDef->format);
+			buffer.saveObject(image->texture.loadDef->resourceSize); // Yes, again
+
+			buffer.save(image->texture.loadDef->data, image->texture.loadDef->resourceSize);
 
 			utils::io::write_file(std::format("{}/images/{}.iw4xImage", get_export_path(), name), buffer.toBuffer());
 		}

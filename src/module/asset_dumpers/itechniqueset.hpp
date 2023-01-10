@@ -27,9 +27,13 @@ namespace asset_dumpers
 		static const std::unordered_map <std::uint32_t, std::uint32_t> iw5_sampler_table;
 		static const std::unordered_map <std::uint16_t, std::uint16_t> iw5_argument_type_map;
 
-		iw4::native::MaterialTechnique* dump(const game::native::MaterialTechnique* technique);
+		iw4::native::MaterialTechnique* convert(const game::native::MaterialTechnique* native_technique);
+		void write(const iw4::native::MaterialTechnique* iw4_technique);
+
 		iw4::native::MaterialVertexDeclaration* dump(const game::native::MaterialVertexDeclaration* decl);
 		game::native::MaterialVertexShader* dump(const game::native::MaterialVertexShader* vs);
 		game::native::MaterialPixelShader* dump(const game::native::MaterialPixelShader* ps);
+
+		iw4::native::MaterialUpdateFrequency get_update_frequency(const game::native::MaterialShaderArgument& iw4_argument);
 	};
 }

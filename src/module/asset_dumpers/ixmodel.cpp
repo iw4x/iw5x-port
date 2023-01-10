@@ -28,9 +28,9 @@ namespace asset_dumpers
 		target.triIndices = source->triIndices;
 		target.vertInfo = source->vertInfo;
 
-		target.verts0 = local_allocator.allocate_array<iw4::native::GfxPackedVertex>(target.vertCount);
+		/// NOT sure about this
+		target.verts0 = reinterpret_cast<iw4::native::GfxPackedVertex*>(source->verts0.verts0);
 		static_assert(sizeof target.verts0 == sizeof source->verts0);
-		memcpy(target.verts0, source->verts0.verts0, target.vertCount); // 🤞
 
 		target.vertListCount = source->vertListCount;
 		target.vertList = source->vertList;
@@ -71,8 +71,6 @@ namespace asset_dumpers
 
 		const auto num_bones = iw4_model->numBones;
 		const auto num_root_bones = iw4_model->numRootBones;
-		const auto num_quats = (num_bones - num_root_bones) * 4;
-		const auto num_trans = (num_bones - num_root_bones) * 3;
 		const auto num_surfs = native_model->numsurfs;
 
 		iw4_model->materialHandles = local_allocator.allocate_array<iw4::native::Material*>(num_surfs);
@@ -92,8 +90,6 @@ namespace asset_dumpers
 			iw4_lod->modelSurfs = local_allocator.allocate<iw4::native::XModelSurfs>();
 			iw4_lod->modelSurfs->name = native_lod->modelSurfs->name;
 
-			iw4_lod->modelSurfs->surfaces = local_allocator.allocate_array<iw4::native::XSurface>(native_lod->modelSurfs->numsurfs);
-			*iw4_lod->modelSurfs->surfaces = convert(native_lod->modelSurfs->surfs);
 			iw4_lod->modelSurfs->numSurfaces = native_lod->modelSurfs->numsurfs;
 
 			assert(iw4_lod->modelSurfs->numSurfaces == iw4_lod->numsurfs);
@@ -105,6 +101,7 @@ namespace asset_dumpers
 			memcpy(iw4_lod->partBits, native_lod->partBits, sizeof native_lod->partBits);
 
 			iw4_lod->surfs = local_allocator.allocate_array<iw4::native::XSurface>(iw4_lod->numsurfs);
+			iw4_lod->modelSurfs->surfaces = iw4_lod->surfs;
 
 			for (unsigned short j = 0; j < iw4_lod->numsurfs; ++j)
 			{
@@ -172,13 +169,6 @@ namespace asset_dumpers
 		{
 			buffer.saveString(asset->name);
 		}
-
-		///
-		if (asset->name == "foliage_tree_oak_1"s)
-		{
-			printf("");
-		}
-		///
 
 		if (asset->boneNames)
 		{
