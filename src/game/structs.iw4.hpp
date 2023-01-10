@@ -78,6 +78,32 @@ namespace iw4::native
 		R_RENDERTARGET_NONE = 0xD,
 	};
 
+	struct ComPrimaryLight
+	{
+		unsigned char type;
+		unsigned char canUseShadowMap;
+		unsigned char exponent;
+		unsigned char unused;
+		float color[3];
+		float dir[3];
+		float origin[3];
+		float radius;
+		float cosHalfFovOuter;
+		float cosHalfFovInner;
+		float cosHalfFovExpanded;
+		float rotationLimit;
+		float translationLimit;
+		const char* defName;
+	};
+
+	struct ComWorld
+	{
+		const char* name;
+		int isInUse;
+		unsigned int primaryLightCount;
+		ComPrimaryLight* primaryLights;
+	};
+
 	struct GfxImageFileHeader
 	{
 		char tag[3];
@@ -342,6 +368,18 @@ namespace iw4::native
 		GfxImage* secondary;
 	};
 
+	struct GfxLightImage
+	{
+		GfxImage* image;
+		unsigned char samplerState;
+	};
+
+	struct GfxLightDef
+	{
+		const char* name;
+		GfxLightImage attenuation;
+		int lmapLookupStart;
+	};
 
 	struct GfxWorldDraw
 	{
@@ -534,41 +572,6 @@ namespace iw4::native
 		IMG_FLAG_DYNAMIC = 0x1000000,
 		IMG_FLAG_RENDER_TARGET = 0x2000000,
 		IMG_FLAG_SYSTEMMEM = 0x4000000,
-	};
-
-	struct G_GlassPiece
-	{
-		unsigned __int16 damageTaken;
-		unsigned __int16 collapseTime;
-		int lastStateChangeTime;
-		char impactDir;
-		char impactPos[2];
-	};
-
-	struct G_GlassName
-	{
-		char* nameStr;
-		unsigned __int16 name;
-		unsigned __int16 pieceCount;
-		unsigned __int16* pieceIndices;
-	};
-
-	struct G_GlassData
-	{
-		G_GlassPiece* glassPieces;
-		unsigned int pieceCount;
-		unsigned __int16 damageToWeaken;
-		unsigned __int16 damageToDestroy;
-		unsigned int glassNameCount;
-		G_GlassName* glassNames;
-		char pad[108];
-	};
-
-
-	struct GameWorldMp
-	{
-		const char* name;
-		G_GlassData* g_glassData;
 	};
 
 	union CollisionAabbTreeIndex
@@ -1874,13 +1877,13 @@ namespace iw4::native
 		//SndCurve* sndCurve;
 		//LoadedSound* loadSnd;
 		clipMap_t* clipMap;
-		//ComWorld* comWorld;
+		ComWorld* comWorld;
 		//GameWorldSp* gameWorldSp;
-		GameWorldMp* gameWorldMp;
+		game::native::GlassWorld* gameWorldMp;
 		MapEnts* mapEnts;
 		//FxWorld* fxWorld;
 		GfxWorld* gfxWorld;
-		//GfxLightDef* lightDef;
+		GfxLightDef* lightDef;
 		//Font_s* font;
 		//MenuList* menuList;
 		//menuDef_t* menu;

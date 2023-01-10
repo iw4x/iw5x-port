@@ -8,9 +8,9 @@
 
 namespace asset_dumpers
 {
-	struct ixmodelsurf : asset_dumper
+	struct icomworld : asset_dumper
 	{
-		ixmodelsurf();
+		icomworld();
 
 	protected:
 		void convert(const game::native::XAssetHeader& header, iw4::native::XAssetHeader& out) override;

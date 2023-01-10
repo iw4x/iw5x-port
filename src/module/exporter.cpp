@@ -12,6 +12,9 @@
 #include <module/asset_dumpers/ixmodel.hpp>
 #include <module/asset_dumpers/iphyspreset.hpp>
 #include <module/asset_dumpers/igfxworld.hpp>
+#include <module/asset_dumpers/iglassworld.hpp>
+#include <module/asset_dumpers/icomworld.hpp>
+#include <module/asset_dumpers/ilightdef.hpp>
 
 #include "exporter.hpp"
 #include <module/scheduler.hpp>
@@ -167,24 +170,36 @@ void exporter::dump_map(const command::params& params)
 	if (params.size() < 2) return;
 	std::string map_name = params[1];
 
-	console::info("dumping %s...\n", map_name.c_str());
+	scheduler::once([map_name]() {
 
-	//auto out_path = std::format("iw5xport_out/{}", map_name);
-	//game::native::Dvar_SetString(export_path_dvar, out_path.c_str());
+		console::info("dumping %s...\n", map_name.c_str());
 
-	command::execute(std::format("loadzone {}", map_name), true);
-	
-	while (!DB_Update())
-	{
-		Sleep(1u);
-	}
+		//auto out_path = std::format("iw5xport_out/{}", map_name);
+		//game::native::Dvar_SetString(export_path_dvar, out_path.c_str());
 
-	command::execute("dumpGfxWorld", true);
+		command::execute(std::format("loadzone {}", map_name), true);
 
-	console::info("done!\n");
+		while (!DB_Update())
+		{
+			Sleep(1u);
+		}
 
-	// Clear memory of everybody
-	initialize_exporters();
+		console::info("dumping comworld...\n", map_name.c_str());
+		command::execute("dumpComWorld", true);
+
+		console::info("dumping glassworld...\n", map_name.c_str());
+		command::execute("dumpGlassWorld", true);
+
+		console::info("dumping gfxworld...\n", map_name.c_str());
+		command::execute("dumpGfxWorld", true);
+
+		console::info("done!\n");
+
+		// Clear memory of everybody
+		initialize_exporters();
+
+
+	}, scheduler::main);
 }
 
 void exporter::add_commands()
@@ -255,6 +270,9 @@ void exporter::initialize_exporters()
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_PHYSPRESET] = new asset_dumpers::iphyspreset();
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_XMODEL] = new asset_dumpers::ixmodel();
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_GFXWORLD] = new asset_dumpers::igfxworld();
+	asset_dumpers[game::native::XAssetType::ASSET_TYPE_GLASSWORLD] = new asset_dumpers::iglassworld();
+	asset_dumpers[game::native::XAssetType::ASSET_TYPE_COMWORLD] = new asset_dumpers::icomworld();
+	asset_dumpers[game::native::XAssetType::ASSET_TYPE_LIGHT_DEF] = new asset_dumpers::ilightdef();
 }
 
 bool exporter::exporter_exists(game::native::XAssetType assetType)

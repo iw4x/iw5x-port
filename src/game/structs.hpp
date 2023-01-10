@@ -535,6 +535,70 @@ namespace game
 			AddonMapEnts* addonMapEnts;
 		};
 
+
+		struct ComPrimaryLight
+		{
+			unsigned char type;
+			unsigned char canUseShadowMap;
+			unsigned char exponent;
+			unsigned char unused;
+			float color[3];
+			float dir[3];
+			float up[3];
+			float origin[3];
+			float radius;
+			float cosHalfFovOuter;
+			float cosHalfFovInner;
+			float cosHalfFovExpanded;
+			float rotationLimit;
+			float translationLimit;
+			const char* defName;
+		};
+
+		struct ComWorld
+		{
+			const char* name;
+			int isInUse;
+			unsigned int primaryLightCount;
+			ComPrimaryLight* primaryLights;
+		};
+
+
+		struct G_GlassPiece
+		{
+			unsigned __int16 damageTaken;
+			unsigned __int16 collapseTime;
+			int lastStateChangeTime;
+			char impactDir;
+			char impactPos[2];
+		};
+
+		struct G_GlassName
+		{
+			char* nameStr;
+			unsigned __int16 name;
+			unsigned __int16 pieceCount;
+			unsigned __int16* pieceIndices;
+		};
+
+		struct G_GlassData
+		{
+			G_GlassPiece* glassPieces;
+			unsigned int pieceCount;
+			unsigned __int16 damageToWeaken;
+			unsigned __int16 damageToDestroy;
+			unsigned int glassNameCount;
+			G_GlassName* glassNames;
+			char pad[108];
+		};
+
+
+		struct GlassWorld
+		{
+			const char* name;
+			G_GlassData* g_glassData;
+		};
+
 		struct GfxImageLoadDef
 		{
 			char levelCount;
@@ -600,6 +664,20 @@ namespace game
 			unsigned short depth;
 			unsigned char levelCount;
 			const char* name;
+		};
+
+		struct GfxLightImage
+		{
+			GfxImage* image;
+			unsigned char samplerState;
+		};
+
+		struct GfxLightDef
+		{
+			const char* name;
+			GfxLightImage attenuation;
+			GfxLightImage cucoloris;
+			int lmapLookupStart;
 		};
 
 		enum MaterialTechniqueType
