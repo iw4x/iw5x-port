@@ -69,7 +69,7 @@ namespace asset_dumpers
 		SET_MEMBER_NO_CONVERSION(materialMemoryCount);
 
 		iw4_world->materialMemory = local_allocator.allocate_array<iw4::native::MaterialMemory>(iw4_world->materialMemoryCount);
-		for (size_t i = 0; i < iw4_world->materialMemoryCount; i++)
+		for (auto i = 0; i < iw4_world->materialMemoryCount; i++)
 		{
 			iw4_world->materialMemory[i].memory = native_world->materialMemory[i].memory;
 			iw4_world->materialMemory[i].material = exporter::dump(game::native::ASSET_TYPE_MATERIAL, {native_world->materialMemory[i].material}).material;
@@ -423,7 +423,7 @@ namespace asset_dumpers
 		if (native_dpvs_static.smodelDrawInsts)
 		{
 			// data is already good but we need to dump every model
-			for (auto i = 0; i < iw4_dpvs_static.smodelCount; i++)
+			for (unsigned int i = 0; i < iw4_dpvs_static.smodelCount; i++)
 			{
 				auto inst = &iw4_dpvs_static.smodelDrawInsts[i];
 				inst->model = exporter::dump(game::native::XAssetType::ASSET_TYPE_XMODEL, { inst->model }).model;
@@ -469,7 +469,7 @@ namespace asset_dumpers
 
 		SET_MEMBER_NO_CONVERSION(lightmapCount);
 		iw4_draw.lightmaps = local_allocator.allocate_array<iw4::native::GfxLightmapArray>(iw4_draw.lightmapCount);
-		for (size_t i = 0; i < iw4_draw.lightmapCount; i++)
+		for (auto i = 0; i < iw4_draw.lightmapCount; i++)
 		{
 			if (native_draw.lightmaps[i].primary)
 			{

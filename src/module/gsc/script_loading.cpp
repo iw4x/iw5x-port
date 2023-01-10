@@ -13,6 +13,8 @@
 #include <xsk/gsc/types.hpp>
 #include <xsk/gsc/interfaces/compiler.hpp>
 #include <xsk/gsc/interfaces/assembler.hpp>
+#include <xsk/gsc/interfaces/decompiler.hpp>
+#include <xsk/gsc/interfaces/disassembler.hpp>
 #include <xsk/utils/compression.hpp>
 #include <xsk/resolver.hpp>
 #include <interface.hpp>
@@ -105,8 +107,8 @@ namespace gsc
 			const auto stack_size = compressed.size();
 			const auto byte_code_size = script.size() + 1;
 
-			script_file_ptr->buffer = static_cast<char*>(game::native::Hunk_AllocateTempMemoryHighInternal(stack_size));
-			std::memcpy(const_cast<char*>(script_file_ptr->buffer), compressed.data(), compressed.size());
+			script_file_ptr->buffer = static_cast<unsigned char*>(game::native::Hunk_AllocateTempMemoryHighInternal(stack_size));
+			std::memcpy(script_file_ptr->buffer, compressed.data(), compressed.size());
 
 			script_file_ptr->bytecode = static_cast<std::uint8_t*>(game::native::PMem_AllocFromSource_NoDebug(byte_code_size, 4, 0, game::native::PMEM_SOURCE_SCRIPT));
 			std::memcpy(script_file_ptr->bytecode, script.data(), script.size());

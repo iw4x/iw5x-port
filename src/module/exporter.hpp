@@ -14,6 +14,9 @@ public:
 	static iw4::native::XAssetHeader dump(game::native::XAssetType type, game::native::XAssetHeader header);
 
 private:
+	static void DB_AddXAsset_Hk(game::native::XAssetType type, game::native::XAssetHeader* header);
+	static void DB_AddXAsset_stub();
+
 	static void load_common_zones();
 	static void initialize_exporters();
 	static bool exporter_exists(game::native::XAssetType assetType);
@@ -23,7 +26,11 @@ private:
 	static void add_commands();
 
 	static class asset_dumper* asset_dumpers[game::native::ASSET_TYPE_COUNT];
-	static bool ready;
 	static const game::native::dvar_t* export_path_dvar;
+
+	static std::vector<std::string> captured_scripts;
+	static std::vector<std::string> captured_rawfiles;
+	static bool capture;
+	static bool ready;
 };
 

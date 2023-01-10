@@ -1859,6 +1859,7 @@ namespace iw4::native
 		FxElemDef* elemDefs;
 	};
 
+
 	union XAssetHeader
 	{
 		void* data;
@@ -1892,7 +1893,7 @@ namespace iw4::native
 		//SndDriverGlobals* sndDriverGlobals;
 		FxEffectDef* fx;
 		//FxImpactTable* impactFx;
-		//RawFile* rawfile;
+		game::native::RawFile* rawfile;
 		//StringTable* stringTable;
 		//LeaderboardDef* leaderboardDef;
 		//StructuredDataDefSet* structuredDataDefSet;

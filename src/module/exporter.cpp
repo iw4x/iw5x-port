@@ -15,6 +15,8 @@
 #include <module/asset_dumpers/iglassworld.hpp>
 #include <module/asset_dumpers/icomworld.hpp>
 #include <module/asset_dumpers/ilightdef.hpp>
+#include <module/asset_dumpers/iscriptfile.hpp>
+#include <module/asset_dumpers/irawfile.hpp>
 
 #include "exporter.hpp"
 #include <module/scheduler.hpp>
@@ -23,7 +25,11 @@
 #include "asset_dumper.hpp"
 
 const game::native::dvar_t* exporter::export_path_dvar;
+
 asset_dumper* exporter::asset_dumpers[game::native::ASSET_TYPE_COUNT]{};
+std::vector<std::string> exporter::captured_scripts{};
+std::vector<std::string> exporter::captured_rawfiles{};
+bool exporter::capture = false;
 bool exporter::ready = false;
 
 
@@ -177,12 +183,39 @@ void exporter::dump_map(const command::params& params)
 		//auto out_path = std::format("iw5xport_out/{}", map_name);
 		//game::native::Dvar_SetString(export_path_dvar, out_path.c_str());
 
+		capture = true;
 		command::execute(std::format("loadzone {}", map_name), true);
+		capture = false;
 
 		while (!DB_Update())
 		{
 			Sleep(1u);
 		}
+
+		for (const auto& script : captured_scripts)
+		{
+			// No OPAQUE strings, they're usually system, not needed i think?
+			if (script[0] > '9')
+			{
+				command::execute(std::format("dumpScript {}", script), true);
+			}
+		}
+
+		for (const auto& rawfiles : captured_rawfiles)
+		{
+			command::execute(std::format("dumpRawFile {}", rawfiles), true);
+		}
+
+		captured_rawfiles.clear();
+		captured_scripts.clear();
+
+		//command::execute(std::format("dumpScript maps/mp/{}", map_name), true);
+		//command::execute(std::format("dumpScript maps/mp/{}_precache", map_name), true);
+		//command::execute(std::format("dumpScript maps/createart/{}_art", map_name), true);
+
+		//command::execute(std::format("dumpScript maps/mp/{}_fx", map_name), true);
+		//command::execute(std::format("dumpScript maps/createfx/{}_fx", map_name), true);
+		//command::execute(std::format("dumpScript maps/createart/{}_fog", map_name), true);
 
 		console::info("dumping comworld...\n", map_name.c_str());
 		command::execute("dumpComWorld", true);
@@ -273,6 +306,8 @@ void exporter::initialize_exporters()
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_GLASSWORLD] = new asset_dumpers::iglassworld();
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_COMWORLD] = new asset_dumpers::icomworld();
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_LIGHT_DEF] = new asset_dumpers::ilightdef();
+	asset_dumpers[game::native::XAssetType::ASSET_TYPE_SCRIPTFILE] = new asset_dumpers::iscriptfile();
+	asset_dumpers[game::native::XAssetType::ASSET_TYPE_RAWFILE] = new asset_dumpers::irawfile();
 }
 
 bool exporter::exporter_exists(game::native::XAssetType assetType)
@@ -293,7 +328,7 @@ iw4::native::XAssetHeader exporter::dump(game::native::XAssetType type, game::na
 	}
 }
 
-void DB_AddXAsset_Hk(game::native::XAssetType type, game::native::XAssetHeader* header)
+void exporter::DB_AddXAsset_Hk(game::native::XAssetType type, game::native::XAssetHeader* header)
 {
 	if (reinterpret_cast<void*>(-1) == header)
 	{
@@ -305,88 +340,29 @@ void DB_AddXAsset_Hk(game::native::XAssetType type, game::native::XAssetHeader* 
 	auto asset = game::native::XAsset{ type, *header };
 	auto assetName = game::native::DB_GetXAssetName(&asset);
 
+	if (capture)
+	{
+		switch (type)
+		{
+
+		case game::native::XAssetType::ASSET_TYPE_SCRIPTFILE:
+			captured_scripts.push_back(asset.header.scriptfile->name);
+			break;
+
+		case game::native::XAssetType::ASSET_TYPE_RAWFILE:
+			captured_rawfiles.push_back(asset.header.rawfile->name);
+			break;
+		}
+	}
+
 	///
 	if (type == game::native::XAssetType::ASSET_TYPE_GFXWORLD)
 	{
 		//console::info("loading %s %s\n", name, assetName);
 	}
-
-	if (type == game::native::XAssetType::ASSET_TYPE_MATERIAL)
-	{
-		for (auto i = 0; i < header->material->textureCount; i++)
-		{
-			if (header->material->textureTable[i].semantic == 0xB)
-			{
-				printf("");
-			}
-		}
-	}
-
-	if (type == game::native::XAssetType::ASSET_TYPE_XMODEL)
-	{
-		if (assetName == "machinery_baggage_container_white"s)
-		{
-			printf("");
-
-			/*
-	struct XSurface
-	{
-		unsigned char tileMode;
-		bool deformed;
-		unsigned __int16 vertCount;
-		unsigned __int16 triCount;
-		char zoneHandle;
-		unsigned __int16 baseTriIndex;
-		unsigned __int16 baseVertIndex;
-		unsigned __int16* triIndices;
-		game::native::XSurfaceVertexInfo vertInfo;
-		GfxPackedVertex* verts0;
-		unsigned int vertListCount;
-		game::native::XRigidVertList* vertList;
-		int partBits[6];
-	};
-			
-			*/
-
-			std::ofstream f(std::string(assetName) + "iw5.txt");
-			auto lod = &asset.header.model->lodInfo[0];
-			f << "model " << asset.header.model->name << " with flags " << (unsigned int)asset.header.model->flags << "\n";
-			for (size_t i = 0; i < lod->numsurfs; i++)
-			{
-				auto surf = &lod->surfs[i];
-				
-				f << "surface #" << i << "\n";
-				f << "flags " << (unsigned int)surf->flags << "\n";
-				f << "vertcount " << surf->vertCount << "\n";
-				f << "tricount " << surf->triCount << "\n";
-				f << "basetriindex " << surf->baseTriIndex << "\n";
-				f << "basevertindex " << surf->baseVertIndex << "\n";
-				
-				f << "tri indices: \n";
-				for (size_t j = 0; j < surf->triCount; j++)
-				{
-					f << "    " << surf->triIndices[j];
-				}
-
-				f << "vertices: \n";
-				for (size_t j = 0; j < surf->vertCount; j++)
-				{
-					f << "    x: " << surf->verts0.packedVerts0[j].xyz[0]
-						<< " y: " << surf->verts0.packedVerts0[j].xyz[1]
-						<< " z: " << surf->verts0.packedVerts0[j].xyz[2]
-						<< "\n";
-				}
-			}
-
-			f.close();
-
-			printf("");
-		}
-	}
-	///
 }
 
-void __declspec(naked) DB_AddXAsset_stub()
+void __declspec(naked) exporter::DB_AddXAsset_stub()
 {
 	__asm
 	{
@@ -395,7 +371,7 @@ void __declspec(naked) DB_AddXAsset_stub()
 		push ecx
 		push[esp + 0x20 + 8]
 
-		call DB_AddXAsset_Hk
+		call exporter::DB_AddXAsset_Hk
 
 		add esp, 8
 
@@ -422,7 +398,7 @@ void Sys_Error_Hk(LPCSTR str)
 void exporter::post_load()
 {
 	// OnFindAsset
-	utils::hook(0x4CAC50, DB_AddXAsset_stub, HOOK_JUMP).install()->quick();
+	utils::hook(0x4CAC50, exporter::DB_AddXAsset_stub, HOOK_JUMP).install()->quick();
 
 	// Hide splash window
 	utils::hook::nop(0x5CCE28, 5);

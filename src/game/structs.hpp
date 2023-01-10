@@ -436,16 +436,16 @@ namespace game
 			int compressedLen;
 			int len;
 			int bytecodeLen;
-			const char* buffer;
+			unsigned char* buffer;
 			unsigned char* bytecode;
 		};
 
 		struct RawFile
 		{
 			const char* name;
-			int compressedLen;
-			int len;
-			const char* buffer;
+			unsigned int compressedLen;
+			unsigned int len;
+			char* buffer;
 		};
 
 		struct PhysPreset;
