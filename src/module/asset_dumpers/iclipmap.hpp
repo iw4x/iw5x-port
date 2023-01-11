@@ -8,13 +8,12 @@
 
 namespace asset_dumpers
 {
-	struct iscriptfile : asset_dumper
+	struct iclipmap : asset_dumper
 	{
-		iscriptfile();
+		iclipmap();
 
 	protected:
 		void convert(const game::native::XAssetHeader& header, iw4::native::XAssetHeader& out) override;
-		std::string get_converted_fog(const std::string& original);
 		void write(const iw4::native::XAssetHeader& header) override;
 	};
 }

@@ -573,33 +573,7 @@ namespace iw4::native
 		IMG_FLAG_RENDER_TARGET = 0x2000000,
 		IMG_FLAG_SYSTEMMEM = 0x4000000,
 	};
-
-	union CollisionAabbTreeIndex
-	{
-		int firstChildIndex;
-		int partitionIndex;
-	};
-
-	struct CollisionAabbTree
-	{
-		float midPoint[3];
-		unsigned __int16 materialIndex;
-		unsigned __int16 childCount;
-		float halfSize[3];
-		CollisionAabbTreeIndex u;
-	};
-
-	struct cbrush_t
-	{
-		unsigned __int16 numsides;
-		unsigned __int16 glassPieceIndex;
-		game::native::cbrushside_t* sides;
-		char* baseAdjacentSide;
-		__int16 axialMaterialNum[2][3];
-		char firstAdjacentSideOffsets[2][3];
-		char edgeCount[2][3];
-	};
-
+	
 	union PackedTexCoords
 	{
 		unsigned int packed;
@@ -721,17 +695,6 @@ namespace iw4::native
 		int contentFlags;
 	};
 
-	struct cLeaf_t
-	{
-		unsigned __int16 firstCollAabbIndex;
-		unsigned __int16 collAabbCount;
-		int brushContents;
-		int terrainContents;
-		game::native::Bounds bounds;
-		int leafBrushNode;
-	};
-
-
 	struct cLeafBrushNodeLeaf_t
 	{
 		unsigned short* brushes;
@@ -744,44 +707,6 @@ namespace iw4::native
 		int contents;
 		cLeafBrushNodeLeaf_t data;
 		char pad[8];
-	};
-
-	struct cmodel_t
-	{
-		game::native::Bounds bounds;
-		float radius;
-		cLeaf_t leaf;
-	};
-
-	struct SModelAabbNode
-	{
-		game::native::Bounds bounds;
-		unsigned __int16 firstChild;
-		unsigned __int16 childCount;
-	};
-
-	struct cNode_t
-	{
-		game::native::cplane_s* plane;
-		unsigned short children[2];
-	};
-
-	struct CollisionBorder
-	{
-		float distEq[3];
-		float zBase;
-		float zSlope;
-		float start;
-		float length;
-	};
-
-	struct CollisionPartition
-	{
-		char triCount;
-		char borderCount;
-		char firstVertSegment;
-		int firstTri;
-		CollisionBorder* borders;
 	};
 
 	struct MapEnts
@@ -802,16 +727,10 @@ namespace iw4::native
 		DYNENT_TYPE_COUNT = 0x3,
 	};
 
-	struct GfxPlacement
-	{
-		float quat[4];
-		float origin[3];
-	};
-
 	struct DynEntityDef
 	{
 		DynEntityType type;
-		GfxPlacement pose;
+		game::native::GfxPlacement pose;
 		XModel* xModel;
 		unsigned short brushModel;
 		unsigned short physicsBrushModel;
@@ -822,60 +741,80 @@ namespace iw4::native
 		int contents;
 	};
 
+	struct DynEntityClient
+	{
+		int physObjId;
+		unsigned short flags;
+		unsigned short lightingHandle;
+		int health;
+	};
+
+	struct cStaticModel_s
+	{
+		XModel* xmodel;
+		float origin[3];
+		float invScaledAxis[3][3];
+		game::native::Bounds absBounds;
+	};
+
+	struct cmodel_t
+	{
+		game::native::Bounds bounds;
+		float radius;
+		game::native::cLeaf_t leaf;
+	};
+
 	struct clipMap_t
 	{
 		const char* name;
-		int isInUse; // +8
-		int numCPlanes; // +8
-		game::native::cplane_s* cPlanes; // sizeof 20, +12
-		int numStaticModels; // +16
-		cStaticModel_t* staticModelList; // sizeof 76, +20
-		int numMaterials; // +24
-		dmaterial_t* materials; // sizeof 12 with a string (possibly name?), +28
-		int numCBrushSides; // +32
-		game::native::cbrushside_t* cBrushSides; // sizeof 8, +36
-		int numCBrushEdges; // +40
-		char* cBrushEdges; // +44
-		int numCNodes; // +48
-		cNode_t* cNodes; // sizeof 8, +52
-		int numCLeaf; // +56
-		cLeaf_t* cLeaf; // +60
-		int numCLeafBrushNodes; // +64
-		cLeafBrushNode_t* cLeafBrushNodes; // +68
-		int numLeafBrushes; // +72
-		short* leafBrushes; // +76
-		int numLeafSurfaces; // +80
-		int* leafSurfaces; // +84
-		int numVerts; // +88
-		game::native::vec3_t* verts; // +92
-		int numTriIndices; // +96
-		short* triIndices; // +100
-		bool* triEdgeIsWalkable; // +104
-		int numCollisionBorders; // +108
-		CollisionBorder* collisionBorders;// sizeof 28, +112
-		int numCollisionPartitions; // +116
-		CollisionPartition* collisionPartitions; // sizeof 12, +120
-		int numCollisionAABBTrees; // +124
-		CollisionAabbTree* collisionAABBTrees;// sizeof 32, +128
-		int numCModels; // +132
-		cmodel_t* cModels; // sizeof 68, +136
-		short numCBrushes; // +140
-		short pad2; // +142
-		cbrush_t* cBrushes; // sizeof 36, +144
-		game::native::Bounds* cBrushBounds; // same count as cBrushes, +148
-		int* cBrushContents; // same count as cBrushes, +152
-		MapEnts* mapEnts; // +156
+		int isInUse;
+		int planeCount;
+		game::native::cplane_s* planes;
+		unsigned int numStaticModels;
+		cStaticModel_s* staticModelList;
+		unsigned int numMaterials;
+		game::native::ClipMaterial* materials;
+		unsigned int numBrushSides;
+		game::native::cbrushside_t* brushsides;
+		unsigned int numBrushEdges;
+		game::native::cbrushedge_t* brushEdges;
+		unsigned int numNodes;
+		game::native::cNode_t* nodes;
+		unsigned int numLeafs;
+		game::native::cLeaf_t* leafs;
+		unsigned int leafbrushNodesCount;
+		game::native::cLeafBrushNode_s* leafbrushNodes;
+		unsigned int numLeafBrushes;
+		unsigned __int16* leafbrushes;
+		unsigned int numLeafSurfaces;
+		unsigned int* leafsurfaces;
+		unsigned int vertCount;
+		float(*verts)[3];
+		int triCount;
+		unsigned __int16* triIndices;
+		unsigned char* triEdgeIsWalkable;
+		int borderCount;
+		game::native::CollisionBorder* borders;
+		int partitionCount;
+		game::native::CollisionPartition* partitions;
+		int aabbTreeCount;
+		game::native::CollisionAabbTree* aabbTrees;
+		unsigned int numSubModels;
+		cmodel_t* cmodels;
+		unsigned __int16 numBrushes;
+		game::native::cbrush_t* brushes;
+		game::native::Bounds* brushBounds;
+		int* brushContents;
+		MapEnts* mapEnts;
 		unsigned __int16 smodelNodeCount;
-		short pad; // +160
-		SModelAabbNode* smodelNodes;
+		game::native::SModelAabbNode* smodelNodes;
 		unsigned __int16 dynEntCount[2];
 		DynEntityDef* dynEntDefList[2];
-		/*DynEntityPose*/ void* dynEntPoseList[2];
-		/*DynEntityClient*/ void* dynEntClientList[2];
-		/*DynEntityColl*/ void* dynEntCollList[2];
+		game::native::DynEntityPose* dynEntPoseList[2];
+		DynEntityClient* dynEntClientList[2];
+		game::native::DynEntityColl* dynEntCollList[2];
 		unsigned int checksum;
-		char unknown5[0x30];
-	}; // +256
+	};
 
 	enum MaterialTechniqueType
 	{

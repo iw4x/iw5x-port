@@ -3091,6 +3091,257 @@ namespace game
 			int exponent;
 		};
 
+
+		struct SModelAabbNode
+		{
+			Bounds bounds;
+			unsigned short firstChild;
+			unsigned short childCount;
+		};
+
+		enum DynEntityType
+		{
+			DYNENT_TYPE_INVALID = 0x0,
+			DYNENT_TYPE_CLUTTER = 0x1,
+			DYNENT_TYPE_DESTRUCT = 0x2,
+			DYNENT_TYPE_HINGE = 0x3,
+			DYNENT_TYPE_COUNT = 0x4
+		};
+
+		struct GfxPlacement
+		{
+			float quat[4];
+			float origin[3];
+		};
+
+		struct DynEntityHingeDef
+		{
+			float axisOrigin[3];
+			float axisDir[3];
+			bool isLimited;
+			float angleMin;
+			float angleMax;
+			float momentOfInertia;
+			float friction;
+		};
+
+		struct DynEntityDef
+		{
+			DynEntityType type;
+			GfxPlacement pose;
+			XModel* xModel;
+			unsigned short brushModel;
+			unsigned short physicsBrushModel;
+			FxEffectDef* destroyFx;
+			PhysPreset* physPreset;
+			int health;
+			DynEntityHingeDef* hinge;
+			PhysMass mass;
+			int contents;
+		};
+
+		struct DynEntityPose
+		{
+			GfxPlacement pose;
+			float radius;
+		};
+
+		struct Hinge
+		{
+			float angle;
+			float quat[4];
+			float angularVel;
+			float torqueAccum;
+			bool active;
+			float autoDisableTimeLeft;
+			DynEntityHingeDef* def;
+			PhysPreset* physPreset;
+			float centerOfMassRelToAxisOriginAtAngleZero[3];
+		};
+
+		struct DynEntityClient
+		{
+			int physObjId;
+			unsigned short flags;
+			unsigned short lightingHandle;
+			int health;
+			Hinge* hinge;
+		};
+
+		struct DynEntityColl
+		{
+			unsigned short sector;
+			unsigned short nextEntInSector;
+			float linkMins[2];
+			float linkMaxs[2];
+		};
+
+
+		struct ClipMaterial
+		{
+			const char* name;
+			int surfaceFlags;
+			int contents;
+		};
+
+		struct cLeafBrushNodeLeaf_t
+		{
+			unsigned short* brushes;
+		};
+
+		struct cLeafBrushNodeChildren_t
+		{
+			float dist;
+			float range;
+			unsigned short childOffset[2];
+		};
+
+		union cLeafBrushNodeData_t
+		{
+			cLeafBrushNodeLeaf_t leaf;
+			cLeafBrushNodeChildren_t children;
+		};
+
+		struct cLeafBrushNode_s
+		{
+			unsigned char axis;
+			short leafBrushCount;
+			int contents;
+			cLeafBrushNodeData_t data;
+		};
+
+
+		struct cbrush_t
+		{
+			unsigned short numsides;
+			unsigned short glassPieceIndex;
+			cbrushside_t* sides;
+			cbrushedge_t* baseAdjacentSide;
+			short axialMaterialNum[2][3];
+			unsigned char firstAdjacentSideOffsets[2][3];
+			unsigned char edgeCount[2][3];
+		};
+
+		struct ClipInfo
+		{
+			int planeCount;
+			cplane_s* planes;
+			unsigned int numMaterials;
+			ClipMaterial* materials;
+			unsigned int numBrushSides;
+			cbrushside_t* brushsides;
+			unsigned int numBrushEdges;
+			cbrushedge_t* brushEdges;
+			unsigned int leafbrushNodesCount;
+			cLeafBrushNode_s* leafbrushNodes;
+			unsigned int numLeafBrushes;
+			unsigned short* leafbrushes;
+			unsigned short numBrushes;
+			cbrush_t* brushes;
+			Bounds* brushBounds;
+			int* brushContents;
+		};
+
+		struct cStaticModel_s
+		{
+			XModel* xmodel;
+			float origin[3];
+			float invScaledAxis[3][3];
+			Bounds absBounds;
+		};
+
+		struct cNode_t
+		{
+			cplane_s* plane;
+			short children[2];
+		};
+
+
+		struct cLeaf_t
+		{
+			unsigned short firstCollAabbIndex;
+			unsigned short collAabbCount;
+			int brushContents;
+			int terrainContents;
+			Bounds bounds;
+			int leafBrushNode;
+		};
+
+		struct CollisionBorder
+		{
+			float distEq[3];
+			float zBase;
+			float zSlope;
+			float start;
+			float length;
+		};
+
+		struct CollisionPartition
+		{
+			unsigned char triCount;
+			unsigned char borderCount;
+			unsigned char firstVertSegment;
+			int firstTri;
+			CollisionBorder* borders;
+		};
+
+		struct CollisionAabbTree
+		{
+			float midPoint[3];
+			unsigned short materialIndex;
+			unsigned short childCount;
+			float halfSize[3];
+			unsigned int u;
+		};
+
+		struct cmodel_t
+		{
+			Bounds bounds;
+			float radius;
+			ClipInfo* info;
+			cLeaf_t leaf;
+		};
+
+		struct clipMap_t
+		{
+			const char* name;
+			int isInUse;
+			ClipInfo info;
+			ClipInfo* pInfo;
+			unsigned int numStaticModels;
+			cStaticModel_s* staticModelList;
+			unsigned int numNodes;
+			cNode_t* nodes;
+			unsigned int numLeafs;
+			cLeaf_t* leafs;
+			unsigned int vertCount;
+			vec3_t* verts;
+			int triCount;
+			unsigned short* triIndices;
+			unsigned char* triEdgeIsWalkable;
+			int borderCount;
+			CollisionBorder* borders;
+			int partitionCount;
+			CollisionPartition* partitions;
+			int aabbTreeCount;
+			CollisionAabbTree* aabbTrees;
+			unsigned int numSubModels;
+			cmodel_t* cmodels;
+			MapEnts* mapEnts;
+			Stage* stages;
+			unsigned char stageCount;
+			MapTriggers stageTrigger;
+			unsigned short smodelNodeCount;
+			SModelAabbNode* smodelNodes;
+			unsigned short dynEntCount[2];
+			DynEntityDef* dynEntDefList[2];
+			DynEntityPose* dynEntPoseList[2];
+			DynEntityClient* dynEntClientList[2];
+			DynEntityColl* dynEntCollList[2];
+			unsigned int checksum;
+			unsigned char padding[20];
+		};
+
 		namespace mp
 		{
 			enum ConfigString

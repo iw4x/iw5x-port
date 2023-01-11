@@ -120,7 +120,11 @@ namespace asset_dumpers
 
 	void imapents::write(const iw4::native::XAssetHeader& header)
 	{
-		utils::io::write_file(std::format("{}/mapents/{}.ents", get_export_path(), header.mapEnts->name), header.mapEnts->entityString);
+		std::string basename(header.mapEnts->name);
+		basename.erase(0, 8);
+		basename.erase(basename.end() - 7, basename.end());
+
+		utils::io::write_file(std::format("{}/mapents/{}.ents", get_export_path(), basename), header.mapEnts->entityString);
 	}
 
 	imapents::imapents()

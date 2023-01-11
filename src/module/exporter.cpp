@@ -18,6 +18,7 @@
 #include <module/asset_dumpers/iscriptfile.hpp>
 #include <module/asset_dumpers/irawfile.hpp>
 #include <module/asset_dumpers/imapents.hpp>
+#include <module/asset_dumpers/iclipmap.hpp>
 
 #include "exporter.hpp"
 #include <module/scheduler.hpp>
@@ -165,9 +166,9 @@ void exporter::perform_common_initialization()
 	add_commands();
 
 
+	DB_Update();
 	Com_AddStartupCommands();
 
-	DB_Update();
 	Com_EventLoop();
 	Cbuf_Execute(0, 0);
 }
@@ -184,6 +185,8 @@ void exporter::dump_map(const command::params& params)
 		//auto out_path = std::format("iw5xport_out/{}", map_name);
 		//game::native::Dvar_SetString(export_path_dvar, out_path.c_str());
 
+		command::execute(std::format("loadzone {}_load", map_name), true);
+
 		capture = true;
 		command::execute(std::format("loadzone {}", map_name), true);
 		capture = false;
@@ -193,7 +196,7 @@ void exporter::dump_map(const command::params& params)
 			Sleep(1u);
 		}
 
-		for (const auto& script : captured_scripts)
+		for (const auto& script : exporter::captured_scripts)
 		{
 			// No OPAQUE strings, they're usually system, not needed i think?
 			if (script[0] > '9')
@@ -202,7 +205,7 @@ void exporter::dump_map(const command::params& params)
 			}
 		}
 
-		for (const auto& rawfiles : captured_rawfiles)
+		for (const auto& rawfiles : exporter::captured_rawfiles)
 		{
 			command::execute(std::format("dumpRawFile {}", rawfiles), true);
 		}
@@ -210,23 +213,37 @@ void exporter::dump_map(const command::params& params)
 		captured_rawfiles.clear();
 		captured_scripts.clear();
 
-		// These are dumped by capture
-		//command::execute(std::format("dumpScript maps/mp/{}", map_name), true);
-		//command::execute(std::format("dumpScript maps/mp/{}_precache", map_name), true);
-		//command::execute(std::format("dumpScript maps/createart/{}_art", map_name), true);
+		command::execute(std::format("dumpScript maps/mp/{}", map_name), true);
+		command::execute(std::format("dumpScript maps/mp/{}_precache", map_name), true);
+		command::execute(std::format("dumpScript maps/createart/{}_art", map_name), true);
 
-		//command::execute(std::format("dumpScript maps/mp/{}_fx", map_name), true);
-		//command::execute(std::format("dumpScript maps/createfx/{}_fx", map_name), true);
-		//command::execute(std::format("dumpScript maps/createart/{}_fog", map_name), true);
+		command::execute(std::format("dumpScript maps/mp/{}_fx", map_name), true);
+		command::execute(std::format("dumpScript maps/createfx/{}_fx", map_name), true);
+		command::execute(std::format("dumpScript maps/createart/{}_fog", map_name), true);
 
-		console::info("dumping comworld...\n", map_name.c_str());
+		console::info("dumping comworld %s...\n", map_name.c_str());
 		command::execute("dumpComWorld", true);
 
-		console::info("dumping glassworld...\n", map_name.c_str());
+		console::info("dumping glassworld %s...\n", map_name.c_str());
 		command::execute("dumpGlassWorld", true);
 
-		console::info("dumping gfxworld...\n", map_name.c_str());
+		console::info("dumping gfxworld %s...\n", map_name.c_str());
 		command::execute("dumpGfxWorld", true);
+
+		console::info("dumping clipmap %s...\n", map_name.c_str());
+		command::execute("dumpClipMap", true);
+
+		console::info("Exporting Vision...\n");
+		command::execute(std::format("dumpRawFile vision/{}.vision", map_name.data()), true);
+
+		console::info("Exporting Sun...\n");
+		command::execute(std::format("dumpRawFile sun/{}.sun", map_name.data()), true);
+
+		console::info("Exporting Compass...\n");
+		command::execute(std::format("dumpMaterial compass_map_{}", map_name.data()), true);
+
+		console::info("Exporting Loadscreen...\n");
+		command::execute(std::format("dumpGfxImage loadscreen_{}", map_name.data()), true);
 
 		console::info("done!\n");
 
@@ -311,6 +328,7 @@ void exporter::initialize_exporters()
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_SCRIPTFILE] = new asset_dumpers::iscriptfile();
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_RAWFILE] = new asset_dumpers::irawfile();
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_MAP_ENTS] = new asset_dumpers::imapents();
+	asset_dumpers[game::native::XAssetType::ASSET_TYPE_CLIPMAP] = new asset_dumpers::iclipmap();
 }
 
 bool exporter::exporter_exists(game::native::XAssetType assetType)

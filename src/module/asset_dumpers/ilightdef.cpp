@@ -11,7 +11,7 @@
 #include "rapidjson/document.h"
 #include "rapidjson/prettywriter.h"
 
-#define IW4X_COMMAP_VERSION 0
+#define IW4X_LIGHT_VERSION "0"
 
 namespace asset_dumpers
 {
@@ -43,8 +43,7 @@ namespace asset_dumpers
 		auto asset = header.lightDef;
 
 		utils::stream buffer;
-		buffer.saveArray("IW4xComW", 8);
-		buffer.saveObject(IW4X_COMMAP_VERSION);
+		buffer.saveArray("IW4xLit" IW4X_LIGHT_VERSION, 8);
 
 		buffer.saveObject(*asset);
 

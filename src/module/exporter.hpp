@@ -12,6 +12,7 @@ typedef void (*##name##_t)();\
 public:
 	void post_load() override;
 	static iw4::native::XAssetHeader dump(game::native::XAssetType type, game::native::XAssetHeader header);
+	static std::string get_map_name() { return map_name; }
 
 private:
 	static void DB_AddXAsset_Hk(game::native::XAssetType type, game::native::XAssetHeader* header);
@@ -30,6 +31,7 @@ private:
 
 	static std::vector<std::string> captured_scripts;
 	static std::vector<std::string> captured_rawfiles;
+	static std::string map_name;
 	static bool capture;
 	static bool ready;
 };
