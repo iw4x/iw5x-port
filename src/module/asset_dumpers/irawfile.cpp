@@ -28,21 +28,24 @@ namespace asset_dumpers
 	{
 		assert(header.rawfile);
 		assert(header.rawfile->buffer);
-		assert(header.rawfile->len);
 
-		auto data = header.rawfile->buffer;
-		std::vector<unsigned char> data_decompressed;
-		if (header.rawfile->compressedLen > 0)
+		if (header.rawfile->len > 0)
 		{
-			auto data_compressed = std::vector<unsigned char>();
-			data_compressed.assign(header.rawfile->buffer, header.rawfile->buffer + header.rawfile->compressedLen);
-			data_decompressed = xsk::utils::zlib::decompress(data_compressed, header.rawfile->len);
-			auto decompressed_length = data_decompressed.size();
-			assert(decompressed_length == header.rawfile->len);
-			data = reinterpret_cast<char*>(data_decompressed.data());
-		}
 
-		utils::io::write_file(std::format("{}/{}", get_export_path(), header.rawfile->name), std::string(data, header.rawfile->len));
+			auto data = header.rawfile->buffer;
+			std::vector<unsigned char> data_decompressed;
+			if (header.rawfile->compressedLen > 0)
+			{
+				auto data_compressed = std::vector<unsigned char>();
+				data_compressed.assign(header.rawfile->buffer, header.rawfile->buffer + header.rawfile->compressedLen);
+				data_decompressed = xsk::utils::zlib::decompress(data_compressed, header.rawfile->len);
+				auto decompressed_length = data_decompressed.size();
+				assert(decompressed_length == header.rawfile->len);
+				data = reinterpret_cast<char*>(data_decompressed.data());
+			}
+
+			utils::io::write_file(std::format("{}/{}", get_export_path(), header.rawfile->name), std::string(data, header.rawfile->len));
+		}
 	}
 
 	irawfile::irawfile()

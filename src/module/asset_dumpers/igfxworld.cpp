@@ -689,12 +689,18 @@ namespace asset_dumpers
 	{
 		command::add("dumpGfxWorld", [&](const command::params& params)
 			{
+				game::native::XAssetHeader out{};
+
 				game::native::DB_EnumXAssets(game::native::XAssetType::ASSET_TYPE_GFXWORLD, [](game::native::XAssetHeader header, void* data) {
-					auto dumper = reinterpret_cast<igfxworld*>(data);
+					auto out = reinterpret_cast<game::native::XAssetHeader*>(data);
+					*out = header;
 
-					dumper->dump(header);
+					}, &out, false);
 
-					}, this, false);
+				if (out.data)
+				{
+					dump(out);
+				}
 			});
 	}
 }

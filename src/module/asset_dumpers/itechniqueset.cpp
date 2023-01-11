@@ -14,6 +14,7 @@
 
 #define IW4X_TECHSET_VERSION 1
 
+#define LITTERALIZE_SATURATION 1
 
 namespace asset_dumpers
 {
@@ -83,12 +84,14 @@ namespace asset_dumpers
 		{ game::native::CONST_SRC_CODE_PARTICLE_CLOUD_COLOR, iw4::native::CONST_SRC_CODE_PARTICLE_CLOUD_COLOR },
 		{ game::native::CONST_SRC_CODE_GAMETIME, iw4::native::CONST_SRC_CODE_GAMETIME },
 
-		{ game::native::CONST_SRC_CODE_EYEOFFSET, iw4::native::CONST_SRC_NONE }, // Wrong
+		//{ game::native::CONST_SRC_CODE_EYEOFFSET, iw4::native::CONST_SRC_NONE }, // Wrong
 
 		// We handle these manually
-		//{ game::native::CONST_SRC_CODE_COLOR_SATURATION_R, iw4::native::CONST_SRC_NONE }, 
-		//{ game::native::CONST_SRC_CODE_COLOR_SATURATION_G, iw4::native::CONST_SRC_NONE }, 
-		//{ game::native::CONST_SRC_CODE_COLOR_SATURATION_B, iw4::native::CONST_SRC_NONE },
+#if !LITTERALIZE_SATURATION
+		{ game::native::CONST_SRC_CODE_COLOR_SATURATION_R, iw4::native::CONST_SRC_CODE_LIGHT_POSITION },
+		{ game::native::CONST_SRC_CODE_COLOR_SATURATION_G, iw4::native::CONST_SRC_CODE_LIGHT_POSITION },
+		{ game::native::CONST_SRC_CODE_COLOR_SATURATION_B, iw4::native::CONST_SRC_CODE_LIGHT_POSITION },
+#endif
 
 		{ game::native::CONST_SRC_CODE_PIXEL_COST_FRACS, iw4::native::CONST_SRC_CODE_PIXEL_COST_FRACS },
 		{ game::native::CONST_SRC_CODE_PIXEL_COST_DECODE, iw4::native::CONST_SRC_CODE_PIXEL_COST_DECODE },
@@ -144,8 +147,8 @@ namespace asset_dumpers
 		{ game::native::CONST_SRC_CODE_VIEWPORT_DIMENSIONS, iw4::native::CONST_SRC_CODE_VIEWPORT_DIMENSIONS },
 		{ game::native::CONST_SRC_CODE_FRAMEBUFFER_READ, iw4::native::CONST_SRC_CODE_FRAMEBUFFER_READ },
 
-		{ game::native::CONST_SRC_CODE_THERMAL_COLOR_OFFSET, iw4::native::CONST_SRC_NONE }, // Wrong
-		{ game::native::CONST_SRC_CODE_PLAYLIST_POPULATION_PARAMS, iw4::native::CONST_SRC_NONE }, // Wrong but probably not important (lobby?)
+		//{ game::native::CONST_SRC_CODE_THERMAL_COLOR_OFFSET, iw4::native::CONST_SRC_CODE_LIGHT_POSITION }, // Wrong
+		//{ game::native::CONST_SRC_CODE_PLAYLIST_POPULATION_PARAMS, iw4::native::CONST_SRC_CODE_LIGHT_POSITION }, // Wrong but probably not important (lobby?)
 
 		{ game::native::CONST_SRC_CODE_BASE_LIGHTING_COORDS, iw4::native::CONST_SRC_CODE_BASE_LIGHTING_COORDS },
 		{ game::native::CONST_SRC_CODE_LIGHT_PROBE_AMBIENT, iw4::native::CONST_SRC_CODE_LIGHT_PROBE_AMBIENT },
@@ -311,15 +314,19 @@ namespace asset_dumpers
 		   iw4_techset->remappedTechniqueSet = exporter::dump(game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, { native_techset->remappedTechniqueSet }).techniqueSet;
 		}
 		else if (name.contains("_sm"))
-		{
-		   native_techset->remappedTechniqueSet = game::native::DB_FindXAssetHeader(
-			   game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, 
-			   std::regex_replace(native_techset->name, smRegx, "_hsm").data(),
-			   0
-		   ).techniqueSet;
+			{
+				auto hsm_version = std::regex_replace(native_techset->name, smRegx, "_hsm");
+			   native_techset->remappedTechniqueSet = game::native::DB_FindXAssetHeader(
+				   game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, 
+				   hsm_version.data(),
+				   0
+			   ).techniqueSet;
 
-		   iw4_techset->remappedTechniqueSet = exporter::dump(game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, { native_techset->remappedTechniqueSet }).techniqueSet;
-		}
+			   if (native_techset->remappedTechniqueSet)
+			   {
+				   iw4_techset->remappedTechniqueSet = exporter::dump(game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, { native_techset->remappedTechniqueSet }).techniqueSet;
+			   }
+			}
 
 		// copy techniques to correct spots
 		for (size_t i = 0; i < iw4::native::TECHNIQUE_COUNT; i++)
@@ -479,11 +486,15 @@ namespace asset_dumpers
 				if (native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_CODE_PIXEL_CONST 
 					|| native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_CODE_VERTEX_CONST)
 				{
+
+#if LITTERALIZE_SATURATION
 					// Handling special cases
-					if (native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_CODE_PIXEL_CONST &&
+					if (
+						native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_CODE_PIXEL_CONST &&
 						(native_arg->u.codeConst.index == game::native::CONST_SRC_CODE_COLOR_SATURATION_R ||
 						native_arg->u.codeConst.index == game::native::CONST_SRC_CODE_COLOR_SATURATION_G ||
 						native_arg->u.codeConst.index == game::native::CONST_SRC_CODE_COLOR_SATURATION_B))
+
 					{
 						iw4_arg->type = iw4::native::MTL_ARG_LITERAL_PIXEL_CONST;
 						auto new_litteral = local_allocator.allocate_array<float>(4);
@@ -505,6 +516,7 @@ namespace asset_dumpers
 					}
 					else
 					{
+#endif
 						if (native_arg->u.codeConst.index == game::native::CONST_SRC_CODE_UNK1)
 						{
 							__debugbreak();
@@ -520,7 +532,13 @@ namespace asset_dumpers
 
 						auto iw4_index = iw5_code_const_map.at(native_arg->u.codeConst.index);
 						iw4_arg->u.codeConst.index = iw4_index;
+
+						
+						assert(iw4_arg->u.codeConst.index < iw4::native::CONST_SRC_TOTAL_COUNT);
+
+#if LITTERALIZE_SATURATION
 					}
+#endif
 				}
 				else if (native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_CODE_PIXEL_SAMPLER)
 				{
@@ -543,6 +561,7 @@ namespace asset_dumpers
 				arguments_to_sort.push_back(*iw4_arg);
 			}
 
+#if LITTERALIZE_SATURATION
 			std::sort(arguments_to_sort.begin(), arguments_to_sort.end(), [this](const game::native::MaterialShaderArgument& arg1, const game::native::MaterialShaderArgument& arg2)
 				{
 					auto a1_freq = get_update_frequency(arg1);
@@ -569,43 +588,7 @@ namespace asset_dumpers
 				});
 
 			std::copy(arguments_to_sort.begin(), arguments_to_sort.end(), iw4_pass->args);
-			
-			printf("");
-
-#if DEBUG && 0
-			// Check arg count is correct
-			auto _perPrimArgCount = 0;
-			auto _perObjArgCount = 0;
-			auto _stableArgCount = 0;
-			for (int k = 0; k < iw4_pass->perPrimArgCount + iw4_pass->perObjArgCount + iw4_pass->stableArgCount; ++k)
-			{
-				const auto iw4_arg = &iw4_pass->args[k];
-
-				if (iw4_arg->type == iw4::native::MTL_ARG_CODE_VERTEX_CONST
-					|| iw4_arg->type == iw4::native::MTL_ARG_CODE_PIXEL_CONST
-					|| iw4_arg->type == iw4::native::MTL_ARG_MATERIAL_PIXEL_CONST
-					|| iw4_arg->type == iw4::native::MTL_ARG_LITERAL_PIXEL_CONST)
-				{
-					_stableArgCount++;
-				}
-
-				else if (iw4_arg->type == iw4::native::MTL_ARG_CODE_VERTEX_CONST)
-				{
-					_perPrimArgCount++;
-				}
-
-				else if (iw4_arg->type == iw4::native::MTL_ARG_CODE_PIXEL_SAMPLER ||
-					iw4_arg->type == iw4::native::MTL_ARG_MATERIAL_PIXEL_SAMPLER)
-				{
-					_perObjArgCount++;
-				}
-			}
-
-			assert(_perPrimArgCount == iw4_pass->perPrimArgCount);
-			assert(_perObjArgCount == iw4_pass->perObjArgCount);
-			assert(_stableArgCount == iw4_pass->stableArgCount);
 #endif
-
 		}
 
 		return iw4_technique;
@@ -688,6 +671,7 @@ namespace asset_dumpers
 					{
 						rapidjson::Value code_const(rapidjson::kObjectType);
 #if DEBUG
+						assert(iw4_arg->u.codeConst.index < ARRAYSIZE(iw4::native::Debug_ShaderCodeConstantsNames));
 						code_const.AddMember("index_debug", RAPIDJSON_STR(iw4::native::Debug_ShaderCodeConstantsNames[iw4_arg->u.codeConst.index]), allocator);
 #endif
 						
@@ -821,6 +805,8 @@ namespace asset_dumpers
 
 	iw4::native::MaterialUpdateFrequency itechniqueset::get_update_frequency(const game::native::MaterialShaderArgument& iw4_argument)
 	{
+		assert(iw4_argument.type < iw4::native::MTL_ARG_COUNT);
+
 		switch (iw4_argument.type)
 		{
 		case iw4::native::MTL_ARG_CODE_VERTEX_CONST:
