@@ -296,19 +296,30 @@ namespace asset_dumpers
 		// 
 
 		// No remapping for now
-		//static std::regex zFeatherRegx = std::regex("_zfeather");
-		//static std::regex smRegx = std::regex("_sm");
+		static std::regex zFeatherRegx = std::regex("_zfeather");
+		static std::regex smRegx = std::regex("_sm");
 
-		//if (name.contains("_zfeather"))
-		//{
-		//    techset->remappedTechniqueSet = game::native::DB_FindXAssetHeader(game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, std::regex_replace(techset->name, zFeatherRegx, "").data()).techniqueSet;
-		//    iw4Techset->remappedTechniqueSet = Dump(techset->remappedTechniqueSet);
-		//}
-		//else if (name.contains("_sm"))
-		//{
-		//    techset->remappedTechniqueSet = game::native::DB_FindXAssetHeader(game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, std::regex_replace(techset->name, smRegx, "_hsm").data()).techniqueSet;
-		//    iw4Techset->remappedTechniqueSet = Dump(techset->remappedTechniqueSet);
-		//}
+		if (name.contains("_zfeather"))
+		{
+		   native_techset->remappedTechniqueSet = 
+			   game::native::DB_FindXAssetHeader(
+				   game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, 
+				   std::regex_replace(native_techset->name, zFeatherRegx, "").data(),
+				   0
+			   ).techniqueSet;
+
+		   iw4_techset->remappedTechniqueSet = exporter::dump(game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, { native_techset->remappedTechniqueSet }).techniqueSet;
+		}
+		else if (name.contains("_sm"))
+		{
+		   native_techset->remappedTechniqueSet = game::native::DB_FindXAssetHeader(
+			   game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, 
+			   std::regex_replace(native_techset->name, smRegx, "_hsm").data(),
+			   0
+		   ).techniqueSet;
+
+		   iw4_techset->remappedTechniqueSet = exporter::dump(game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, { native_techset->remappedTechniqueSet }).techniqueSet;
+		}
 
 		// copy techniques to correct spots
 		for (size_t i = 0; i < iw4::native::TECHNIQUE_COUNT; i++)

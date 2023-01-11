@@ -19,6 +19,8 @@
 #include <module/asset_dumpers/irawfile.hpp>
 #include <module/asset_dumpers/imapents.hpp>
 #include <module/asset_dumpers/iclipmap.hpp>
+#include <module/asset_dumpers/isndalias.hpp>
+#include <module/asset_dumpers/iloadedsound.hpp>
 
 #include "exporter.hpp"
 #include <module/scheduler.hpp>
@@ -33,6 +35,7 @@ std::vector<std::string> exporter::captured_scripts{};
 std::vector<std::string> exporter::captured_rawfiles{};
 bool exporter::capture = false;
 bool exporter::ready = false;
+std::string exporter::map_name{};
 
 
 DEFINE_OG_FUNCTION(Com_EventLoop, 0x555880);
@@ -177,6 +180,7 @@ void exporter::dump_map(const command::params& params)
 {
 	if (params.size() < 2) return;
 	std::string map_name = params[1];
+	exporter::map_name = map_name;
 
 	scheduler::once([map_name]() {
 
@@ -329,6 +333,8 @@ void exporter::initialize_exporters()
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_RAWFILE] = new asset_dumpers::irawfile();
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_MAP_ENTS] = new asset_dumpers::imapents();
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_CLIPMAP] = new asset_dumpers::iclipmap();
+	asset_dumpers[game::native::XAssetType::ASSET_TYPE_SOUND] = new asset_dumpers::isndalias();
+	asset_dumpers[game::native::XAssetType::ASSET_TYPE_LOADED_SOUND] = new asset_dumpers::iloadedsound();
 }
 
 bool exporter::exporter_exists(game::native::XAssetType assetType)
@@ -416,9 +422,22 @@ void Sys_Error_Hk(LPCSTR str)
 	printf("");
 }
 
+int exporter::SND_SetDataHook(game::native::MssSound*, char*)
+{
+	game::native::LoadedSound*** loadedSoundPtr = reinterpret_cast<game::native::LoadedSound***>(0x013E2748);
+	auto loadedSound = *(*(loadedSoundPtr));
+
+	// We do not dump rightaway, we'll do so when we need to because of soundaliases
+	asset_dumpers::iloadedsound::duplicate_sound_data(loadedSound);
+	return 0;
+}
+
 
 void exporter::post_load()
 {
+	// Keep sounds around
+	utils::hook(0x4B94EC, exporter::SND_SetDataHook, HOOK_CALL).install()->quick();
+
 	// OnFindAsset
 	utils::hook(0x4CAC50, exporter::DB_AddXAsset_stub, HOOK_JUMP).install()->quick();
 

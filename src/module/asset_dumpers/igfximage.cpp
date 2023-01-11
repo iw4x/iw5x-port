@@ -148,9 +148,4 @@ namespace asset_dumpers
 		utils::hook(0x66A1C0, igfximage::release_texture_hk, HOOK_JUMP).install()->quick();
 	}
 
-	//igfximage::~IGfxImage()
-	//{
-
-	//}
-
 }

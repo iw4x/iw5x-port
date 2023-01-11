@@ -69,8 +69,6 @@ namespace asset_dumpers
 		SET_MEMBER_NO_CONVERSION(partClassification);
 		SET_MEMBER_NO_CONVERSION(baseMat);
 
-		const auto num_bones = iw4_model->numBones;
-		const auto num_root_bones = iw4_model->numRootBones;
 		const auto num_surfs = native_model->numsurfs;
 
 		iw4_model->materialHandles = local_allocator.allocate_array<iw4::native::Material*>(num_surfs);

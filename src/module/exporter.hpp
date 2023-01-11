@@ -17,6 +17,7 @@ public:
 private:
 	static void DB_AddXAsset_Hk(game::native::XAssetType type, game::native::XAssetHeader* header);
 	static void DB_AddXAsset_stub();
+	static int SND_SetDataHook(game::native::MssSound*, char*);
 
 	static void load_common_zones();
 	static void initialize_exporters();

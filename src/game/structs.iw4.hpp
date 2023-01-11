@@ -11,6 +11,24 @@ namespace iw4::native
 		STATIC_MODEL_FLAG_GROUND_LIGHTING = 0x20,
 	};
 
+	union SoundAliasFlags
+	{
+		struct
+		{
+			unsigned int looping : 1;
+			unsigned int isMaster : 1;
+			unsigned int isSlave : 1;
+			unsigned int fullDryLevel : 1;
+			unsigned int noWetLevel : 1;
+			unsigned int unknown : 1;
+			unsigned int type : 2;
+			unsigned int channel : 6;
+		};
+		unsigned int intValue;
+	};
+
+	static_assert(sizeof(SoundAliasFlags) == sizeof(unsigned int));
+
 	enum SndChannel
 	{
 		SND_CHANNEL_PHYSICS,
@@ -76,6 +94,15 @@ namespace iw4::native
 		R_RENDERTARGET_SHADOWMAP_SMALL = 0xB,
 		R_RENDERTARGET_COUNT = 0xC,
 		R_RENDERTARGET_NONE = 0xD,
+	};
+
+	enum snd_alias_type_t : char
+	{
+		SAT_UNKNOWN = 0x0,
+		SAT_LOADED = 0x1,
+		SAT_STREAMED = 0x2,
+		SAT_VOICED = 0x3,
+		SAT_COUNT,
 	};
 
 	struct ComPrimaryLight
@@ -1790,6 +1817,59 @@ namespace iw4::native
 		FxElemDef* elemDefs;
 	};
 
+	struct _AILSOUNDINFO
+	{
+		int format;
+		const void* data_ptr;
+		unsigned int data_len;
+		unsigned int rate;
+		int bits;
+		int channels;
+		unsigned int samples;
+		unsigned int block_size;
+		const void* initial_ptr;
+	};
+
+	struct SndCurve
+	{
+		const char* filename;
+		int knotCount;
+		float knots[8][2];
+	};
+
+	const struct snd_alias_t
+	{
+		const char* aliasName;
+		const char* subtitle;
+		const char* secondaryAliasName;
+		const char* chainAliasName;
+		game::native::SoundFile* soundFile;
+		int sequence;
+		float volMin;
+		float volMax;
+		float pitchMin;
+		float pitchMax;
+		float distMin;
+		float distMax;
+		SoundAliasFlags flags;
+		float slavePercentage;
+		float probability;
+		float lfePercentage;
+		float centerPercentage;
+		int startDelay;
+		SndCurve* volumeFalloffCurve;
+		float envelopMin;
+		float envelopMax;
+		float envelopPercentage;
+		game::native::SpeakerMap* speakerMap;
+	};
+
+	struct snd_alias_list_t
+	{
+		const char* aliasName;
+		snd_alias_t* head;
+		unsigned int count;
+	};
 
 	union XAssetHeader
 	{
@@ -1805,9 +1885,9 @@ namespace iw4::native
 		MaterialVertexDeclaration* vertexDecl;
 		MaterialTechniqueSet* techniqueSet;
 		GfxImage* image;
-		//snd_alias_list_t* sound;
+		snd_alias_list_t* sound;
 		//SndCurve* sndCurve;
-		//LoadedSound* loadSnd;
+		game::native::LoadedSound* loadSnd;
 		clipMap_t* clipMap;
 		ComWorld* comWorld;
 		//GameWorldSp* gameWorldSp;

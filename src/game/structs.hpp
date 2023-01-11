@@ -1305,6 +1305,212 @@ namespace game
 			const char** subMaterials;
 		};
 
+
+		enum snd_alias_type_t
+		{
+			SAT_UNKNOWN = 0x0,
+			SAT_LOADED = 0x1,
+			SAT_STREAMED = 0x2,
+			SAT_VOICED = 0x3,
+			SAT_COUNT = 0x4
+		};
+
+		struct StreamedSound
+		{
+			const char* dir;
+			const char* name;
+		};
+
+		struct AILSOUNDINFO
+		{
+			int format;
+			const void* data_ptr;
+			unsigned int data_len;
+			unsigned int rate;
+			int bits;
+			int channels;
+			unsigned int samples;
+			unsigned int block_size;
+			const void* initial_ptr;
+		};
+
+		struct MssSound
+		{
+			AILSOUNDINFO info;
+			char* data;
+		};
+
+		struct LoadedSound
+		{
+			const char* name;
+			MssSound sound;
+		};
+
+		union SoundFileRef
+		{
+			LoadedSound* loadSnd;
+			StreamedSound streamSnd;
+		};
+
+		struct SoundFile
+		{
+			unsigned char type;
+			unsigned char exists;
+			SoundFileRef u;
+		};
+
+		struct MSSSpeakerLevels
+		{
+			int speaker;
+			int numLevels;
+			float levels[2];
+		};
+
+		struct MSSChannelMap
+		{
+			int speakerCount;
+			MSSSpeakerLevels speakers[6];
+		};
+
+		struct SpeakerMap
+		{
+			bool isDefault;
+			const char* name;
+			MSSChannelMap channelMaps[2][2];
+		};
+
+		struct SndCurve
+		{
+			const char* filename;
+			unsigned short knotCount;
+			float knots[16][2];
+		};
+
+		// 100% Accurate
+		enum SndChannel
+		{
+			SND_CHANNEL_PHYSICS,
+			SND_CHANNEL_AMBDIST1,
+			SND_CHANNEL_AMBDIST2,
+				SND_CHANNEL_ALARM1,
+			SND_CHANNEL_AUTO,
+			SND_CHANNEL_AUTO2,
+			SND_CHANNEL_AUTO2D,
+			SND_CHANNEL_AUTODOG,
+				SND_CHANNEL_EXPLOSIONDIST1,
+				SND_CHANNEL_EXPLOSIONDIST2,
+				SND_CHANNEL_EXPLOSIVEIMPACT,
+				SND_CHANNEL_ELEMENT,
+				SND_CHANNEL_ELEMENT_INT,
+				SND_CHANNEL_ELEMENT_EXT,
+			SND_CHANNEL_BULLETIMPACT,
+				SND_CHANNEL_BULLETFLESH1,
+				SND_CHANNEL_BULLETFLESH2,
+			SND_CHANNEL_BULLETWHIZBY,
+			SND_CHANNEL_VEHICLE,
+			SND_CHANNEL_VEHICLELIMITED,
+			SND_CHANNEL_MENU,
+			SND_CHANNEL_BODY,
+			SND_CHANNEL_BODY2D,
+			SND_CHANNEL_RELOAD,
+			SND_CHANNEL_RELOAD2D,
+			SND_CHANNEL_ITEM,
+				SND_CHANNEL_EXPLOSION1,
+				SND_CHANNEL_EXPLOSION2,
+				SND_CHANNEL_EXPLOSION3,
+				SND_CHANNEL_EXPLOSION4,
+				SND_CHANNEL_EXPLOSION5,
+			SND_CHANNEL_EFFECTS1, // 31
+			SND_CHANNEL_EFFECTS2,
+				SND_CHANNEL_EFFECTS3,
+				SND_CHANNEL_EFFECTS2D1,
+				SND_CHANNEL_EFFECTS2D2,
+				SND_CHANNEL_NORESTRICT,
+				SND_CHANNEL_NORESTRICT2D,
+				SND_CHANNEL_AIRCRAFT,
+				SND_CHANNEL_VEHICLE2D,
+				SND_CHANNEL_WEAPON_DIST,
+				SND_CHANNEL_WEAPON_MID,
+			SND_CHANNEL_WEAPON,
+			SND_CHANNEL_WEAPON2D, // 43
+			SND_CHANNEL_NONSHOCK,
+				SND_CHANNEL_NONSHOCK2,
+				SND_CHANNEL_GRONDO3D,
+				SND_CHANNEL_GRONDO2D,
+			SND_CHANNEL_VOICE,	// 48
+			SND_CHANNEL_LOCAL,
+			SND_CHANNEL_LOCAL2,
+			SND_CHANNEL_LOCAL3,
+			SND_CHANNEL_AMBIENT,
+			SND_CHANNEL_HURT,
+			SND_CHANNEL_PLAYER1,
+			SND_CHANNEL_PLAYER2,
+			SND_CHANNEL_MUSIC,
+			SND_CHANNEL_MUSICNOPAUSE,
+			SND_CHANNEL_MISSION,
+				SND_CHANNEL_CRITICAL,	// 59
+			SND_CHANNEL_ANNOUNCER,
+			SND_CHANNEL_SHELLSHOCK,
+
+			SND_CHANNEL_COUNT
+		};
+
+		union SoundAliasFlags
+		{
+			struct
+			{
+				unsigned int looping : 1;
+				unsigned int isMaster : 1;
+				unsigned int isSlave : 1;
+				unsigned int fullDryLevel : 1;
+				unsigned int noWetLevel : 1;
+				unsigned int unknown : 2;
+				unsigned int type : 2;
+				unsigned int unknown2 : 1;
+				unsigned int channel : 6;
+			};
+			unsigned int intValue;
+		};
+
+		struct snd_alias_t
+		{
+			const char* aliasName;
+			const char* subtitle;
+			const char* secondaryAliasName;
+			const char* chainAliasName;
+			const char* mixerGroup;
+			SoundFile* soundFile;
+			int sequence;
+			float volMin;
+			float volMax;
+			int volModIndex;
+			float pitchMin;
+			float pitchMax;
+			float distMin;
+			float distMax;
+			float velocityMin;
+			SoundAliasFlags flags;
+			unsigned char masterPriority;
+			float masterPercentage;
+			float slavePercentage;
+			float probability;
+			float lfePercentage;
+			float centerPercentage;
+			int startDelay;
+			SndCurve* volumeFalloffCurve;
+			float envelopMin;
+			float envelopMax;
+			float envelopPercentage;
+			SpeakerMap* speakerMap;
+		};
+
+		struct snd_alias_list_t
+		{
+			const char* aliasName;
+			snd_alias_t* head;
+			int count;
+		};
+
 		struct XAsset
 		{
 			XAssetType type;
