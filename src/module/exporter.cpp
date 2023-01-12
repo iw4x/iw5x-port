@@ -21,6 +21,7 @@
 #include <module/asset_dumpers/iclipmap.hpp>
 #include <module/asset_dumpers/isndalias.hpp>
 #include <module/asset_dumpers/iloadedsound.hpp>
+#include <module/asset_dumpers/ifxworld.hpp>
 
 #include "exporter.hpp"
 #include <module/scheduler.hpp>
@@ -225,6 +226,9 @@ void exporter::dump_map(const command::params& params)
 		command::execute(std::format("dumpScript maps/createfx/{}_fx", map_name), true);
 		command::execute(std::format("dumpScript maps/createart/{}_fog", map_name), true);
 
+		console::info("dumping fxworld %s...\n", map_name.c_str());
+		command::execute("dumpFxWorld", true);
+
 		console::info("dumping comworld %s...\n", map_name.c_str());
 		command::execute("dumpComWorld", true);
 
@@ -335,6 +339,7 @@ void exporter::initialize_exporters()
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_CLIPMAP] = new asset_dumpers::iclipmap();
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_SOUND] = new asset_dumpers::isndalias();
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_LOADED_SOUND] = new asset_dumpers::iloadedsound();
+	asset_dumpers[game::native::XAssetType::ASSET_TYPE_FXWORLD] = new asset_dumpers::ifxworld();
 }
 
 bool exporter::exporter_exists(game::native::XAssetType assetType)

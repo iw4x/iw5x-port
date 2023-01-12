@@ -69,7 +69,7 @@ namespace asset_dumpers
 				}
 				else
 				{
-					auto header = game::native::DB_FindXAssetHeader(game::native::XAssetType::ASSET_TYPE_IMAGE, name, false);
+					auto header = game::native::DB_FindXAssetHeader(game::native::XAssetType::ASSET_TYPE_PHYSPRESET, name, false);
 
 					if (header.data)
 					{

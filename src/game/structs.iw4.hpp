@@ -1817,6 +1817,55 @@ namespace iw4::native
 		FxElemDef* elemDefs;
 	};
 
+	struct FxGlassDef
+	{
+		float halfThickness;
+		float texVecs[2][2];
+		game::native::GfxColor color;
+		Material* material;
+		Material* materialShattered;
+		PhysPreset* physPreset;
+	};
+
+	struct FxGlassSystem
+	{
+		int time;
+		int prevTime;
+		unsigned int defCount;
+		unsigned int pieceLimit;
+		unsigned int pieceWordCount;
+		unsigned int initPieceCount;
+		unsigned int cellCount;
+		unsigned int activePieceCount;
+		unsigned int firstFreePiece;
+		unsigned int geoDataLimit;
+		unsigned int geoDataCount;
+		unsigned int initGeoDataCount;
+		FxGlassDef* defs;
+		game::native::FxGlassPiecePlace* piecePlaces;
+		game::native::FxGlassPieceState* pieceStates;
+		game::native::FxGlassPieceDynamics* pieceDynamics;
+		game::native::FxGlassGeometryData* geoData;
+		unsigned int* isInUse;
+		unsigned int* cellBits;
+		unsigned char* visData;
+		float(*linkOrg)[3];
+		float* halfThickness;
+		unsigned __int16* lightingHandles;
+		game::native::FxGlassInitPieceState* initPieceStates;
+		game::native::FxGlassGeometryData* initGeoData;
+		bool needToCompactData;
+		char initCount;
+		float effectChanceAccum;
+		int lastPieceDeletionTime;
+	};
+
+	struct FxWorld
+	{
+		const char* name;
+		FxGlassSystem glassSys;
+	};
+
 	struct _AILSOUNDINFO
 	{
 		int format;
@@ -1893,7 +1942,7 @@ namespace iw4::native
 		//GameWorldSp* gameWorldSp;
 		game::native::GlassWorld* gameWorldMp;
 		MapEnts* mapEnts;
-		//FxWorld* fxWorld;
+		FxWorld* fxWorld;
 		GfxWorld* gfxWorld;
 		GfxLightDef* lightDef;
 		//Font_s* font;

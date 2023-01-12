@@ -62,10 +62,17 @@ namespace asset_dumpers
 			auto final_output_vector = dec->output();
 			std::string final_output = std::string(reinterpret_cast<char*>(final_output_vector.data()), final_output_vector.size());
 
+			/////////////////////
+			/// quick GSC Fixups
+			///
 			// Fog works completely differently in iw5 but the settings are very similar
 			if (script_name.ends_with("_fog"))
 			{
 				final_output = get_converted_fog(final_output);
+			}
+			else if (script_name.ends_with("_fx") && script_name.starts_with("maps/createfx/"))
+			{
+				dump_create_fx_contents(final_output);
 			}
 			else if (script_name.ends_with("_precache"))
 			{
@@ -74,13 +81,11 @@ namespace asset_dumpers
 			}
 
 			// General removals (things that don't exist in IW4)
+			auto map_name = exporter::get_map_name();
 			std::unordered_map<std::string, std::string> replacements
 			{
 				// Remove audio reverb setting
-				{"maps\\mp\\_audio::", "// Commented out by iw5xport\n// maps\\mp\\_audio::"},
-
-				// Add fog init
-				{"maps\\mp\\_load::main();", std::format("maps\\createart\\{}_fog::main();// Added by iw5xport (iw4 can't make that call automatically)\nmaps\\mp\\_load::main();", exporter::get_map_name())}
+				{"maps\\mp\\_audio::", "// Commented out by iw5xport\n// maps\\mp\\_audio::"}
 			};
 
 			for (auto replacement : replacements)
@@ -91,6 +96,19 @@ namespace asset_dumpers
 					final_output = final_output.replace(index, replacement.second.length(), replacement.second);
 				}
 			}
+
+			// Add fog init
+			auto load_offset = final_output.find("maps\\mp\\_load::main\(\);\n");
+			if (load_offset != std::string::npos)
+			{
+				final_output = final_output.insert(
+					load_offset, 
+					std::format("maps\\createart\\{}_fog::main();// Added by iw5xport (iw4 can't make that call automatically)\n    ", map_name)
+				);
+			}
+			
+			///
+			////////////////////////////
 
 
 			iw4_rawfile->buffer = local_allocator.allocate_array<char>(final_output.size());
@@ -170,6 +188,57 @@ namespace asset_dumpers
 	void iscriptfile::write(const iw4::native::XAssetHeader& header)
 	{
 		// We don't! iRawfile.cpp handles that
+	}
+
+	void asset_dumpers::iscriptfile::dump_create_fx_contents(const std::string& script)
+	{
+		std::regex sound_catcher("(?:\\.v\\[\"soundalias\"\\] *= *\"(.+)\")");
+		std::smatch m;
+
+		std::string::const_iterator search_start(script.cbegin());
+		while (std::regex_search(search_start, script.cend(), m, sound_catcher))
+		{
+			bool skip = true;
+			for (auto match : m)
+			{
+				if (skip)
+				{
+					skip = false;
+					continue;
+				}
+
+				auto sound_name = match.str();
+				auto sound = game::native::DB_FindXAssetHeader(game::native::ASSET_TYPE_SOUND, sound_name.data(), 0);
+				search_start = m.suffix().first;
+
+				if (sound.data)
+				{
+					exporter::dump(game::native::ASSET_TYPE_SOUND, { sound });
+				}
+			}
+		}
+
+		std::regex fx_catcher("(?:utility::createoneshoteffect\\( *\"(.+)\")");
+		while (std::regex_search(search_start, script.cend(), m, fx_catcher))
+		{
+			bool skip = true;
+			for (auto match : m)
+			{
+				if (skip)
+				{
+					skip = false;
+					continue;
+				}
+
+				auto fx_name = match.str();
+				auto fx = game::native::DB_FindXAssetHeader(game::native::ASSET_TYPE_FX, fx_name.data(), 0);
+
+				if (fx.data)
+				{
+					exporter::dump(game::native::ASSET_TYPE_FX, { fx });
+				}
+			}
+		}
 	}
 
 	iscriptfile::iscriptfile()

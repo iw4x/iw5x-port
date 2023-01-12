@@ -1457,6 +1457,7 @@ namespace game
 
 		union SoundAliasFlags
 		{
+#pragma warning(push, disable: 4201)
 			struct
 			{
 				unsigned int looping : 1;
@@ -1469,6 +1470,7 @@ namespace game
 				unsigned int unknown2 : 1;
 				unsigned int channel : 6;
 			};
+#pragma warning(pop)
 			unsigned int intValue;
 		};
 
@@ -3546,6 +3548,141 @@ namespace game
 			DynEntityColl* dynEntCollList[2];
 			unsigned int checksum;
 			unsigned char padding[20];
+		};
+
+		struct FxGlassDef
+		{
+			float halfThickness;
+			float texVecs[2][2];
+			GfxColor color;
+			Material* material;
+			Material* materialShattered;
+			PhysPreset* physPreset;
+		};
+
+		struct FxSpatialFrame
+		{
+			float quat[4];
+			float origin[3];
+		};
+
+		union FxGlassPiecePlace
+		{
+#pragma warning(push, disable: 4201)
+			struct
+			{
+				FxSpatialFrame frame;
+				float radius;
+			};
+#pragma warning(pop)
+			unsigned int nextFree;
+		};
+
+		struct FxGlassPieceState
+		{
+			float texCoordOrigin[2];
+			unsigned int supportMask;
+			unsigned short initIndex;
+			unsigned short geoDataStart;
+			unsigned char defIndex;
+			unsigned char pad[5];
+			unsigned char vertCount;
+			unsigned char holeDataCount;
+			unsigned char crackDataCount;
+			unsigned char fanDataCount;
+			unsigned short flags;
+			float areaX2;
+		};
+
+		struct FxGlassPieceDynamics
+		{
+			int fallTime;
+			int physObjId;
+			int physJointId;
+			float vel[3];
+			float avel[3];
+		};
+
+
+		struct FxGlassVertex
+		{
+			short x;
+			short y;
+		};
+
+		struct FxGlassHoleHeader
+		{
+			unsigned short uniqueVertCount;
+			unsigned char touchVert;
+			unsigned char pad[1];
+		};
+
+		struct FxGlassCrackHeader
+		{
+			unsigned short uniqueVertCount;
+			unsigned char beginVertIndex;
+			unsigned char endVertIndex;
+		};
+
+		union FxGlassGeometryData
+		{
+			FxGlassVertex vert;
+			FxGlassHoleHeader hole;
+			FxGlassCrackHeader crack;
+			unsigned char asBytes[4];
+			short anonymous[2];
+		};
+
+		struct FxGlassInitPieceState
+		{
+			FxSpatialFrame frame;
+			float radius;
+			float texCoordOrigin[2];
+			unsigned int supportMask;
+			float areaX2;
+			unsigned char defIndex;
+			unsigned char vertCount;
+			unsigned char fanDataCount;
+			unsigned char pad[1];
+		};
+
+		struct FxGlassSystem
+		{
+			int time;
+			int prevTime;
+			unsigned int defCount;
+			unsigned int pieceLimit;
+			unsigned int pieceWordCount;
+			unsigned int initPieceCount;
+			unsigned int cellCount;
+			unsigned int activePieceCount;
+			unsigned int firstFreePiece;
+			unsigned int geoDataLimit;
+			unsigned int geoDataCount;
+			unsigned int initGeoDataCount;
+			FxGlassDef* defs;
+			FxGlassPiecePlace* piecePlaces;
+			FxGlassPieceState* pieceStates;
+			FxGlassPieceDynamics* pieceDynamics;
+			FxGlassGeometryData* geoData;
+			unsigned int* isInUse;
+			unsigned int* cellBits;
+			unsigned char* visData;
+			float(*linkOrg)[3];
+			float* halfThickness;
+			unsigned short* lightingHandles;
+			FxGlassInitPieceState* initPieceStates;
+			FxGlassGeometryData* initGeoData;
+			bool needToCompactData;
+			unsigned char initCount;
+			float effectChanceAccum;
+			int lastPieceDeletionTime;
+		};
+
+		struct FxWorld
+		{
+			const char* name;
+			FxGlassSystem glassSys;
 		};
 
 		namespace mp
