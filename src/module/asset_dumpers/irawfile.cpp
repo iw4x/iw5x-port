@@ -59,6 +59,7 @@ namespace asset_dumpers
 				if (entry)
 				{
 					dump(entry->asset.header);
+					exporter::add_to_source(game::native::XAssetType::ASSET_TYPE_RAWFILE, entry->asset.header.rawfile->name);
 				}
 				else
 				{

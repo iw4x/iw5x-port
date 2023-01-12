@@ -15,7 +15,7 @@
 
 namespace asset_dumpers
 {
-	// I don't have time to figure out why SCR_OPAQUE_STRING don't match what I get. Do you ?
+	// I don't have time to figure out why SCR_OPAQUE_STRING doesn't match what I get. Do you ?
 	static const std::unordered_map<int, std::string> map_ents_table
 	{
 		{ 1668, "classname"},
@@ -112,6 +112,7 @@ namespace asset_dumpers
 		}
 
 		auto str = iw4_ents_string.str();
+		dump_models(str);
 		iw4_ents->entityString = local_allocator.duplicate_string(str);
 		iw4_ents->numEntityChars = str.size();
 
@@ -126,6 +127,39 @@ namespace asset_dumpers
 
 		utils::io::write_file(std::format("{}/mapents/{}.ents", get_export_path(), basename), header.mapEnts->entityString);
 	}
+
+	void imapents::dump_models(const std::string& entity_string)
+	{
+		std::regex model_catcher("model \"([^\\*\\?].*)\"");
+
+		std::smatch m;
+
+		std::string::const_iterator search_start(entity_string.cbegin());
+		while (std::regex_search(search_start, entity_string.cend(), m, model_catcher))
+		{
+			bool skip = true;
+			for (auto match : m)
+			{
+				if (skip)
+				{
+					skip = false;
+					continue;
+				}
+
+				auto model_name = match.str();
+				auto model = game::native::DB_FindXAssetHeader(game::native::ASSET_TYPE_XMODEL, model_name.data(), 0);
+				search_start = m.suffix().first;
+
+				if (model.data)
+				{
+					exporter::dump(game::native::ASSET_TYPE_XMODEL, model);
+					exporter::add_to_source(game::native::ASSET_TYPE_XMODEL, model.model->name);
+				}
+			}
+		}
+
+	}
+
 
 	imapents::imapents()
 	{

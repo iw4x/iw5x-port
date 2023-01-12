@@ -189,7 +189,22 @@ namespace asset_dumpers
 
 		glass_system.AddMember("initPieceStates", init_pieces, allocator);
 
-		// And that's it! Everything else in this thing is NULL!
+
+		rapidjson::Value init_geo_json(rapidjson::kArrayType);
+		for (auto i = 0; i < asset->glassSys.initGeoDataCount; i++)
+		{
+			auto init_geo = &asset->glassSys.initGeoData[i];
+
+			rapidjson::Value data_array(rapidjson::kArrayType);
+			data_array.PushBack(init_geo->anonymous[0], allocator);
+			data_array.PushBack(init_geo->anonymous[1], allocator);
+
+			init_geo_json.PushBack(data_array, allocator);
+		}
+
+		glass_system.AddMember("initGeoData", init_geo_json, allocator);
+
+		// And that's it! Everything else in this thing is RUNTIME!
 		// Crazy huh ?
 
 		output.AddMember("glassSys", glass_system, allocator);
@@ -218,6 +233,7 @@ namespace asset_dumpers
 				if (out.data)
 				{
 					dump(out);
+					exporter::add_to_source(game::native::ASSET_TYPE_FXWORLD, out.fxWorld->name);
 				}
 			});
 	}

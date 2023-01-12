@@ -12,6 +12,7 @@
 
 #include "rapidjson/document.h"
 #include "rapidjson/prettywriter.h"
+#include <module/exporter.hpp>
 
 #define IW4X_GAMEWORLD_VERSION 1
 
@@ -114,12 +115,19 @@ namespace asset_dumpers
 	{
 		command::add("dumpGlassWorld", [&](const command::params& params)
 			{
+				game::native::XAssetHeader out{};
+
 				game::native::DB_EnumXAssets(game::native::XAssetType::ASSET_TYPE_GLASSWORLD, [](game::native::XAssetHeader header, void* data) {
-					auto dumper = reinterpret_cast<iglassworld*>(data);
+					auto out = reinterpret_cast<game::native::XAssetHeader*>(data);
+					*out = header;
 
-					dumper->dump(header);
+					}, &out, false);
 
-					}, this, false);
+				if (out.data)
+				{
+					dump(out);
+					exporter::add_to_source(game::native::ASSET_TYPE_GLASSWORLD, out.glassWorld->name);
+				}
 			});
 	}
 }

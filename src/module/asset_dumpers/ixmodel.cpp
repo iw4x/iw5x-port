@@ -418,7 +418,12 @@ namespace asset_dumpers
 
 				if (header.data)
 				{
-					dump(header, true);
+					if (!is_already_dumped(header))
+					{
+						exporter::add_to_source(game::native::XAssetType::ASSET_TYPE_XMODEL, name);
+					}
+
+					dump(header);
 					console::info("successfullly dumped xmodel %s!\n", name);
 				}
 				else

@@ -700,6 +700,7 @@ namespace asset_dumpers
 				if (out.data)
 				{
 					dump(out);
+					exporter::add_to_source(game::native::ASSET_TYPE_GFXWORLD, out.gfxWorld->name);
 				}
 			});
 	}

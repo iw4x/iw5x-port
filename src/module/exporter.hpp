@@ -13,6 +13,7 @@ public:
 	void post_load() override;
 	static iw4::native::XAssetHeader dump(game::native::XAssetType type, game::native::XAssetHeader header);
 	static std::string get_map_name() { return map_name; }
+	static void add_to_source(game::native::XAssetType type, const std::string asset);
 
 private:
 	static void DB_AddXAsset_Hk(game::native::XAssetType type, game::native::XAssetHeader* header);
@@ -32,7 +33,11 @@ private:
 
 	static std::vector<std::string> captured_scripts;
 	static std::vector<std::string> captured_rawfiles;
+	static std::vector<std::string> captured_snd;
+	static std::vector<std::string> captured_models;
+	static std::vector<std::string> captured_fx;
 	static std::string map_name;
+	static std::vector<std::string> prepared_source;
 	static bool capture;
 	static bool ready;
 };

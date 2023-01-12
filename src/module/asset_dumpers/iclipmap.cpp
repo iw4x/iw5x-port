@@ -117,7 +117,7 @@ namespace asset_dumpers
 				iw4_def->xModel = exporter::dump(game::native::ASSET_TYPE_XMODEL, { native_def->xModel }).model;
 				iw4_def->brushModel = native_def->brushModel;
 				iw4_def->physicsBrushModel = native_def->physicsBrushModel;
-				iw4_def->destroyFx = nullptr; // TODO
+				iw4_def->destroyFx = exporter::dump(game::native::ASSET_TYPE_FX, { native_def->destroyFx}).fx; // TODO
 				iw4_def->physPreset = exporter::dump(game::native::ASSET_TYPE_PHYSPRESET, { native_def->physPreset }).physPreset;
 				iw4_def->health = native_def->health;
 				iw4_def->mass = native_def->mass;
@@ -569,6 +569,7 @@ namespace asset_dumpers
 				if (out.data)
 				{
 					dump(out);
+					exporter::add_to_source(game::native::ASSET_TYPE_CLIPMAP, out.clipMap->name);
 				}
 			});
 	}

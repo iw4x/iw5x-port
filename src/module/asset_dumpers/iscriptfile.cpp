@@ -70,9 +70,16 @@ namespace asset_dumpers
 			{
 				final_output = get_converted_fog(final_output);
 			}
-			else if (script_name.ends_with("_fx") && script_name.starts_with("maps/createfx/"))
+			else if (script_name.ends_with("_fx"))
 			{
-				dump_create_fx_contents(final_output);
+				if (script_name.starts_with("maps/createfx/"))
+				{
+					dump_create_fx_sounds(final_output);
+				}
+				else
+				{
+					dump_map_fx(final_output);
+				}
 			}
 			else if (script_name.ends_with("_precache"))
 			{
@@ -190,7 +197,36 @@ namespace asset_dumpers
 		// We don't! iRawfile.cpp handles that
 	}
 
-	void asset_dumpers::iscriptfile::dump_create_fx_contents(const std::string& script)
+	void iscriptfile::dump_map_fx(const std::string& script)
+	{
+		std::regex fx_catcher("\\] = loadfx\\( *\"(.+)\" *\\);");
+		std::smatch m;
+		std::string::const_iterator search_start(script.cbegin());
+		while (std::regex_search(search_start, script.cend(), m, fx_catcher))
+		{
+			bool skip = true;
+			for (auto match : m)
+			{
+				if (skip)
+				{
+					skip = false;
+					continue;
+				}
+
+				auto fx_name = match.str();
+				auto fx = game::native::DB_FindXAssetHeader(game::native::ASSET_TYPE_FX, fx_name.data(), 0);
+				search_start = m.suffix().first;
+
+				if (fx.data)
+				{
+					exporter::dump(game::native::ASSET_TYPE_FX, fx);
+					exporter::add_to_source(game::native::ASSET_TYPE_FX, fx_name);
+				}
+			}
+		}
+	}
+
+	void iscriptfile::dump_create_fx_sounds(const std::string& script)
 	{
 		std::regex sound_catcher("(?:\\.v\\[\"soundalias\"\\] *= *\"(.+)\")");
 		std::smatch m;
@@ -213,29 +249,8 @@ namespace asset_dumpers
 
 				if (sound.data)
 				{
-					exporter::dump(game::native::ASSET_TYPE_SOUND, { sound });
-				}
-			}
-		}
-
-		std::regex fx_catcher("(?:utility::createoneshoteffect\\( *\"(.+)\")");
-		while (std::regex_search(search_start, script.cend(), m, fx_catcher))
-		{
-			bool skip = true;
-			for (auto match : m)
-			{
-				if (skip)
-				{
-					skip = false;
-					continue;
-				}
-
-				auto fx_name = match.str();
-				auto fx = game::native::DB_FindXAssetHeader(game::native::ASSET_TYPE_FX, fx_name.data(), 0);
-
-				if (fx.data)
-				{
-					exporter::dump(game::native::ASSET_TYPE_FX, { fx });
+					exporter::dump(game::native::ASSET_TYPE_SOUND, sound);
+					exporter::add_to_source(game::native::ASSET_TYPE_SOUND, sound_name);
 				}
 			}
 		}
@@ -254,6 +269,7 @@ namespace asset_dumpers
 				{
 					auto rawfile = dump(entry->asset.header).rawfile;
 					exporter::dump(game::native::ASSET_TYPE_RAWFILE, { rawfile });
+					exporter::add_to_source(game::native::ASSET_TYPE_RAWFILE, rawfile->name);
 				}
 				else
 				{

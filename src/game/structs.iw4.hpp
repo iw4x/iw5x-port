@@ -13,6 +13,8 @@ namespace iw4::native
 
 	union SoundAliasFlags
 	{
+#pragma warning(push)
+#pragma warning(disable: 4201)
 		struct
 		{
 			unsigned int looping : 1;
@@ -21,9 +23,11 @@ namespace iw4::native
 			unsigned int fullDryLevel : 1;
 			unsigned int noWetLevel : 1;
 			unsigned int unknown : 1;
+			unsigned int unknown2 : 1;
 			unsigned int type : 2;
 			unsigned int channel : 6;
-		};
+		}; 
+#pragma warning(pop)
 		unsigned int intValue;
 	};
 
@@ -1602,119 +1606,6 @@ namespace iw4::native
 		MaterialTechnique* techniques[48];
 	};
 
-	struct FxTrailVertex
-	{
-		float pos[2];
-		float normal[2];
-		float texCoord;
-	};
-
-	struct FxTrailDef
-	{
-		int scrollTimeMsec;
-		int repeatDist;
-		float invSplitDist;
-		float invSplitArcDist;
-		float invSplitTime;
-		int vertCount;
-		FxTrailVertex* verts;
-		int indCount;
-		unsigned __int16* inds;
-	};
-
-	enum FxElemType : char
-	{
-		FX_ELEM_TYPE_SPRITE_BILLBOARD = 0x0,
-		FX_ELEM_TYPE_SPRITE_ORIENTED = 0x1,
-		FX_ELEM_TYPE_TAIL = 0x2,
-		FX_ELEM_TYPE_TRAIL = 0x3,
-		FX_ELEM_TYPE_CLOUD = 0x4,
-		FX_ELEM_TYPE_SPARKCLOUD = 0x5,
-		FX_ELEM_TYPE_SPARKFOUNTAIN = 0x6,
-		FX_ELEM_TYPE_MODEL = 0x7,
-		FX_ELEM_TYPE_OMNI_LIGHT = 0x8,
-		FX_ELEM_TYPE_SPOT_LIGHT = 0x9,
-		FX_ELEM_TYPE_SOUND = 0xA,
-		FX_ELEM_TYPE_DECAL = 0xB,
-		FX_ELEM_TYPE_RUNNER = 0xC,
-		FX_ELEM_TYPE_COUNT = 0xD,
-		FX_ELEM_TYPE_LAST_SPRITE = 0x3,
-		FX_ELEM_TYPE_LAST_DRAWN = 0x9,
-	};
-
-	struct FxIntRange
-	{
-		int base;
-		int amplitude;
-	};
-
-	struct FxSpawnDefOneShot
-	{
-		FxIntRange count;
-	};
-
-	struct FxSpawnDefLooping
-	{
-		int intervalMsec;
-		int count;
-	};
-
-	union FxSpawnDef
-	{
-		FxSpawnDefLooping looping;
-		FxSpawnDefOneShot oneShot;
-	};
-
-	struct FxFloatRange
-	{
-		float base;
-		float amplitude;
-	};
-
-	struct FxElemAtlas
-	{
-		char behavior;
-		char index;
-		char fps;
-		char loopCount;
-		char colIndexBits;
-		char rowIndexBits;
-		short entryCount;
-	};
-
-	struct FxElemVec3Range
-	{
-		float base[3];
-		float amplitude[3];
-	};
-
-	struct FxElemVelStateInFrame
-	{
-		FxElemVec3Range velocity;
-		FxElemVec3Range totalDelta;
-	};
-
-	struct FxElemVelStateSample
-	{
-		FxElemVelStateInFrame local;
-		FxElemVelStateInFrame world;
-	};
-
-	struct FxElemVisualState
-	{
-		char color[4];
-		float rotationDelta;
-		float rotationTotal;
-		float size[2];
-		float scale;
-	};
-
-	struct FxElemVisStateSample
-	{
-		FxElemVisualState base;
-		FxElemVisualState amplitude;
-	};
-
 	union FxEffectDefRef
 	{
 		struct FxEffectDef* handle;
@@ -1742,67 +1633,50 @@ namespace iw4::native
 		FxElemVisuals instance;
 	};
 
-	struct FxSparkFountainDef
-	{
-		float gravity;
-		float bounceFrac;
-		float bounceRand;
-		float sparkSpacing;
-		float sparkLength;
-		int sparkCount;
-		float loopTime;
-		float velMin;
-		float velMax;
-		float velConeFrac;
-		float restSpeed;
-		float boostTime;
-		float boostFactor;
-	};
-
 	union FxElemExtendedDefPtr
 	{
-		FxTrailDef* trailDef;
-		FxSparkFountainDef* sparkFountainDef;
+		game::native::FxTrailDef* trailDef;
+		game::native::FxSparkFountainDef* sparkFountainDef;
 		char* unknownDef;
 	};
 
 	struct FxElemDef
 	{
 		int flags;
-		FxSpawnDef spawn;
-		FxFloatRange spawnRange;
-		FxFloatRange fadeInRange;
-		FxFloatRange fadeOutRange;
+		game::native::FxSpawnDef spawn;
+		game::native::FxFloatRange spawnRange;
+		game::native::FxFloatRange fadeInRange;
+		game::native::FxFloatRange fadeOutRange;
 		float spawnFrustumCullRadius;
-		FxIntRange spawnDelayMsec;
-		FxIntRange lifeSpanMsec;
-		FxFloatRange spawnOrigin[3];
-		FxFloatRange spawnOffsetRadius;
-		FxFloatRange spawnOffsetHeight;
-		FxFloatRange spawnAngles[3];
-		FxFloatRange angularVelocity[3];
-		FxFloatRange initialRotation;
-		FxFloatRange gravity;
-		FxFloatRange reflectionFactor;
-		FxElemAtlas atlas;
-		char elemType;
-		char visualCount;
-		char velIntervalCount;
-		char visStateIntervalCount;
-		FxElemVelStateSample* velSamples;
-		FxElemVisStateSample* visSamples;
+		game::native::FxIntRange spawnDelayMsec;
+		game::native::FxIntRange lifeSpanMsec;
+		game::native::FxFloatRange spawnOrigin[3];
+		game::native::FxFloatRange spawnOffsetRadius;
+		game::native::FxFloatRange spawnOffsetHeight;
+		game::native::FxFloatRange spawnAngles[3];
+		game::native::FxFloatRange angularVelocity[3];
+		game::native::FxFloatRange initialRotation;
+		game::native::FxFloatRange gravity;
+		game::native::FxFloatRange reflectionFactor;
+		game::native::FxElemAtlas atlas;
+		unsigned char elemType;
+		unsigned char visualCount;
+		unsigned char velIntervalCount;
+		unsigned char visStateIntervalCount;
+		game::native::FxElemVelStateSample* velSamples;
+		game::native::FxElemVisStateSample* visSamples;
 		FxElemDefVisuals visuals;
 		game::native::Bounds collBounds;
 		FxEffectDefRef effectOnImpact;
 		FxEffectDefRef effectOnDeath;
 		FxEffectDefRef effectEmitted;
-		FxFloatRange emitDist;
-		FxFloatRange emitDistVariance;
+		game::native::FxFloatRange emitDist;
+		game::native::FxFloatRange emitDistVariance;
 		FxElemExtendedDefPtr extended;
-		char sortOrder;
-		char lightingFrac;
-		char useItemClip;
-		char fadeInfo;
+		unsigned char sortOrder;
+		unsigned char lightingFrac;
+		unsigned char useItemClip;
+		unsigned char fadeInfo;
 	};
 
 	struct FxEffectDef
@@ -1865,6 +1739,8 @@ namespace iw4::native
 		const char* name;
 		FxGlassSystem glassSys;
 	};
+
+
 
 	struct _AILSOUNDINFO
 	{

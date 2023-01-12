@@ -357,7 +357,8 @@ namespace game
 			BD_NAT_STRICT = 0x3,
 		};
 
-#pragma pack(push, 1)
+#pragma pack(push)
+#pragma warning(disable: 1)
 		struct bdAuthTicket
 		{
 			unsigned int m_magicNumber;
@@ -1457,18 +1458,19 @@ namespace game
 
 		union SoundAliasFlags
 		{
-#pragma warning(push, disable: 4201)
+#pragma warning(push)
+#pragma warning(disable: 4201)
 			struct
 			{
-				unsigned int looping : 1;
-				unsigned int isMaster : 1;
-				unsigned int isSlave : 1;
-				unsigned int fullDryLevel : 1;
-				unsigned int noWetLevel : 1;
-				unsigned int unknown : 2;
-				unsigned int type : 2;
-				unsigned int unknown2 : 1;
-				unsigned int channel : 6;
+				unsigned int looping : 1;	// & 1		/ 0x1		/ 0000 0000 0000 0001
+				unsigned int isMaster : 1;	// & 2		/ 0x2		/ 0000 0000 0000 0010
+				unsigned int isSlave : 1;	// & 4		/ 0x4		/ 0000 0000 0000 0100
+				unsigned int fullDryLevel : 1;	//	& 8	/ 0x8		/ 0000 0000 0000 1000
+				unsigned int noWetLevel : 1;	// & 16	/ 0x10		/ 0000 0000 0001 0000
+				unsigned int unknown : 1;	// & 32		/ 0x20		/ 0000 0000 0010 0000
+				unsigned int unknown2 : 1;	// & 64		/ 0x30		/ 0000 0000 0100 0000
+				unsigned int type : 2;		// & 384	/ 0x180		/ 0000 0001 1000 0000 // CONFIRMED (same in iw4 ??)
+				unsigned int channel : 6;	// & 32256	/ 0x7E00	/ 0111 1110 0000 0000
 			};
 #pragma warning(pop)
 			unsigned int intValue;
@@ -3568,7 +3570,8 @@ namespace game
 
 		union FxGlassPiecePlace
 		{
-#pragma warning(push, disable: 4201)
+#pragma warning(push)
+#pragma warning(disable: 4201)
 			struct
 			{
 				FxSpatialFrame frame;
@@ -3683,6 +3686,239 @@ namespace game
 		{
 			const char* name;
 			FxGlassSystem glassSys;
+		};
+
+		struct FxIntRange
+		{
+			int base;
+			int amplitude;
+		};
+
+		struct FxSpawnDefLooping
+		{
+			int intervalMsec;
+			int count;
+		};
+
+		struct FxSpawnDefOneShot
+		{
+			FxIntRange count;
+		};
+
+		union FxSpawnDef
+		{
+			FxSpawnDefLooping looping;
+			FxSpawnDefOneShot oneShot;
+		};
+
+		struct FxFloatRange
+		{
+			float base;
+			float amplitude;
+		};
+
+		struct FxElemAtlas
+		{
+			unsigned char behavior;
+			unsigned char index;
+			unsigned char fps;
+			unsigned char loopCount;
+			unsigned char colIndexBits;
+			unsigned char rowIndexBits;
+			short entryCount;
+		};
+
+		struct FxElemVec3Range
+		{
+			float base[3];
+			float amplitude[3];
+		};
+
+		struct FxElemVelStateInFrame
+		{
+			FxElemVec3Range velocity;
+			FxElemVec3Range totalDelta;
+		};
+
+
+		struct FxElemVelStateSample
+		{
+			FxElemVelStateInFrame local;
+			FxElemVelStateInFrame world;
+		};
+
+		struct FxElemVisualState
+		{
+			unsigned char color[4];
+			float rotationDelta;
+			float rotationTotal;
+			float size[2];
+			float scale;
+		};
+
+		struct FxElemVisStateSample
+		{
+			FxElemVisualState base;
+			FxElemVisualState amplitude;
+		};
+
+		struct FxElemMarkVisuals
+		{
+			Material* materials[2];
+		};
+
+		union FxEffectDefRef
+		{
+			FxEffectDef* handle;
+			const char* name;
+		};
+
+		union FxElemVisuals
+		{
+			const void* anonymous;
+			Material* material;
+			XModel* model;
+			FxEffectDefRef effectDef;
+			const char* soundName;
+			GfxLightDef* lightDef;
+		};
+
+		union FxElemDefVisuals
+		{
+			FxElemMarkVisuals* markArray;
+			FxElemVisuals* array;
+			FxElemVisuals instance;
+		};
+
+		struct FxTrailVertex
+		{
+			float pos[2];
+			float normal[2];
+			float texCoord;
+		};
+
+		struct FxTrailDef
+		{
+			int scrollTimeMsec;
+			int repeatDist;
+			float invSplitDist;
+			float invSplitArcDist;
+			float invSplitTime;
+			int vertCount;
+			FxTrailVertex* verts;
+			int indCount;
+			unsigned short* inds;
+		};
+
+		struct FxSparkFountainDef
+		{
+			float gravity;
+			float bounceFrac;
+			float bounceRand;
+			float sparkSpacing;
+			float sparkLength;
+			int sparkCount;
+			float loopTime;
+			float velMin;
+			float velMax;
+			float velConeFrac;
+			float restSpeed;
+			float boostTime;
+			float boostFactor;
+		};
+
+		struct FxSpotLightDef
+		{
+			float fovInnerFraction;
+			float startRadius;
+			float endRadius;
+			float brightness;
+			float maxLength;
+			int exponent;
+		};
+
+		union FxElemExtendedDefPtr
+		{
+			FxTrailDef* trailDef;
+			FxSparkFountainDef* sparkFountainDef;
+			FxSpotLightDef* spotLightDef;
+			char* unknownDef;
+		};
+
+		enum FxElemType : char
+		{
+			FX_ELEM_TYPE_SPRITE_BILLBOARD = 0x0,
+			FX_ELEM_TYPE_SPRITE_ORIENTED = 0x1,
+			FX_ELEM_TYPE_TAIL = 0x2,
+			FX_ELEM_TYPE_TRAIL = 0x3,
+			FX_ELEM_TYPE_CLOUD = 0x4,
+			FX_ELEM_TYPE_SPARKCLOUD = 0x5,
+			FX_ELEM_TYPE_SPARKFOUNTAIN = 0x6,
+			FX_ELEM_TYPE_MODEL = 0x7,
+			FX_ELEM_TYPE_OMNI_LIGHT = 0x8,
+			FX_ELEM_TYPE_SPOT_LIGHT = 0x9,
+			FX_ELEM_TYPE_SOUND = 0xA,
+			FX_ELEM_TYPE_DECAL = 0xB,
+			FX_ELEM_TYPE_RUNNER = 0xC,
+			FX_ELEM_TYPE_COUNT = 0xD,
+			FX_ELEM_TYPE_LAST_SPRITE = 0x3,
+			FX_ELEM_TYPE_LAST_DRAWN = 0x9,
+		};
+
+		struct FxElemDef
+		{
+			int flags;
+			FxSpawnDef spawn;
+			FxFloatRange spawnRange;
+			FxFloatRange fadeInRange;
+			FxFloatRange fadeOutRange;
+			float spawnFrustumCullRadius;
+			FxIntRange spawnDelayMsec;
+			FxIntRange lifeSpanMsec;
+			FxFloatRange spawnOrigin[3];
+			FxFloatRange spawnOffsetRadius;
+			FxFloatRange spawnOffsetHeight;
+			FxFloatRange spawnAngles[3];
+			FxFloatRange angularVelocity[3];
+			FxFloatRange initialRotation;
+			FxFloatRange gravity;
+			FxFloatRange reflectionFactor;
+			FxElemAtlas atlas;
+			unsigned char elemType;
+			unsigned char visualCount;
+			unsigned char velIntervalCount;
+			unsigned char visStateIntervalCount;
+			FxElemVelStateSample* velSamples;
+			FxElemVisStateSample* visSamples;
+			FxElemDefVisuals visuals;
+			Bounds collBounds;
+			FxEffectDefRef effectOnImpact;
+			FxEffectDefRef effectOnDeath;
+			FxEffectDefRef effectEmitted;
+			FxFloatRange emitDist;
+			FxFloatRange emitDistVariance;
+			FxElemExtendedDefPtr extended;
+			unsigned char sortOrder;
+			unsigned char lightingFrac;
+			unsigned char useItemClip;
+			unsigned char fadeInfo;
+			int randomSeed;
+		};
+
+		struct FxEffectDef
+		{
+			const char* name;
+			int flags;
+			int totalSize;
+			int msecLoopingLife;
+			int elemDefCountLooping;
+			int elemDefCountOneShot;
+			int elemDefCountEmission;
+			float occlusionQueryDepthBias;
+			int occlusionQueryFadeIn;
+			int occlusionQueryFadeOut;
+			FxFloatRange occlusionQueryScaleRange;
+			FxElemDef* elemDefs;
 		};
 
 		namespace mp

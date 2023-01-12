@@ -121,7 +121,7 @@ namespace asset_dumpers
 			iw4_alias->pitchMax = native_alias->pitchMax;
 			iw4_alias->distMin = native_alias->distMin;
 
-			assert(native_alias->flags.intValue >> 10 == native_alias->flags.channel);
+			assert(native_alias->flags.channel == native_alias->flags.channel);
 
 			auto native_channel = static_cast<game::native::SndChannel>(native_alias->flags.channel);
 
@@ -129,6 +129,7 @@ namespace asset_dumpers
 			assert(native_channel >= 0);
 
 			assert(native_alias->flags.type == native_alias->soundFile->type);
+
 
 			if (!channel_mapping.contains(native_channel))
 			{
@@ -142,8 +143,10 @@ namespace asset_dumpers
 			iw4_alias->flags.fullDryLevel = native_alias->flags.fullDryLevel;
 			iw4_alias->flags.noWetLevel = native_alias->flags.noWetLevel;
 			iw4_alias->flags.type = native_alias->flags.type;
-			iw4_alias->flags.unknown = native_alias->flags.unknown2;
+			iw4_alias->flags.unknown = native_alias->flags.unknown;
 			iw4_alias->flags.channel = channel_mapping.at(native_channel);
+
+			assert((native_alias->flags.intValue & 0x180) == (iw4_alias->flags.intValue & 0x180));
 
 			assert(iw4_alias->flags.channel < iw4::native::SndChannel::SND_CHANNEL_COUNT);
 			assert(iw4_alias->flags.channel >= 0);
@@ -383,6 +386,11 @@ namespace asset_dumpers
 
 					if (header.data)
 					{
+						if (!is_already_dumped(header))
+						{
+							exporter::add_to_source(game::native::XAssetType::ASSET_TYPE_SOUND, name);
+						}
+
 						dump(header, true);
 						console::info("successfullly dumped sound %s!\n", name);
 					}

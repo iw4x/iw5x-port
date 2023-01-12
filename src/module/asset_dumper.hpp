@@ -37,6 +37,7 @@ public:
 		if (clear_memory)
 		{
 			local_allocator.clear();
+			converted_assets.erase(header.data); // In case
 		}
 
 		return out;
@@ -47,7 +48,13 @@ protected:
 	utils::memory::allocator local_allocator;
 	std::unordered_map<void*, void*> converted_assets{};
 
-	std::string get_export_path() {
+	bool is_already_dumped(const game::native::XAssetHeader& header)
+	{
+		return converted_assets.contains(header.data);
+	}
+
+	std::string get_export_path() 
+	{
 		return export_path_dvar->current.string;
 	};
 

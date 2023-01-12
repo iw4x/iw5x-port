@@ -122,6 +122,7 @@ namespace asset_dumpers
 				if (com_header.data)
 				{
 					dump(com_header);
+					exporter::add_to_source(game::native::ASSET_TYPE_COMWORLD, com_header.comWorld->name);
 				}
 			});
 	}
