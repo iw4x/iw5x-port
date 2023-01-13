@@ -23,7 +23,7 @@ namespace iw4::native
 			unsigned int fullDryLevel : 1;
 			unsigned int noWetLevel : 1;
 			unsigned int unknown : 1;
-			unsigned int unknown2 : 1;
+			unsigned int unk_is3D : 1;
 			unsigned int type : 2;
 			unsigned int channel : 6;
 		}; 

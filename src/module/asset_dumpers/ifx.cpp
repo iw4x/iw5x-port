@@ -73,6 +73,7 @@ namespace asset_dumpers
 
 		case game::native::FX_ELEM_TYPE_OMNI_LIGHT:
 		case game::native::FX_ELEM_TYPE_SPOT_LIGHT:
+			
 			break;
 
 		case game::native::FX_ELEM_TYPE_SOUND:
@@ -105,14 +106,22 @@ namespace asset_dumpers
 		{
 			if (visuals->material)
 			{
+				// We reallocate it because we're copying it over to the new one and modifying it soo...
+				auto backup = visuals->material->info.name;
+
+				auto suffixed_name = std::string(backup) + itechniqueset::techset_suffix;
+
+				// We have to rename it because it gets otherwise shadowed by iw4!
+				visuals->material->info.name = local_allocator.duplicate_string(suffixed_name);
+
 				into->material =
 					exporter::dump(game::native::XAssetType::ASSET_TYPE_MATERIAL, { visuals->material })
 					.material;
 
-				// We have to rename it because it gets otherwise shadowed by iw4!
-				std::string mat_name = visuals->material->info.name;
-				mat_name += itechniqueset::techset_suffix;
-				into->material->info.name = local_allocator.duplicate_string(mat_name);
+				assert(into->material);
+
+				//// Restore original name
+				visuals->material->info.name = backup;
 			}
 
 			break;
@@ -172,6 +181,8 @@ namespace asset_dumpers
 			{
 				if (native_def->visuals.array)
 				{
+					iw4_def->visuals.array = local_allocator.allocate_array<iw4::native::FxElemVisuals>(native_def->visualCount);
+
 					for (char j = 0; j < native_def->visualCount; ++j)
 					{
 						convert(&native_def->visuals.array[j], &iw4_def->visuals.array[j], native_def->elemType);
@@ -210,8 +221,18 @@ namespace asset_dumpers
 			{
 				// Unsupported
 				iw4_def->extended.unknownDef = nullptr;
+
+				// Only case where this is valid
+				assert((native_def->extended.unknownDef != nullptr) == (native_def->elemType == game::native::FX_ELEM_TYPE_SPOT_LIGHT));
 			}
 		}
+
+		//
+		if (iw4_fx->name == "props/car_glass_med"s)
+		{
+			printf("");
+		}
+		//
 
 		out.fx = iw4_fx;
 	}

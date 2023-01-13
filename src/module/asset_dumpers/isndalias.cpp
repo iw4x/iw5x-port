@@ -61,9 +61,9 @@ namespace asset_dumpers
 		{ game::native::SndChannel::SND_CHANNEL_EXPLOSIONDIST2, iw4::native::SndChannel::SND_CHANNEL_BODY },
 		{ game::native::SndChannel::SND_CHANNEL_EXPLOSIVEIMPACT, iw4::native::SndChannel::SND_CHANNEL_BODY },
 
-		{ game::native::SndChannel::SND_CHANNEL_ELEMENT, iw4::native::SndChannel::SND_CHANNEL_AUTO },
-		{ game::native::SndChannel::SND_CHANNEL_ELEMENT_INT, iw4::native::SndChannel::SND_CHANNEL_AUTO },
-		{ game::native::SndChannel::SND_CHANNEL_ELEMENT_EXT, iw4::native::SndChannel::SND_CHANNEL_AUTO },
+		{ game::native::SndChannel::SND_CHANNEL_ELEMENT, iw4::native::SndChannel::SND_CHANNEL_ELEMENT },
+		{ game::native::SndChannel::SND_CHANNEL_ELEMENT_INT, iw4::native::SndChannel::SND_CHANNEL_ELEMENT },
+		{ game::native::SndChannel::SND_CHANNEL_ELEMENT_EXT, iw4::native::SndChannel::SND_CHANNEL_ELEMENT },
 
 		{ game::native::SndChannel::SND_CHANNEL_BULLETFLESH1, iw4::native::SndChannel::SND_CHANNEL_BULLETIMPACT },
 		{ game::native::SndChannel::SND_CHANNEL_BULLETFLESH2, iw4::native::SndChannel::SND_CHANNEL_BULLETIMPACT },
@@ -108,6 +108,13 @@ namespace asset_dumpers
 			auto iw4_alias = &iw4_sound->head[i];
 			auto native_alias = &native_sound->head[i];
 
+			///
+			if (native_alias->aliasName == "emt_mx_airport_dining"s)
+			{
+				printf("");
+			}
+			///
+
 			iw4_alias->aliasName = native_alias->aliasName;
 			iw4_alias->subtitle = native_alias->subtitle;
 			iw4_alias->secondaryAliasName = native_alias->secondaryAliasName;
@@ -120,6 +127,7 @@ namespace asset_dumpers
 			iw4_alias->pitchMin = native_alias->pitchMin;
 			iw4_alias->pitchMax = native_alias->pitchMax;
 			iw4_alias->distMin = native_alias->distMin;
+			iw4_alias->distMax = native_alias->distMax;
 
 			assert(native_alias->flags.channel == native_alias->flags.channel);
 
@@ -129,7 +137,6 @@ namespace asset_dumpers
 			assert(native_channel >= 0);
 
 			assert(native_alias->flags.type == native_alias->soundFile->type);
-
 
 			if (!channel_mapping.contains(native_channel))
 			{
@@ -144,6 +151,7 @@ namespace asset_dumpers
 			iw4_alias->flags.noWetLevel = native_alias->flags.noWetLevel;
 			iw4_alias->flags.type = native_alias->flags.type;
 			iw4_alias->flags.unknown = native_alias->flags.unknown;
+			iw4_alias->flags.unk_is3D = native_alias->flags.unk_is3D;
 			iw4_alias->flags.channel = channel_mapping.at(native_channel);
 
 			assert((native_alias->flags.intValue & 0x180) == (iw4_alias->flags.intValue & 0x180));
@@ -154,11 +162,11 @@ namespace asset_dumpers
 			iw4_alias->slavePercentage = native_alias->slavePercentage;
 			iw4_alias->probability = native_alias->probability;
 			iw4_alias->lfePercentage = native_alias->lfePercentage;
-			iw4_alias->lfePercentage = native_alias->lfePercentage;
 			iw4_alias->centerPercentage = native_alias->centerPercentage;
 			iw4_alias->startDelay = native_alias->startDelay;
 
 			iw4_alias->volumeFalloffCurve = local_allocator.allocate<iw4::native::SndCurve>();
+			iw4_alias->volumeFalloffCurve->filename = native_alias->volumeFalloffCurve->filename;
 			iw4_alias->volumeFalloffCurve->knotCount = std::min(static_cast<unsigned short>(8), native_alias->volumeFalloffCurve->knotCount);
 
 			if (native_alias->volumeFalloffCurve->knotCount > iw4_alias->volumeFalloffCurve->knotCount)
@@ -262,7 +270,7 @@ namespace asset_dumpers
 					auto channel_map = alias.speakerMap->channelMaps[j][k];
 					rapidjson::Value speakers(rapidjson::kArrayType);
 
-					for (size_t speakerIndex = 0; speakerIndex < channel_map.speakerCount; speakerIndex++)
+					for (auto speakerIndex = 0; speakerIndex < channel_map.speakerCount; speakerIndex++)
 					{
 						auto game_speaker = channel_map.speakers[speakerIndex];
 
@@ -301,7 +309,7 @@ namespace asset_dumpers
 					// STREAMED
 					case iw4::native::snd_alias_type_t::SAT_STREAMED:
 					{
-						std::string file_name = alias.soundFile->u.streamSnd.name;
+						file_name = alias.soundFile->u.streamSnd.name;
 
 						if (alias.soundFile->u.streamSnd.dir)
 						{

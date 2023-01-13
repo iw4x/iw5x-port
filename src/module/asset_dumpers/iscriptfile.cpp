@@ -134,7 +134,7 @@ namespace asset_dumpers
 		auto regex_str_template = "(?:{} *= *((?:[0-9]|\\.)*))";
 		const std::string members[] =
 		{
-			"startdist", "halfwaydist", "red", "green" ,"blue", "maxopacity", "transitiontime", "sunfogenabled"
+			"startdist", "halfwaydist", "red", "green" ,"blue", "maxopacity", "transitiontime"
 		};
 
 		std::stringstream regex_str{};
@@ -239,11 +239,24 @@ namespace asset_dumpers
 			"common_scripts\\_createfx::"
 		};
 
+		std::unordered_map< std::string, std::string> to_replace{
+			{"var_0", "ent"},
+			{"createoneshoteffect", "createOneshotEffect"},
+			{"createloopsound", "createLoopSound"},
+			{"\"origin\"", " \"origin\" "},
+			{"\"angles\"", " \"angles\" "},
+			{"\"soundalias\"", " \"soundalias\" "},
+			{"\"fxid\"", " \"fxid\" "},
+			{"\"delay\"", " \"delay\" "},
+			{"    ent = ", "\n    ent = "},
+		};
+
 		std::istringstream f(script);
 		std::string line;
 		auto i = 0;
 		while (std::getline(f, line)) 
 		{
+			// Skip the two Xensik comments - i wish i could keep them, but iw4 cfx does not allow comments except the canonical one
 			if (i > 2)
 			{
 				for (const auto& str : to_remove)
@@ -254,6 +267,11 @@ namespace asset_dumpers
 					{
 						line.erase(position, str.length());
 					}
+				}
+
+				for (const auto& kv : to_replace)
+				{
+					line = std::regex_replace(line, std::regex(kv.first), kv.second);
 				}
 
 				new_data << line << '\n';
