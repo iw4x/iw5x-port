@@ -403,6 +403,9 @@ namespace asset_dumpers
 				// Cast for legacy reasons
 				buffer.saveObject(static_cast<unsigned int>(clipMap->brushes[i].numsides));
 
+				// NEW
+				buffer.saveObject(clipMap->brushes[i].glassPieceIndex);
+
 				brushSideTotal += clipMap->brushes[i].numsides;
 				if (clipMap->brushes[i].numsides > 0)
 				{

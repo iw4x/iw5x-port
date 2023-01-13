@@ -75,6 +75,7 @@ namespace asset_dumpers
 				if (script_name.starts_with("maps/createfx/"))
 				{
 					dump_create_fx_sounds(final_output);
+					final_output = convert_to_strict_createfx(final_output);
 				}
 				else
 				{
@@ -224,6 +225,45 @@ namespace asset_dumpers
 				}
 			}
 		}
+	}
+
+	std::string iscriptfile::convert_to_strict_createfx(const std::string& script)
+	{
+		std::stringstream new_data;
+
+		// Obligatory IW4 header
+		new_data << "//_createfx generated. Do not touch!!\n#include common_scripts\\utility;\n#include common_scripts\\_createfx;\n\n";
+
+		std::vector< std::string> to_remove{
+			"common_scripts\\utility::" ,
+			"common_scripts\\_createfx::"
+		};
+
+		std::istringstream f(script);
+		std::string line;
+		auto i = 0;
+		while (std::getline(f, line)) 
+		{
+			if (i > 2)
+			{
+				for (const auto& str : to_remove)
+				{
+					std::string::size_type position = line.find(str);
+
+					if (position != std::string::npos)
+					{
+						line.erase(position, str.length());
+					}
+				}
+
+				new_data << line << '\n';
+			}
+			i++;
+
+		}
+
+		auto result = new_data.str();
+		return result;
 	}
 
 	void iscriptfile::dump_create_fx_sounds(const std::string& script)
