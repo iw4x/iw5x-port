@@ -400,7 +400,6 @@ namespace asset_dumpers
 						}
 
 						dump(header, true);
-						console::info("successfullly dumped sound %s!\n", name);
 					}
 					else
 					{

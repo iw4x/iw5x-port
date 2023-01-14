@@ -61,6 +61,8 @@ namespace asset_dumpers
 		{
 		case game::native::FX_ELEM_TYPE_MODEL:
 		{
+			assert(visuals->model);
+
 			if (visuals->model)
 			{
 				into->model =
@@ -78,9 +80,15 @@ namespace asset_dumpers
 
 		case game::native::FX_ELEM_TYPE_SOUND:
 		{
+
 			if (visuals->soundName)
 			{
-				auto sound = game::native::DB_FindXAssetHeader(game::native::XAssetType::ASSET_TYPE_SOUND, visuals->soundName, 0);
+				auto sound = game::native::DB_FindXAssetHeader(
+					game::native::XAssetType::ASSET_TYPE_SOUND, 
+					visuals->soundName, 
+					1 // Create default asset if missing - ON DLC MAPS THIS HAPPENS!
+				);
+
 				if (sound.data)
 				{
 					exporter::dump(game::native::XAssetType::ASSET_TYPE_SOUND, { sound });
@@ -92,6 +100,8 @@ namespace asset_dumpers
 
 		case game::native::FX_ELEM_TYPE_RUNNER:
 		{
+			assert(visuals->effectDef.handle);
+
 			if (visuals->effectDef.handle)
 			{
 				into->effectDef.handle
@@ -189,7 +199,7 @@ namespace asset_dumpers
 					}
 				}
 			}
-			else
+			else if (native_def->visualCount == 1)
 			{
 				convert(&native_def->visuals.instance, &iw4_def->visuals.instance, native_def->elemType);
 			}
@@ -307,7 +317,7 @@ namespace asset_dumpers
 							}
 						}
 					}
-					else
+					else if (elem_def->visualCount == 1)
 					{
 						write(&elem_def->visuals.instance, elem_def->elemType, &buffer);
 					}
@@ -406,7 +416,6 @@ namespace asset_dumpers
 						}
 
 						dump(header);
-						console::info("successfullly dumped fx %s!\n", name);
 					}
 					else
 					{

@@ -553,6 +553,11 @@ namespace asset_dumpers
 					else
 					{
 						code_sampler = static_cast<iw4::native::MaterialTextureSource>(iw5_sampler_table.at(native_arg->u.codeSampler));
+					
+						if (code_sampler == iw4::native::TEXTURE_SRC_CODE_OUTDOOR)
+						{
+							iw4_technique->flags |= 0x40; // 0x40 is necessary for outdoor sampling. I'm not exactly sure why - there is no similar example in iw3
+						}
 					}
 
 					iw4_arg->u.codeSampler = code_sampler;

@@ -19,7 +19,9 @@
 #include <xsk/utils/compression.hpp>
 #include <xsk/resolver.hpp>
 #include <interface.hpp>
+#include "../gsc/script_loading.hpp"
 #include <module/console.hpp>
+#include "utils/hook.hpp"
 
 namespace asset_dumpers
 {
@@ -34,7 +36,22 @@ namespace asset_dumpers
 
 		if (script->compressedLen > 0 && script->bytecodeLen > 0 && script->len > 0)
 		{
-			const std::string script_name = script->name;
+			std::string script_name = script->name;
+
+			typedef int (*test_t)(const char*);
+			test_t test_func = (test_t)0x564560;
+			
+			typedef int (*Scr_CreateCanonicalFilename_t)(const char*);
+			Scr_CreateCanonicalFilename_t Scr_CreateCanonicalFilename = (Scr_CreateCanonicalFilename_t)0X564F70;
+			
+			typedef const char* (*getconststring_t)(int);
+			getconststring_t Scr_GetConstString = (getconststring_t)0x56A200;
+			
+			// This name has been mangled!
+			if (script->name[0] <= '9')
+			{
+				script_name = xsk::gsc::iw5::resolver::token_name(std::stoi(script_name));
+			}
 
 			auto data_compressed = std::vector<unsigned char>();
 			data_compressed.assign(script->buffer, script->buffer + script->compressedLen);

@@ -99,11 +99,6 @@ namespace asset_dumpers
 
 		memcpy(iw4_clipmap->dynEntCount, native_clipmap->dynEntCount, sizeof iw4_clipmap->dynEntCount);
 		
-		// WIP:
-		iw4_clipmap->dynEntCount[0] = 0;
-		iw4_clipmap->dynEntCount[1] = 0;
-		//
-		
 		for (auto i = 0; i < ARRAYSIZE(iw4_clipmap->dynEntDefList); i++)
 		{
 			auto count = iw4_clipmap->dynEntCount[i];
@@ -114,11 +109,25 @@ namespace asset_dumpers
 				auto native_def = &native_clipmap->dynEntDefList[i][dyn_index];
 
 				iw4_def->pose = native_def->pose;
-				iw4_def->xModel = exporter::dump(game::native::ASSET_TYPE_XMODEL, { native_def->xModel }).model;
+
+				if (native_def->xModel)
+				{
+					iw4_def->xModel = exporter::dump(game::native::ASSET_TYPE_XMODEL, { native_def->xModel }).model;
+				}
+
 				iw4_def->brushModel = native_def->brushModel;
 				iw4_def->physicsBrushModel = native_def->physicsBrushModel;
-				iw4_def->destroyFx = exporter::dump(game::native::ASSET_TYPE_FX, { native_def->destroyFx}).fx; // TODO
-				iw4_def->physPreset = exporter::dump(game::native::ASSET_TYPE_PHYSPRESET, { native_def->physPreset }).physPreset;
+
+				if (native_def->destroyFx)
+				{
+					iw4_def->destroyFx = exporter::dump(game::native::ASSET_TYPE_FX, { native_def->destroyFx }).fx;
+				}
+
+				if (native_def->physPreset)
+				{
+					iw4_def->physPreset = exporter::dump(game::native::ASSET_TYPE_PHYSPRESET, { native_def->physPreset }).physPreset;
+				}
+
 				iw4_def->health = native_def->health;
 				iw4_def->mass = native_def->mass;
 				iw4_def->contents = native_def->contents;
@@ -127,6 +136,13 @@ namespace asset_dumpers
 				{
 					iw4_def->type = iw4::native::DynEntityType::DYNENT_TYPE_INVALID; // unsupported
 					console::warn("Found non-supported hinge dynamic entity that we cannot convert (entity %i-%i)\n", i, dyn_index);
+					assert(false);
+				}
+				else
+				{
+					iw4_def->type = static_cast<iw4::native::DynEntityType>(native_def->type);
+					assert(iw4_def->type > 0);
+					assert(iw4_def->type < iw4::native::DynEntityType::DYNENT_TYPE_COUNT);
 				}
 			}
 
@@ -467,8 +483,6 @@ namespace asset_dumpers
 			}
 		}
 
-		// skip mapents here
-
 		for (int n = 0; n < 2; ++n)
 		{
 			if (clipMap->dynEntDefList[n])
@@ -520,31 +534,32 @@ namespace asset_dumpers
 		buffer.saveObject(numNodes);
 		buffer.saveArray<game::native::SModelAabbNode>(nodes, numNodes);
 
-		////////////////////
-		// Version 2
-		if (IW4X_CLIPMAP_VERSION >= 2)
+		// V3
+		// We save mapents
+		if (clipMap->mapEnts)
 		{
-			// add triggers to mapEnts
-			if (clipMap->cmodels)
+			const auto trigger = &clipMap->mapEnts->trigger;
+			buffer.save(trigger->count);
+			for (size_t i = 0; i < trigger->count; i++)
 			{
-				for (unsigned short i = 0; i < clipMap->numSubModels; ++i)
-				{
-					auto trigMod = clipMap->mapEnts->trigger.models[i];
-					auto trigHull = clipMap->mapEnts->trigger.hulls[i];
+				buffer.saveObject(trigger->models[i]);
+				static_assert(sizeof game::native::TriggerModel == 8);
+			}
 
-					buffer.saveObject(trigMod);
-					buffer.saveObject(trigHull);
-				}
+			buffer.save(trigger->hullCount);
+			for (size_t i = 0; i < trigger->hullCount; i++)
+			{
+				buffer.saveObject(trigger->hulls[i]);
+				static_assert(sizeof game::native::TriggerHull == 32);
+			}
 
-				buffer.save(clipMap->mapEnts->trigger.slabCount);
-				for (unsigned int i = 0; i < clipMap->mapEnts->trigger.slabCount; i++) {
-					buffer.saveObject(clipMap->mapEnts->trigger.slabs[i]);
-				}
+			buffer.save(trigger->slabCount);
+			for (size_t i = 0; i < trigger->slabCount; i++)
+			{
+				buffer.saveObject(trigger->slabs[i]);
+				static_assert(sizeof game::native::TriggerSlab == 20);
 			}
 		}
-
-
-		///////////////////////
 
 		buffer.saveObject(clipMap->checksum);
 
