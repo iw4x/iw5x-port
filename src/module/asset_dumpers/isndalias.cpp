@@ -57,13 +57,13 @@ namespace asset_dumpers
 		// 🆕
 		{ game::native::SndChannel::SND_CHANNEL_ALARM1, iw4::native::SndChannel::SND_CHANNEL_AUTO },
 
-		{ game::native::SndChannel::SND_CHANNEL_EXPLOSIONDIST1, iw4::native::SndChannel::SND_CHANNEL_BODY },
-		{ game::native::SndChannel::SND_CHANNEL_EXPLOSIONDIST2, iw4::native::SndChannel::SND_CHANNEL_BODY },
+		{ game::native::SndChannel::SND_CHANNEL_EXPLOSIONDIST1, iw4::native::SndChannel::SND_CHANNEL_EFFECTS1 },
+		{ game::native::SndChannel::SND_CHANNEL_EXPLOSIONDIST2, iw4::native::SndChannel::SND_CHANNEL_AUTO },
 		{ game::native::SndChannel::SND_CHANNEL_EXPLOSIVEIMPACT, iw4::native::SndChannel::SND_CHANNEL_BODY },
 
 		{ game::native::SndChannel::SND_CHANNEL_ELEMENT, iw4::native::SndChannel::SND_CHANNEL_ELEMENT },
-		{ game::native::SndChannel::SND_CHANNEL_ELEMENT_INT, iw4::native::SndChannel::SND_CHANNEL_ELEMENT },
-		{ game::native::SndChannel::SND_CHANNEL_ELEMENT_EXT, iw4::native::SndChannel::SND_CHANNEL_ELEMENT },
+		{ game::native::SndChannel::SND_CHANNEL_ELEMENT_INT, iw4::native::SndChannel::SND_CHANNEL_AUTO },
+		{ game::native::SndChannel::SND_CHANNEL_ELEMENT_EXT, iw4::native::SndChannel::SND_CHANNEL_AUTO },
 
 		{ game::native::SndChannel::SND_CHANNEL_BULLETFLESH1, iw4::native::SndChannel::SND_CHANNEL_BULLETIMPACT },
 		{ game::native::SndChannel::SND_CHANNEL_BULLETFLESH2, iw4::native::SndChannel::SND_CHANNEL_BULLETIMPACT },
@@ -108,13 +108,6 @@ namespace asset_dumpers
 			auto iw4_alias = &iw4_sound->head[i];
 			auto native_alias = &native_sound->head[i];
 
-			///
-			if (native_alias->aliasName == "emt_mx_airport_dining"s)
-			{
-				printf("");
-			}
-			///
-
 			iw4_alias->aliasName = native_alias->aliasName;
 			iw4_alias->subtitle = native_alias->subtitle;
 			iw4_alias->secondaryAliasName = native_alias->secondaryAliasName;
@@ -129,8 +122,6 @@ namespace asset_dumpers
 			iw4_alias->distMin = native_alias->distMin;
 			iw4_alias->distMax = native_alias->distMax;
 
-			assert(native_alias->flags.channel == native_alias->flags.channel);
-
 			auto native_channel = static_cast<game::native::SndChannel>(native_alias->flags.channel);
 
 			assert(native_channel < game::native::SndChannel::SND_CHANNEL_COUNT);
@@ -142,6 +133,7 @@ namespace asset_dumpers
 			{
 				assert(false);
 			}
+
 
 			iw4_alias->flags.intValue = 0;
 			iw4_alias->flags.looping = native_alias->flags.looping;

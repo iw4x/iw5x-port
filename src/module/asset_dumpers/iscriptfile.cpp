@@ -110,7 +110,10 @@ namespace asset_dumpers
 			std::unordered_map<std::string, std::string> replacements
 			{
 				// Remove audio reverb setting
-				{"maps\\mp\\_audio::", "// Commented out by iw5xport\n// maps\\mp\\_audio::"}
+				{"maps\\mp\\_audio::", "// Commented out by iw5xport\n// maps\\mp\\_audio::"},
+
+				// sunlight createart call
+				{"setsunlight", "// Commented out by iw5xport\n// setsunlight"}
 			};
 
 			for (auto replacement : replacements)

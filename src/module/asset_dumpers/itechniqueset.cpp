@@ -348,7 +348,7 @@ namespace asset_dumpers
 
 	void itechniqueset::write(const iw4::native::XAssetHeader& header)
 	{
-		auto techset = header.techniqueSet;
+		const auto techset = header.techniqueSet;
 
 		rapidjson::Document output(rapidjson::kObjectType);
 		auto& allocator = output.GetAllocator();
@@ -846,7 +846,6 @@ namespace asset_dumpers
 
 				if (name == "*"s)
 				{
-					static std::mutex m{};
 					game::native::DB_EnumXAssets(game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, [](game::native::XAssetHeader header, void* data) {
 						auto asset_dmper = reinterpret_cast<asset_dumper*>(data);
 
@@ -859,7 +858,7 @@ namespace asset_dumpers
 
 					if (header.data)
 					{
-						asset_dumper::dump(header, true);
+						asset_dumper::dump(header);
 						console::info("successfullly dumped techset %s!\n", name);
 					}
 					else

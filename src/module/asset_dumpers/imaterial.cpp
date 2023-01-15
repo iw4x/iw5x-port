@@ -76,6 +76,18 @@ namespace asset_dumpers
 				// DISPLACEMENT_MAP is not in iw4
 				tex->semantic = iw4::native::TS_UNUSED_2;
 			}
+
+			if (tex->u.image == nullptr)
+			{
+				// This happens sometimes! No idea why, it sounds like a big mistake to me
+				// Maybe because of dedicated server files?
+				// This will crash the game in iw4 so we gotta be very careful about it
+				auto other_image = game::native::DB_FindXAssetHeader(game::native::XAssetType::ASSET_TYPE_IMAGE, "$default", 1);
+				tex->u.image = exporter::dump(game::native::XAssetType::ASSET_TYPE_IMAGE, other_image).image;
+				console::warn("missing image %i of material %s! This will not crash, but it will look weird...\n", i, iw4_material->info.name);
+			}
+
+			assert(tex->u.image);
 		}
 
 		iw4_material->constantTable = native_material->constantTable;
@@ -147,18 +159,19 @@ namespace asset_dumpers
 							exporter::dump(game::native::XAssetType::ASSET_TYPE_IMAGE, { water->image });
 						}
 
-						constexpr unsigned long BUFF_SIZE = 1024;
+						constexpr unsigned long BUFF_SIZE = 0xFFFF; // 65KB
 
 						// Save_water_t
 						if (water->H0)
 						{
 							auto ptr = reinterpret_cast<uint8_t*>(water->H0);
 							auto buffer = std::vector<uint8_t>(ptr, ptr + water->M * water->N * sizeof(game::native::complex_s));
-							
+
+							auto b64 = local_allocator.allocate_array<char>(BUFF_SIZE);
 							unsigned long buffLength = BUFF_SIZE;
-							char b64[BUFF_SIZE];
-							base64_encode(&buffer.front(), buffer.size(), b64, &buffLength);
-							assert(buffLength < BUFF_SIZE);
+
+							auto result = base64_encode(&buffer.front(), buffer.size(), b64, &buffLength);
+							assert(result == CRYPT_OK);
 
 							waterJson.AddMember("H0", RAPIDJSON_STR(str_duplicator.duplicate_string(b64)), allocator);
 						}
@@ -168,10 +181,11 @@ namespace asset_dumpers
 							auto ptr = reinterpret_cast<uint8_t*>(water->wTerm);
 							auto buffer = std::vector<uint8_t>(ptr, ptr + water->M * water->N * sizeof(float));
 
+							auto b64 = local_allocator.allocate_array<char>(BUFF_SIZE);
 							unsigned long buffLength = BUFF_SIZE;
-							char b64[BUFF_SIZE];
-							base64_encode(&buffer.front(), buffer.size(), b64, &buffLength);
-							assert(buffLength < BUFF_SIZE);
+
+							auto result = base64_encode(&buffer.front(), buffer.size(), b64, &buffLength);
+							assert(result == CRYPT_OK);
 
 							waterJson.AddMember("wTerm", RAPIDJSON_STR(str_duplicator.duplicate_string(b64)), allocator);
 						}
@@ -193,10 +207,18 @@ namespace asset_dumpers
 						textureJson.AddMember("water", waterJson, allocator);
 					}
 				}
-				else if (textureDef->u.image)
+				else
 				{
-					textureJson.AddMember("image", RAPIDJSON_STR(textureDef->u.image->name), allocator);
-					exporter::dump(game::native::XAssetType::ASSET_TYPE_IMAGE, { textureDef->u.image });
+					if (textureDef->u.image)
+					{
+						textureJson.AddMember("image", RAPIDJSON_STR(textureDef->u.image->name), allocator);
+						exporter::dump(game::native::XAssetType::ASSET_TYPE_IMAGE, { textureDef->u.image });
+					}
+					else
+					{
+						// This can't happen! It will crash the game
+						assert(false);
+					}
 				}
 
 				textureTable.PushBack(textureJson, allocator);

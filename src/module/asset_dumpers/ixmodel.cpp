@@ -10,7 +10,7 @@
 #include "module/command.hpp"
 #include <module\exporter.hpp>
 
-#define IW4X_MODEL_VERSION 8
+#define IW4X_MODEL_VERSION 9
 
 namespace asset_dumpers
 {
@@ -106,13 +106,6 @@ namespace asset_dumpers
 				auto target = &iw4_lod->surfs[j];
 				*target = convert(&native_lod->surfs[j]);
 				
-				if (i != native_model->collLod)
-				{
-					for (size_t k = 0; k < target->vertListCount; k++)
-					{
-						target->vertList[k].collisionTree = nullptr; // Only collod is used
-					}
-				}
 			}
 
 			// Should we keep these? TODO try
@@ -282,11 +275,11 @@ namespace asset_dumpers
 					if (geom->brushWrapper)
 					{
 						game::native::BrushWrapper* brush = geom->brushWrapper;
-						buffer.saveObject(*brush);
+						buffer.saveArrayIfNotExisting(brush, 1);
 						{
 							if (brush->brush.sides)
 							{
-								buffer.saveArray(brush->brush.sides, brush->brush.numsides);
+								buffer.saveArrayIfNotExisting(brush->brush.sides, brush->brush.numsides);
 
 								// Save_cbrushside_tArray
 								for (unsigned short j = 0; j < brush->brush.numsides; ++j)
@@ -296,21 +289,21 @@ namespace asset_dumpers
 									// TODO: Add pointer support
 									if (side->plane)
 									{
-										buffer.saveObject(*side->plane);
+										buffer.saveArrayIfNotExisting(side->plane, 1);
 									}
 								}
 							}
 
 							if (brush->brush.baseAdjacentSide)
 							{
-								buffer.saveArray(brush->brush.baseAdjacentSide, brush->totalEdgeCount);
+								buffer.saveArrayIfNotExisting(brush->brush.baseAdjacentSide, brush->totalEdgeCount);
 							}
 						}
 
 						// TODO: Add pointer support
 						if (brush->planes)
 						{
-							buffer.saveArray(brush->planes, brush->brush.numsides);
+							buffer.saveArrayIfNotExisting(brush->planes, brush->brush.numsides);
 						}
 					}
 				}
@@ -424,7 +417,6 @@ namespace asset_dumpers
 					}
 
 					dump(header);
-					console::info("successfullly dumped xmodel %s!\n", name);
 				}
 				else
 				{
