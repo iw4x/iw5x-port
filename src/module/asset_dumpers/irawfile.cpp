@@ -20,8 +20,58 @@ namespace asset_dumpers
 	{
 		assert(header.rawfile);
 
+		std::string name(header.rawfile->name);
+		if (name.ends_with(".vision"))
+		{
+			// IW4 is a very vibrant game, so let's saturate vision a little bit
+			saturate_vision(header.rawfile);
+		}
+
 		// No conversion
 		out.rawfile = header.rawfile;
+	}
+
+	void irawfile::saturate_vision(game::native::RawFile* rawfile)
+	{
+		if (rawfile->len > 0)
+		{
+			std::vector<unsigned char> data_decompressed;
+			std::string data;
+			if (rawfile->compressedLen > 0)
+			{
+				auto data_compressed = std::vector<unsigned char>();
+				data_compressed.assign(rawfile->buffer, rawfile->buffer + rawfile->compressedLen);
+				data_decompressed = xsk::utils::zlib::decompress(data_compressed, rawfile->len);
+				auto decompressed_length = data_decompressed.size();
+				assert(decompressed_length == rawfile->len);
+				data = std::string(reinterpret_cast<const char*>(data_decompressed.data()), decompressed_length);
+			}
+			else
+			{
+				data = rawfile->buffer;
+			}
+
+			static std::regex saturation_catcher("(r_filmDesaturation +)\"([0-9]+(?:\\.[0-9]*)?)\"");
+
+			std::smatch m;
+
+			if (std::regex_search(data, m, saturation_catcher))
+			{
+				auto value = m.str(2);
+				auto f_value = std::stof(value);
+
+				// I hope that isn't a bit too much
+				f_value -= 0.25f;
+
+				value = std::to_string(f_value);
+
+				data = std::regex_replace(data, saturation_catcher, "$1\""s + value + "\"");
+
+				rawfile->buffer = local_allocator.duplicate_string(data);
+				rawfile->compressedLen = 0;
+				rawfile->len = data.size();
+			}
+		}
 	}
 
 	void irawfile::write(const iw4::native::XAssetHeader& header)

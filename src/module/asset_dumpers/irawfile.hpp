@@ -14,6 +14,7 @@ namespace asset_dumpers
 
 	protected:
 		void convert(const game::native::XAssetHeader& header, iw4::native::XAssetHeader& out) override;
+		void saturate_vision(game::native::RawFile* rawfile);
 		void write(const iw4::native::XAssetHeader& header) override;
 	};
 }
