@@ -121,7 +121,7 @@ namespace asset_dumpers
 				int index;
 				if ((index = final_output.find(replacement.first)) != std::string::npos) 
 				{
-					final_output = final_output.replace(index, replacement.second.length(), replacement.second);
+					final_output = final_output.replace(index, replacement.first.length(), replacement.second);
 				}
 			}
 

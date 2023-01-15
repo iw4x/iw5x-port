@@ -14,8 +14,6 @@
 
 #define IW4X_TECHSET_VERSION 1
 
-#define LITTERALIZE_SATURATION 1
-
 namespace asset_dumpers
 {
 	const std::string itechniqueset::techset_suffix = ".5x";
@@ -72,6 +70,25 @@ namespace asset_dumpers
 		{ iw4::native::TECHNIQUE_DEBUG_BUMPMAP_INSTANCED, game::native::TECHNIQUE_DEBUG_BUMPMAP_INSTANCED },
 	};
 
+	std::unordered_map<std::uint16_t, std::array<float, 4>> literal_const_map =
+	{
+		// Offset is straight up added to output 1 
+		//    add o1.xyz, r1, c10 CONST_SRC_CODE_EYEOFFSET
+		// in vertices so making it zero effectively voids it
+		{ game::native::CONST_SRC_CODE_EYEOFFSET, {0.f, 0.f, 0.f, 0.f}},
+
+		// W (4th member) must be zero because otherwise it destroys color with a dot product 4 (DP4)
+		// For saturations
+		/*
+			dp4_pp r2.x, r2, c6 CONST_SRC_CODE_COLOR_SATURATION_R
+			dp4_pp r2.y, r2, c7 CONST_SRC_CODE_COLOR_SATURATION_G
+			dp4_pp r2.z, r2, c8 CONST_SRC_CODE_COLOR_SATURATION_B
+		*/
+		{ game::native::CONST_SRC_CODE_COLOR_SATURATION_R, {1.f, 0.f, 0.f, 0.f}},
+		{ game::native::CONST_SRC_CODE_COLOR_SATURATION_G, {0.f, 1.f, 0.f, 0.f}},
+		{ game::native::CONST_SRC_CODE_COLOR_SATURATION_B, {0.f, 0.f, 1.f, 0.f}}
+	};
+
 	// IW5 on the left - IW4 on the right
 	const std::unordered_map <std::uint16_t, std::uint16_t> itechniqueset::iw5_code_const_map =
 	{
@@ -83,15 +100,6 @@ namespace asset_dumpers
 		{ game::native::CONST_SRC_CODE_LIGHT_FALLOFF_PLACEMENT, iw4::native::CONST_SRC_CODE_LIGHT_FALLOFF_PLACEMENT },
 		{ game::native::CONST_SRC_CODE_PARTICLE_CLOUD_COLOR, iw4::native::CONST_SRC_CODE_PARTICLE_CLOUD_COLOR },
 		{ game::native::CONST_SRC_CODE_GAMETIME, iw4::native::CONST_SRC_CODE_GAMETIME },
-
-		//{ game::native::CONST_SRC_CODE_EYEOFFSET, iw4::native::CONST_SRC_NONE }, // Wrong
-
-		// We handle these manually
-#if !LITTERALIZE_SATURATION
-		{ game::native::CONST_SRC_CODE_COLOR_SATURATION_R, iw4::native::CONST_SRC_CODE_LIGHT_POSITION },
-		{ game::native::CONST_SRC_CODE_COLOR_SATURATION_G, iw4::native::CONST_SRC_CODE_LIGHT_POSITION },
-		{ game::native::CONST_SRC_CODE_COLOR_SATURATION_B, iw4::native::CONST_SRC_CODE_LIGHT_POSITION },
-#endif
 
 		{ game::native::CONST_SRC_CODE_PIXEL_COST_FRACS, iw4::native::CONST_SRC_CODE_PIXEL_COST_FRACS },
 		{ game::native::CONST_SRC_CODE_PIXEL_COST_DECODE, iw4::native::CONST_SRC_CODE_PIXEL_COST_DECODE },
@@ -336,6 +344,11 @@ namespace asset_dumpers
 			{
 				auto iw5_technique = native_techset->techniques[techniques_from_iw5_to_iw4.at(technique)];
 				iw4_techset->techniques[technique] = convert(iw5_technique);
+
+				if ((iw4_techset->techniques[technique] == nullptr) != (iw5_technique == nullptr))
+				{
+					printf("");
+				}
 			}
 			else
 			{
@@ -487,36 +500,18 @@ namespace asset_dumpers
 					|| native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_CODE_VERTEX_CONST)
 				{
 
-#if LITTERALIZE_SATURATION
 					// Handling special cases
-					if (
-						native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_CODE_PIXEL_CONST &&
-						(native_arg->u.codeConst.index == game::native::CONST_SRC_CODE_COLOR_SATURATION_R ||
-						native_arg->u.codeConst.index == game::native::CONST_SRC_CODE_COLOR_SATURATION_G ||
-						native_arg->u.codeConst.index == game::native::CONST_SRC_CODE_COLOR_SATURATION_B))
-
+					if (literal_const_map.contains(native_arg->u.codeConst.index))
 					{
-						iw4_arg->type = iw4::native::MTL_ARG_LITERAL_PIXEL_CONST;
-						auto new_litteral = local_allocator.allocate_array<float>(4);
+						iw4_arg->type = 
+							native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_CODE_PIXEL_CONST ? 
+								iw4::native::MTL_ARG_LITERAL_PIXEL_CONST :
+								iw4::native::MTL_ARG_LITERAL_VERTEX_CONST;
 
-
-						// W (4th member) must be zero because otherwise it destroys color with a dot product 4 (DP4)
-						/*
-							dp4_pp r2.x, r2, c6
-							dp4_pp r2.y, r2, c7
-							dp4_pp r2.z, r2, c8
-						*/
-
-						new_litteral[0] = native_arg->u.codeConst.index == game::native::CONST_SRC_CODE_COLOR_SATURATION_R ? 1.f : 0.f;
-						new_litteral[1] = native_arg->u.codeConst.index == game::native::CONST_SRC_CODE_COLOR_SATURATION_G ? 1.f : 0.f;
-						new_litteral[2] = native_arg->u.codeConst.index == game::native::CONST_SRC_CODE_COLOR_SATURATION_B ? 1.f : 0.f;
-						new_litteral[3] = 0.f;
-
-						iw4_arg->u.literalConst = reinterpret_cast<float(*)[4]>(new_litteral);
+						iw4_arg->u.literalConst = reinterpret_cast<float(*)[4]>(literal_const_map.at(native_arg->u.codeConst.index).data());
 					}
 					else
 					{
-#endif
 						if (native_arg->u.codeConst.index == game::native::CONST_SRC_CODE_UNK1)
 						{
 							__debugbreak();
@@ -536,9 +531,7 @@ namespace asset_dumpers
 						
 						assert(iw4_arg->u.codeConst.index < iw4::native::CONST_SRC_TOTAL_COUNT);
 
-#if LITTERALIZE_SATURATION
 					}
-#endif
 				}
 				else if (native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_CODE_PIXEL_SAMPLER)
 				{
@@ -566,7 +559,6 @@ namespace asset_dumpers
 				arguments_to_sort.push_back(*iw4_arg);
 			}
 
-#if LITTERALIZE_SATURATION
 			std::sort(arguments_to_sort.begin(), arguments_to_sort.end(), [this](const game::native::MaterialShaderArgument& arg1, const game::native::MaterialShaderArgument& arg2)
 				{
 					auto a1_freq = get_update_frequency(arg1);
@@ -593,7 +585,6 @@ namespace asset_dumpers
 				});
 
 			std::copy(arguments_to_sort.begin(), arguments_to_sort.end(), iw4_pass->args);
-#endif
 		}
 
 		return iw4_technique;
@@ -798,6 +789,13 @@ namespace asset_dumpers
 		{
 			name = std::format("{}{}", ps->name, itechniqueset::techset_suffix);
 			ps_copy->name = local_allocator.duplicate_string(name);
+
+			//
+			if (name.contains("fog_foam_detail_flatn"))
+			{
+				printf("");
+			}
+			//
 		}
 
 		utils::stream buffer;
