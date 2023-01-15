@@ -1343,7 +1343,7 @@ namespace game
 
 		struct LoadedSound
 		{
-			const char* name;
+			char* name;
 			MssSound sound;
 		};
 

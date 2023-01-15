@@ -75,7 +75,8 @@ namespace asset_dumpers
 
 		case game::native::FX_ELEM_TYPE_OMNI_LIGHT:
 		case game::native::FX_ELEM_TYPE_SPOT_LIGHT:
-			
+			// Unused in COD6
+			into->anonymous = (void*)0xDEADC0DE;
 			break;
 
 		case game::native::FX_ELEM_TYPE_SOUND:
@@ -91,6 +92,7 @@ namespace asset_dumpers
 
 				if (sound.data)
 				{
+					into->soundName = visuals->soundName;
 					exporter::dump(game::native::XAssetType::ASSET_TYPE_SOUND, { sound });
 				}
 			}
@@ -166,18 +168,25 @@ namespace asset_dumpers
 			auto iw4_def = &iw4_fx->elemDefs[i];
 			auto native_def = &native_fx->elemDefs[i];
 
+			iw4_def->visuals = iw4::native::FxElemDefVisuals{};
+
 			// fxElemType is IDENTICAL
 			if (native_def->elemType == game::native::FX_ELEM_TYPE_DECAL)
 			{
 				if (native_def->visuals.markArray)
 				{
+					iw4_def->visuals.markArray = local_allocator.allocate_array<iw4::native::FxElemMarkVisuals>(native_def->visualCount);
 					for (char j = 0; j < native_def->visualCount; ++j)
 					{
-						for (auto k = 0; k < ARRAYSIZE(native_def->visuals.markArray[j].materials); k++)
+						constexpr auto arr_count = ARRAYSIZE(native_def->visuals.markArray[j].materials);
+						static_assert(arr_count == 2);
+						for (auto k = 0; k < arr_count; k++)
 						{
+							auto materials = iw4_def->visuals.markArray[j].materials;
+
 							if (native_def->visuals.markArray[j].materials[k])
 							{
-								iw4_def->visuals.markArray[j].materials[k] =
+								materials[k] =
 									exporter::dump(
 										game::native::XAssetType::ASSET_TYPE_MATERIAL,
 										{ native_def->visuals.markArray[j].materials[k] }
@@ -201,7 +210,9 @@ namespace asset_dumpers
 			}
 			else if (native_def->visualCount == 1)
 			{
+				iw4_def->visuals.instance.anonymous = nullptr; // Making sure it's dead
 				convert(&native_def->visuals.instance, &iw4_def->visuals.instance, native_def->elemType);
+				assert(iw4_def->visuals.instance.anonymous);
 			}
 
 			if (native_def->effectOnImpact.handle)

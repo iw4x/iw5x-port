@@ -187,6 +187,12 @@ namespace asset_dumpers
 					// LOADED
 				case iw4::native::snd_alias_type_t::SAT_LOADED:
 				{
+					// Man fuck that sound in particular
+					if (iw4_alias->soundFile->u.loadSnd->name == "amb_emitters/emt_mtl_chainlink_rattle2.wav"s)
+					{
+						iw4_alias->soundFile->u.loadSnd->name[37] = '1';
+					}
+
 					// Save the LoadedSound subasset
 					exporter::dump(game::native::XAssetType::ASSET_TYPE_LOADED_SOUND, { iw4_alias->soundFile->u.loadSnd });
 				}

@@ -817,8 +817,8 @@ namespace iw4::native
 		game::native::cLeafBrushNode_s* leafbrushNodes;
 		unsigned int numLeafBrushes;
 		unsigned __int16* leafbrushes;
-		unsigned int numLeafSurfaces;
-		unsigned int* leafsurfaces;
+			unsigned int numLeafSurfaces;
+			unsigned int* leafsurfaces;
 		unsigned int vertCount;
 		float(*verts)[3];
 		int triCount;

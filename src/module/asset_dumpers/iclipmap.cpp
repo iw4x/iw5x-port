@@ -528,11 +528,10 @@ namespace asset_dumpers
 			}
 		}
 
-		unsigned short numNodes = 0;
 		game::native::SModelAabbNode* nodes = clipMap->smodelNodes;
 
-		buffer.saveObject(numNodes);
-		buffer.saveArray<game::native::SModelAabbNode>(nodes, numNodes);
+		buffer.saveObject(clipMap->smodelNodeCount);
+		buffer.saveArray<game::native::SModelAabbNode>(nodes, clipMap->smodelNodeCount);
 
 		// V3
 		// We save mapents
