@@ -171,6 +171,19 @@ namespace asset_dumpers
 	{
 		assert(header.clipMap);
 
+		static_assert(sizeof iw4::native::clipMap_t == 256);
+		static_assert(sizeof game::native::ClipMaterial == 12);
+		static_assert(sizeof game::native::cbrushside_t == 8);
+		static_assert(sizeof game::native::cNode_t == 8);
+		static_assert(sizeof game::native::cLeaf_t == 40);
+		static_assert(sizeof game::native::cLeafBrushNode_s == 20);
+		static_assert(sizeof game::native::CollisionBorder == 28);
+		static_assert(sizeof game::native::CollisionPartition == 12);
+		static_assert(sizeof game::native::CollisionAabbTree == 32);
+		static_assert(sizeof iw4::native::cmodel_t == 68);
+		static_assert(sizeof game::native::SModelAabbNode == 28);
+
+
 		const auto clipMap = header.clipMap;
 
 		if (!clipMap) return;

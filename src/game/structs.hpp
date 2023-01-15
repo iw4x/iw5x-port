@@ -2599,14 +2599,12 @@ namespace game
 			unsigned char edgeCount;
 		};
 
-		typedef unsigned char cbrushedge_t;
-
 		struct cbrushWrapper_t
 		{
 			unsigned short numsides;
 			unsigned short glassPieceIndex;
 			cbrushside_t* sides;
-			cbrushedge_t* baseAdjacentSide;
+			unsigned char* baseAdjacentSide;
 			short axialMaterialNum[2][3];
 			unsigned char firstAdjacentSideOffsets[2][3];
 			unsigned char edgeCount[2][3];
@@ -3439,7 +3437,7 @@ namespace game
 			unsigned short numsides;
 			unsigned short glassPieceIndex;
 			cbrushside_t* sides;
-			cbrushedge_t* baseAdjacentSide;
+			unsigned char* baseAdjacentSide;
 			short axialMaterialNum[2][3];
 			unsigned char firstAdjacentSideOffsets[2][3];
 			unsigned char edgeCount[2][3];
@@ -3454,7 +3452,7 @@ namespace game
 			unsigned int numBrushSides;
 			cbrushside_t* brushsides;
 			unsigned int numBrushEdges;
-			cbrushedge_t* brushEdges;
+			unsigned char* brushEdges;
 			unsigned int leafbrushNodesCount;
 			cLeafBrushNode_s* leafbrushNodes;
 			unsigned int numLeafBrushes;

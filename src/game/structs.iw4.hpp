@@ -795,7 +795,7 @@ namespace iw4::native
 		game::native::cLeaf_t leaf;
 	};
 
-	struct clipMap_t
+	struct __declspec(align(64)) clipMap_t
 	{
 		const char* name;
 		int isInUse;
@@ -808,7 +808,7 @@ namespace iw4::native
 		unsigned int numBrushSides;
 		game::native::cbrushside_t* brushsides;
 		unsigned int numBrushEdges;
-		game::native::cbrushedge_t* brushEdges;
+		unsigned char* brushEdges;
 		unsigned int numNodes;
 		game::native::cNode_t* nodes;
 		unsigned int numLeafs;
