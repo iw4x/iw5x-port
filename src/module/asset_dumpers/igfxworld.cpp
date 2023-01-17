@@ -33,7 +33,7 @@ namespace asset_dumpers
 
 		iw4_world->skies = local_allocator.allocate_array<iw4::native::GfxSky>(native_world->skyCount);
 		static_assert(sizeof iw4::native::GfxSky == sizeof game::native::GfxSky);
-		memcpy(iw4_world->skies, native_world->skies, native_world->skyCount);
+		memcpy(iw4_world->skies, native_world->skies, native_world->skyCount * sizeof iw4::native::GfxSky);
 
 		for (auto i = 0; i < native_world->skyCount; i++)
 		{
@@ -92,7 +92,7 @@ namespace asset_dumpers
 		static_assert(sizeof iw4_world->outdoorLookupMatrix == sizeof native_world->outdoorLookupMatrix);
 		memcpy(iw4_world->outdoorLookupMatrix, native_world->outdoorLookupMatrix, sizeof iw4_world->outdoorLookupMatrix);
 
-		if (iw4_world->outdoorImage)
+		if (native_world->outdoorImage)
 		{
 			iw4_world->outdoorImage = exporter::dump(game::native::ASSET_TYPE_IMAGE, { native_world->outdoorImage }).image;
 		}
