@@ -3438,7 +3438,7 @@ namespace game
 			unsigned short glassPieceIndex;
 			cbrushside_t* sides;
 			unsigned char* baseAdjacentSide;
-			short axialMaterialNum[2][3];
+			unsigned short axialMaterialNum[2][3];
 			unsigned char firstAdjacentSideOffsets[2][3];
 			unsigned char edgeCount[2][3];
 		};

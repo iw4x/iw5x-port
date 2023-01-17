@@ -15,5 +15,7 @@ namespace asset_dumpers
 	protected:
 		void convert(const game::native::XAssetHeader& header, iw4::native::XAssetHeader& out) override;
 		void write(const iw4::native::XAssetHeader& header) override;
+		void write_binary(const iw4::native::XAssetHeader& header);
+		void write_plaintext(const iw4::native::XAssetHeader& header);
 	};
 }
