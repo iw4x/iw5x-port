@@ -110,18 +110,25 @@ namespace asset_dumpers
 			std::unordered_map<std::string, std::string> replacements
 			{
 				// Remove audio reverb setting
-				{"maps\\mp\\_audio::", "// Commented out by iw5xport\n// maps\\mp\\_audio::"},
+				{"maps\\mp\\_audio::", "// Commented out by iw5xport\n    // maps\\mp\\_audio::"},
 
 				// sunlight createart call
-				{"setsunlight", "// Commented out by iw5xport\n// setsunlight"}
+				{"setsunlight", "// Commented out by iw5xport\n    // setsunlight"}  ,
+
+				// faceoff maps have these calls to set up spawns
+				{"maps\\mp\\gametypes\\faceoff", "// Commented out by iw5xport\n    // maps\\mp\\gametypes\\faceoff"}    
 			};
 
 			for (auto replacement : replacements)
 			{
 				int index;
-				if ((index = final_output.find(replacement.first)) != std::string::npos) 
+				auto work_copy = final_output;
+				int offset = 0;
+				while ((index = work_copy.find(replacement.first)) != std::string::npos)
 				{
-					final_output = final_output.replace(index, replacement.first.length(), replacement.second);
+					final_output = final_output.replace(index + offset, replacement.first.length(), replacement.second);
+					work_copy = work_copy.substr(index + replacement.first.length());
+					offset += index + replacement.second.length();
 				}
 			}
 
