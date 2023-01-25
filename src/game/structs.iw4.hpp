@@ -177,142 +177,6 @@ namespace iw4::native
 		TriggerSlab* slabs;
 	};
 
-	enum XAnimPartType
-	{
-		PART_TYPE_NO_QUAT = 0x0,
-		PART_TYPE_HALF_QUAT = 0x1,
-		PART_TYPE_FULL_QUAT = 0x2,
-		PART_TYPE_HALF_QUAT_NO_SIZE = 0x3,
-		PART_TYPE_FULL_QUAT_NO_SIZE = 0x4,
-		PART_TYPE_SMALL_TRANS = 0x5,
-		PART_TYPE_TRANS = 0x6,
-		PART_TYPE_TRANS_NO_SIZE = 0x7,
-		PART_TYPE_NO_TRANS = 0x8,
-		PART_TYPE_ALL = 0x9,
-	};
-
-	union XAnimIndices
-	{
-		char* _1;
-		unsigned short* _2;
-		void* data;
-	};
-
-	struct XAnimNotifyInfo
-	{
-		unsigned __int16 name;
-		float time;
-	};
-
-	union XAnimDynamicFrames
-	{
-		char(*_1)[3];
-		unsigned __int16(*_2)[3];
-	};
-
-	union XAnimDynamicIndices
-	{
-		char _1[1];
-		unsigned __int16 _2[1];
-	};
-
-	struct XAnimPartTransFrames
-	{
-		float mins[3];
-		float size[3];
-		XAnimDynamicFrames frames;
-		XAnimDynamicIndices indices;
-	};
-
-	union XAnimPartTransData
-	{
-		XAnimPartTransFrames frames;
-		float frame0[3];
-	};
-
-	struct XAnimPartTrans
-	{
-		unsigned __int16 size;
-		char smallTrans;
-		XAnimPartTransData u;
-	};
-
-	struct XAnimDeltaPartQuatDataFrames2
-	{
-		__int16* frames;
-		char indices[1];
-	};
-
-	union XAnimDeltaPartQuatData2
-	{
-		XAnimDeltaPartQuatDataFrames2 frames;
-		__int16 frame0[2];
-	};
-
-	struct XAnimDeltaPartQuat2
-	{
-		unsigned __int16 size;
-		XAnimDeltaPartQuatData2 u;
-	};
-
-	struct XAnimDeltaPartQuatDataFrames
-	{
-		__int16* frames;
-		char indices[1];
-	};
-
-	union XAnimDeltaPartQuatData
-	{
-		XAnimDeltaPartQuatDataFrames frames;
-		__int16 frame0[4];
-	};
-
-	struct XAnimDeltaPartQuat
-	{
-		unsigned __int16 size;
-		XAnimDeltaPartQuatData u;
-	};
-
-	struct XAnimDeltaPart
-	{
-		XAnimPartTrans* trans;
-		XAnimDeltaPartQuat2* quat2;
-		XAnimDeltaPartQuat* quat;
-	};
-
-	struct XAnimParts
-	{
-		const char* name; // 0
-		unsigned short dataByteCount; // 4
-		unsigned short dataShortCount; // 6
-		unsigned short dataIntCount; // 8
-		unsigned short randomDataByteCount; // 10 - 0xA
-		unsigned short randomDataIntCount;// 12 - 0xC
-		unsigned short framecount; // 14 - 0xE
-		char bLoop; // 16
-		char boneCount[10]; // 17
-		char notetrackCount; // 27
-		char pad1; // 28
-		char bDelta; // 29
-		char assetType; // 30
-		char pad2; // 31
-		int randomDataShortCount; // 32 - 0x20
-		int indexcount; // 36 - 0x24
-		float framerate; // 40 - 0x28
-		float frequency; // 44 - 0x2C
-		short* tagnames; // 48 - 0x30
-		char* dataByte;// 52 - 0x34
-		short* dataShort; // 56 - 0x38
-		int* dataInt; // 60 - 0x3C
-		short* randomDataShort; // 64 - 0x40
-		char* randomDataByte; // 68 - 0x44
-		int* randomDataInt; // 72 - 0x48
-		XAnimIndices indices; // 76 - 0x4C
-		XAnimNotifyInfo* notetracks; // 80 - 0x50
-		XAnimDeltaPart* delta; // 84 - 0x54
-								// 88 - 0x58
-	};
-
 	struct XModelTagPos
 	{
 		float x;
@@ -1758,8 +1622,8 @@ namespace iw4::native
 	struct SndCurve
 	{
 		const char* filename;
-		int knotCount;
-		float knots[8][2];
+		unsigned __int16 knotCount;
+		float knots[16][2];
 	};
 
 	const struct snd_alias_t
@@ -1801,7 +1665,7 @@ namespace iw4::native
 		void* data;
 		PhysPreset* physPreset;
 		game::native::PhysCollmap* physCollmap;
-		XAnimParts* parts;
+		game::native::XAnimParts* parts;
 		XModelSurfs* modelSurfs;
 		XModel* model;
 		Material* material;
@@ -1811,7 +1675,7 @@ namespace iw4::native
 		MaterialTechniqueSet* techniqueSet;
 		GfxImage* image;
 		snd_alias_list_t* sound;
-		//SndCurve* sndCurve;
+		SndCurve* sndCurve;
 		game::native::LoadedSound* loadSnd;
 		clipMap_t* clipMap;
 		ComWorld* comWorld;

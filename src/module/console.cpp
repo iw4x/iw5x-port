@@ -63,7 +63,8 @@ void console::print(const int type, const char* fmt, ...)
 	const auto result = format(&ap, fmt);
 	va_end(ap);
 
-	dispatch_message(type, result);
+	log_message(result);
+	//dispatch_message(type, result);
 }
 
 void console::log_messages() const

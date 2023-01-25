@@ -3932,6 +3932,152 @@ namespace game
 			FxElemDef* elemDefs;
 		};
 
+		enum XAnimPartType
+		{
+			PART_TYPE_NO_QUAT = 0x0,
+			PART_TYPE_HALF_QUAT = 0x1,
+			PART_TYPE_FULL_QUAT = 0x2,
+			PART_TYPE_HALF_QUAT_NO_SIZE = 0x3,
+			PART_TYPE_FULL_QUAT_NO_SIZE = 0x4,
+			PART_TYPE_SMALL_TRANS = 0x5,
+			PART_TYPE_TRANS = 0x6,
+			PART_TYPE_TRANS_NO_SIZE = 0x7,
+			PART_TYPE_NO_TRANS = 0x8,
+			PART_TYPE_ALL = 0x9,
+			PART_TYPE_COUNT = 0xA,
+		};
+
+		union XAnimIndices
+		{
+			char* _1;
+			unsigned short* _2;
+			void* data;
+		};
+
+		struct XAnimNotifyInfo
+		{
+			unsigned short name;
+			float time;
+		};
+
+		union XAnimDynamicFrames
+		{
+			char(*_1)[3];
+			unsigned __int16(*_2)[3];
+		};
+
+		union XAnimDynamicIndicesTrans
+		{
+			char _1[1];
+			unsigned short _2[1];
+		};
+
+		struct XAnimPartTransFrames
+		{
+			float mins[3];
+			float size[3];
+			XAnimDynamicFrames frames;
+			XAnimDynamicIndicesTrans indices;
+		};
+
+		union XAnimPartTransData
+		{
+			XAnimPartTransFrames frames;
+			vec3_t frame0;
+		};
+
+		struct XAnimPartTrans
+		{
+			unsigned short size;
+			char smallTrans;
+			XAnimPartTransData u;
+		};
+
+		union XAnimDynamicIndicesQuat2
+		{
+			char _1[1];
+			unsigned short _2[1];
+		};
+
+		struct XAnimDeltaPartQuatDataFrames2
+		{
+			__int16(*frames)[2];
+			XAnimDynamicIndicesQuat2 indices;
+		};
+
+		union XAnimDeltaPartQuatData2
+		{
+			XAnimDeltaPartQuatDataFrames2 frames;
+			int16_t frame0[2];
+		};
+
+		struct XAnimDeltaPartQuat2
+		{
+			unsigned short size;
+			XAnimDeltaPartQuatData2 u;
+		};
+
+		union XAnimDynamicIndicesQuat
+		{
+			char _1[1];
+			unsigned short _2[1];
+		};
+
+		struct XAnimDeltaPartQuatDataFrames
+		{
+			__int16(*frames)[4];
+			XAnimDynamicIndicesQuat indices;
+		};
+
+		union XAnimDeltaPartQuatData
+		{
+			XAnimDeltaPartQuatDataFrames frames;
+			short frame0[4];
+		};
+
+		struct XAnimDeltaPartQuat
+		{
+			unsigned short size;
+			XAnimDeltaPartQuatData u;
+		};
+
+		struct XAnimDeltaPart
+		{
+			XAnimPartTrans* trans;
+			XAnimDeltaPartQuat2* quat2;
+			XAnimDeltaPartQuat* quat;
+		};
+
+		struct XAnimParts
+		{
+			const char* name;
+			unsigned short dataByteCount;
+			unsigned short dataShortCount;
+			unsigned short dataIntCount;
+			unsigned short randomDataByteCount;
+			unsigned short randomDataIntCount;
+			unsigned short numframes;
+			char flags;
+			unsigned char boneCount[10];
+			char notifyCount;
+			char assetType;
+			bool isDefault;
+			unsigned int randomDataShortCount;
+			unsigned int indexCount;
+			float framerate;
+			float frequency;
+			unsigned short* names;
+			char* dataByte;
+			unsigned short* dataShort;
+			int* dataInt;
+			unsigned short* randomDataShort;
+			char* randomDataByte;
+			int* randomDataInt;
+			XAnimIndices indices;
+			XAnimNotifyInfo* notify;
+			XAnimDeltaPart* deltaPart;
+		};
+
 		namespace mp
 		{
 			enum ConfigString

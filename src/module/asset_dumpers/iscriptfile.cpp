@@ -101,8 +101,7 @@ namespace asset_dumpers
 			}
 			else if (script_name.ends_with("_precache"))
 			{
-				// TEMP - I didn't port animated model scripts yet
-				final_output = "main(){\n// Nuked by iw5xport...for now\n}\n";
+				dump_map_precache(final_output);
 			}
 
 			// General removals (things that don't exist in IW4)
@@ -249,6 +248,83 @@ namespace asset_dumpers
 				{
 					exporter::dump(game::native::ASSET_TYPE_FX, fx);
 					exporter::add_to_source(game::native::ASSET_TYPE_FX, fx_name);
+				}
+			}
+		}
+	}
+
+	void iscriptfile::dump_map_precache(const std::string& script)
+	{
+		std::regex anim_script_catcher(" *(.*)::main\\(\\);");
+		std::smatch anim_script_matches;
+
+		std::string::const_iterator search_start(script.cbegin());
+		while (std::regex_search(search_start, script.cend(), anim_script_matches, anim_script_catcher))
+		{
+			if (anim_script_matches.size() > 1)
+			{
+				const auto& match = anim_script_matches[1];
+				auto script_name = std::format("{}", match.str());
+				std::replace(script_name.begin(), script_name.end(), '\\', '/');
+				auto obfuscated_name = std::to_string(xsk::gsc::iw5::resolver::token_id(script_name));
+
+				auto script = game::native::DB_FindXAssetHeader(game::native::ASSET_TYPE_SCRIPTFILE, obfuscated_name.data(), 0);
+				search_start = anim_script_matches.suffix().first;
+
+				if (script.data)
+				{
+					auto rawfile = exporter::dump(game::native::ASSET_TYPE_SCRIPTFILE, script).rawfile;
+					auto raw_script = std::string(rawfile->buffer, rawfile->len);
+					dump_map_animtrees(raw_script);
+					dump_map_animated_model_anim(raw_script);
+				}
+			}
+		}
+	}
+
+	void iscriptfile::dump_map_animtrees(const std::string& script)
+	{
+		std::regex animtree_catcher("#using_animtree\\(\"(.*)\"\\);");
+		std::smatch m;
+
+		std::string::const_iterator search_start(script.cbegin());
+		while (std::regex_search(search_start, script.cend(), m, animtree_catcher))
+		{
+			if (m.size() > 1)
+			{
+				const auto& match = m[1];
+				auto animtree_name = std::format("animtrees/{}.atr", match.str());
+				auto animtree = game::native::DB_FindXAssetHeader(game::native::ASSET_TYPE_RAWFILE, animtree_name.data(), 0);
+				search_start = m.suffix().first;
+
+				if (animtree.rawfile)
+				{
+					exporter::dump(game::native::ASSET_TYPE_RAWFILE, animtree);
+					exporter::add_to_source(game::native::ASSET_TYPE_RAWFILE, animtree_name);
+				}
+			}
+		}
+	}
+
+	void iscriptfile::dump_map_animated_model_anim(const std::string& script)
+	{
+		std::regex anim_catcher("%(.*);"); // We use % because it's used for MP and SP (on destructibles for instance it's for both)
+		std::smatch m;
+
+		std::string::const_iterator search_start(script.cbegin());
+		while (std::regex_search(search_start, script.cend(), m, anim_catcher))
+		{
+			if (m.size() > 1)
+			{
+				const auto& match = m[1];
+				auto anim_name = match.str();
+				auto anim = game::native::DB_FindXAssetHeader(game::native::ASSET_TYPE_XANIMPARTS, anim_name.data(), 0);
+				search_start = m.suffix().first;
+
+				if (anim.data)
+				{
+					exporter::dump(game::native::ASSET_TYPE_XANIMPARTS, anim);
+					exporter::add_to_source(game::native::ASSET_TYPE_XANIMPARTS, anim_name);
 				}
 			}
 		}

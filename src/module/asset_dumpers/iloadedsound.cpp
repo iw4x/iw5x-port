@@ -18,7 +18,7 @@ namespace asset_dumpers
 	{
 		char* soundCopy = new char[loadedSound->sound.info.data_len];
 		ZeroMemory(soundCopy, loadedSound->sound.info.data_len);
-		std::memcpy(soundCopy, &(loadedSound->sound.data), loadedSound->sound.info.data_len);
+		std::memcpy(soundCopy, loadedSound->sound.data, loadedSound->sound.info.data_len);
 
 		available_sound_data.insert({ loadedSound->name, soundCopy });
 	}
@@ -35,26 +35,33 @@ namespace asset_dumpers
 	{
 		assert(header.loadSnd);
 
-		auto loadedSound = header.loadSnd;
-		if (!iloadedsound::available_sound_data.contains(loadedSound->name))
+		auto loaded_sound = header.loadSnd;
+		if (!iloadedsound::available_sound_data.contains(loaded_sound->name))
 		{
-			console::error("Tried to save sound %s which was never loaded before!\n", loadedSound->name);
+			console::error("Tried to save sound %s which was never loaded before!\n", loaded_sound->name);
 			return;
 		}
 
-		char* soundData = iloadedsound::available_sound_data[loadedSound->name];
+		//
+		if (header.loadSnd->name == "amb_emitters/emt_mtl_chainlink_rattle2.wav"s)
+		{
+			printf("");
+		}
+		//
+
+		char* sound_data = iloadedsound::available_sound_data[loaded_sound->name];
 
 		utils::stream buffer;
 		// --- RIF HEADER
 		// ChunkID
-		const char* chunkID = "RIFF";
-		buffer.saveArray(chunkID, 4);
+		const char* chunk_id = "RIFF";
+		buffer.saveArray(chunk_id, 4);
 
 		// ChunkSize
-		int subchunk1Size = 16;
-		int subchunk2Size = loadedSound->sound.info.data_len;
-		int chunkSize = 4 + (8 + subchunk1Size) + (8 + subchunk2Size);
-		buffer.save(chunkSize);
+		int sub_chunk_1_size = 16;
+		int sub_chunk_2_size = loaded_sound->sound.info.data_len;
+		int chunk_size = 4 + (8 + sub_chunk_1_size) + (8 + sub_chunk_2_size);
+		buffer.save(chunk_size);
 
 		// Format
 		const char* format = "WAVE";
@@ -62,50 +69,53 @@ namespace asset_dumpers
 
 		// --- FMT SUBCHUNK
 		// Subchunk1ID
-		const char* subchunk1ID = "fmt "; // Mind the space
-		buffer.saveArray(subchunk1ID, 4);
+		const char* sub_chunk_1_id = "fmt "; // Mind the space
+		buffer.saveArray(sub_chunk_1_id, 4);
 
 		// Subchunk1Size
-		buffer.save(subchunk1Size);
+		buffer.save(sub_chunk_1_size);
 
 		// AudioFormat
-		short audioFormat = static_cast<short>(loadedSound->sound.info.format);
-		buffer.saveObject(audioFormat);
+		short audio_formt = static_cast<short>(loaded_sound->sound.info.format);
+		buffer.saveObject(audio_formt);
 
 		// NumChannels
-		short numChannels = static_cast<short>(loadedSound->sound.info.channels);
-		buffer.saveObject(numChannels);
+		short num_channels = static_cast<short>(loaded_sound->sound.info.channels);
+		buffer.saveObject(num_channels);
 
 		// SampleRate
-		int sampleRate = loadedSound->sound.info.rate;
+		int sampleRate = loaded_sound->sound.info.rate;
 		buffer.save(sampleRate);
 
+
+		auto data_length = loaded_sound->sound.info.data_len;
+		assert(data_length / (loaded_sound->sound.info.bits / 8) == loaded_sound->sound.info.samples);
+
 		// ByteRate
-		int byteRate = loadedSound->sound.info.rate * loadedSound->sound.info.channels * loadedSound->sound.info.bits / 8;
+		int byteRate = loaded_sound->sound.info.rate * loaded_sound->sound.info.channels * loaded_sound->sound.info.bits / 8;
 		buffer.save(byteRate);
 
 		// BlockAlign
-		short blockAlign = static_cast<short>(loadedSound->sound.info.block_size);
-		buffer.saveObject(blockAlign);
+		short block_align = static_cast<short>(loaded_sound->sound.info.block_size);
+		buffer.saveObject(block_align);
 
 		// BitsPerSample
-		short bitsPerSample = static_cast<short>(loadedSound->sound.info.bits);
-		buffer.saveObject(bitsPerSample);
+		short bits_per_sample = static_cast<short>(loaded_sound->sound.info.bits);
+		buffer.saveObject(bits_per_sample);
 
 
 		// --- DATA SUBCHUNK
-		const char* subchunk2ID = "data";
-		buffer.saveArray(subchunk2ID, 4);
+		const char* sub_chunk_2_id = "data";
+		buffer.saveArray(sub_chunk_2_id, 4);
 
 		// Data
-		auto dataLength = loadedSound->sound.info.data_len;
-		buffer.save(dataLength);
-		buffer.save(soundData, dataLength);
+		buffer.save(data_length);
+		buffer.save(sound_data, data_length);
 
-		auto exportPath = get_export_path();
-		auto outPath = std::format("{}/loaded_sound/{}", exportPath, loadedSound->name);
+		auto export_path = get_export_path();
+		auto out_path = std::format("{}/loaded_sound/{}", export_path, loaded_sound->name);
 
-		utils::io::write_file(outPath, buffer.toBuffer());
+		utils::io::write_file(out_path, buffer.toBuffer());
 	}
 
 	iloadedsound::iloadedsound()

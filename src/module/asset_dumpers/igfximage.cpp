@@ -32,6 +32,16 @@ namespace asset_dumpers
 		{
 			if (name[0] == '*') name.erase(name.begin());
 
+			if (name == "reflection_probe0"s)
+			{
+				// Reflection probe 0 is "all red" for IW3, IW4, and IW5
+				// This is a sort of... tradition, i assume
+				// But some IW5 maps like mp_nola still _use_ this reflection probe
+				// On IW5 this is probably supported, but in IW4 it makes it look all red
+				// Let's skip it and write RP1 instead over RP0.
+				return;
+			}
+
 			utils::stream buffer;
 			buffer.saveArray("IW4xImg" IW4X_IMG_VERSION, 8); // just stick version in the magic since we have an extra char
 
@@ -52,6 +62,15 @@ namespace asset_dumpers
 			buffer.save(image->texture.loadDef->data, image->texture.loadDef->resourceSize);
 
 			utils::io::write_file(std::format("{}/images/{}.iw4xImage", get_export_path(), name), buffer.toBuffer());
+			
+			if (name.starts_with("reflection_probe"))
+			{
+				auto path_to_rp0 = std::format("{}/images/{}.iw4xImage", get_export_path(), "reflection_probe0");
+				if (!utils::io::file_exists(path_to_rp0))
+				{
+					utils::io::write_file(path_to_rp0, buffer.toBuffer());
+				}
+			}
 		}
 		else
 		{

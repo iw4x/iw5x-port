@@ -20,9 +20,11 @@
 #include <module/asset_dumpers/imapents.hpp>
 #include <module/asset_dumpers/iclipmap.hpp>
 #include <module/asset_dumpers/isndalias.hpp>
+#include <module/asset_dumpers/isndcurve.hpp>
 #include <module/asset_dumpers/iloadedsound.hpp>
 #include <module/asset_dumpers/ifxworld.hpp>
 #include <module/asset_dumpers/ifx.hpp>
+#include <module/asset_dumpers/ixanimparts.hpp>
 
 #include "exporter.hpp"
 #include <module/scheduler.hpp>
@@ -48,6 +50,9 @@ std::vector<std::string> exporter::prepared_source{};
 
 typedef bool (*DB_Update_t)();
 DB_Update_t DB_Update = (DB_Update_t)0x4CDA40;
+
+typedef bool (*SV_Map_f_t)(int a1, const char* mapName, unsigned __int8 isPreloaded, unsigned __int8 migrate);
+SV_Map_f_t SV_Map_f = (SV_Map_f_t)0x56EEA0;
 
 typedef void (*Cbuf_Execute_t)(int localClient, int controllerIndex);
 Cbuf_Execute_t Cbuf_Execute = (Cbuf_Execute_t)0x546590;
@@ -165,13 +170,11 @@ void exporter::perform_common_initialization()
 	*com_fullyInitialized = 1;
 	load_common_zones();
 
+	export_path_dvar = game::native::Dvar_RegisterString("export_path", "iw5xport_out/default", game::native::DVAR_NONE, "export path for iw5xport");
 
 	auto com_consoleLines = (const char**)0x01CEF598;
 	auto cmdLine = GetCommandLineA();
 	Com_ParseCommandLine_Stub(cmdLine);
-
-
-	export_path_dvar = game::native::Dvar_RegisterString("export_path", "iw5xport_out/default", game::native::DVAR_NONE, "export path for iw5xport");
 
 	initialize_exporters();
 	add_commands();
@@ -270,6 +273,9 @@ void exporter::dump_map(const command::params& params)
 	command::execute(std::format("dumpScript maps/createart/{}_fog", map_name), true);
 
 	prepared_source.emplace_back("\n");
+	command::execute("dumpRawFile animtrees/animated_props.atr", true);
+
+	prepared_source.emplace_back("\n");
 	console::info("Exporting Vision...\n");
 	command::execute(std::format("dumpRawFile vision/{}.vision", map_name.data()), true);
 
@@ -294,6 +300,7 @@ void exporter::dump_map(const command::params& params)
 	{
 		command::execute(std::format("dumpXModel {}", model), true); // This adds it to the zone source
 	}
+
 	for (const auto& snd : exporter::captured_snd)
 	{
 		command::execute(std::format("dumpSound {}", snd), true); // This adds it to the zone source
@@ -396,8 +403,10 @@ void exporter::initialize_exporters()
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_CLIPMAP] = new asset_dumpers::iclipmap();
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_SOUND] = new asset_dumpers::isndalias();
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_LOADED_SOUND] = new asset_dumpers::iloadedsound();
+	asset_dumpers[game::native::XAssetType::ASSET_TYPE_SOUND_CURVE] = new asset_dumpers::isndcurve();
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_FXWORLD] = new asset_dumpers::ifxworld();
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_FX] = new asset_dumpers::ifx();
+	asset_dumpers[game::native::XAssetType::ASSET_TYPE_XANIMPARTS] = new asset_dumpers::ixanimparts();
 }
 
 bool exporter::exporter_exists(game::native::XAssetType assetType)
@@ -536,10 +545,81 @@ int exporter::SND_SetDataHook(game::native::MssSound*, char*)
 }
 
 
+int Mark_MaterialTechniqueSetAsset(game::native::MaterialTechniqueSet* set, int inuse)
+{
+	typedef int (*aaa_t)(game::native::MaterialTechniqueSet* set, int inuse);
+	aaa_t aaa = (aaa_t)0X4CC450;
+	
+	auto test = *set->name;
+
+	auto result = aaa(set, inuse);
+
+	return result;
+}
+
+int Mark_XModel(int unk)
+{
+	printf("");
+	auto xmodel = *reinterpret_cast<game::native::XModel**>(0x13E1FA8);
+	for (size_t i = 0; i < xmodel->numsurfs; i++)
+	{
+		auto mat = xmodel->materialHandles[i];
+		auto test = *mat->techniqueSet->name;
+	}
+	auto result = utils::hook::invoke<int>(0x4BB7D0, xmodel);
+
+	return result;
+}
+
+int Mark_FxEffectDefHandle()
+{
+	auto handle = reinterpret_cast<game::native::FxEffectDef***>(0x13E299C);
+	auto bb = *handle;
+
+	if (bb)
+	{
+		auto def_ptr = *bb;
+
+		auto count = def_ptr->elemDefCountEmission + def_ptr->elemDefCountLooping + def_ptr->elemDefCountOneShot;
+		
+		for (size_t i = 0; i < count; i++)
+		{
+			auto elem = &def_ptr->elemDefs[i];
+			auto visuals = elem->visuals;
+
+			if (elem->elemType == game::native::FX_ELEM_TYPE_DECAL)
+			{
+				// DECAL
+				if (visuals.markArray)
+				{
+					for (size_t j = 0; j < elem->visualCount; j++)
+					{
+						auto mats = visuals.markArray[j].materials;
+						
+
+						for (size_t k = 0; k < 2; k++)
+						{
+							auto mat = mats[k];
+							auto test = *mat->techniqueSet->name;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	auto result = utils::hook::invoke<int>(0x4C1320, bb);
+	return result;
+}
+
 void exporter::post_load()
 {
 	if (utils::flags::has_flag("exporter"))
 	{
+		utils::hook(0x4C51BB, Mark_FxEffectDefHandle, HOOK_CALL).install()->quick();
+		utils::hook(0x4BB890, Mark_XModel, HOOK_CALL).install()->quick();
+		utils::hook(0x004BAB54, Mark_MaterialTechniqueSetAsset, HOOK_CALL).install()->quick();
+
 		// Keep sounds around
 		utils::hook(0x4B94EC, exporter::SND_SetDataHook, HOOK_CALL).install()->quick();
 
@@ -575,8 +655,18 @@ void exporter::post_load()
 			}, scheduler::pipeline::main);
 	}
 
+	//// Nop demonware 
+	//utils::hook::nop(0x490CA9, 5);
+	//utils::hook::nop(0x490DD4, 5);
+	//utils::hook::set<unsigned char>(0x54CB40, 0xC3);
 
+	//command::add("map", [](const command::params& params)
+	//	{
+	//		if (params.size() < 2) return;
+	//		std::string map_name = params[1];
 
+	//		SV_Map_f(0, map_name.c_str(), 0, 0);
+	//	});
 
 }
 

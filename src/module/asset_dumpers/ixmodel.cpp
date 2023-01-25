@@ -19,7 +19,7 @@ namespace asset_dumpers
 		iw4::native::XSurface target{};
 
 		target.tileMode = source->tileMode;
-		target.deformed = false;
+		target.deformed = (source->flags & 0x40) == 0x40;
 		target.vertCount = source->vertCount;
 		target.triCount = source->triCount;
 		target.zoneHandle = source->zoneHandle;

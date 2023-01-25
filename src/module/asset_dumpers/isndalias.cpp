@@ -134,6 +134,13 @@ namespace asset_dumpers
 				assert(false);
 			}
 
+			//
+			if (native_alias->aliasName == "emt_mtl_chainlink_rattle_ext"s)
+			{
+				printf("");
+			}
+			//
+
 
 			iw4_alias->flags.intValue = 0;
 			iw4_alias->flags.looping = native_alias->flags.looping;
@@ -151,28 +158,16 @@ namespace asset_dumpers
 			assert(iw4_alias->flags.channel < iw4::native::SndChannel::SND_CHANNEL_COUNT);
 			assert(iw4_alias->flags.channel >= 0);
 
-			iw4_alias->slavePercentage = native_alias->slavePercentage;
+			iw4_alias->flags.isMaster |= native_alias->masterPercentage == 1.f;
+
+			iw4_alias->slavePercentage = iw4_alias->flags.isMaster ? native_alias->masterPercentage : native_alias->slavePercentage;
 			iw4_alias->probability = native_alias->probability;
 			iw4_alias->lfePercentage = native_alias->lfePercentage;
 			iw4_alias->centerPercentage = native_alias->centerPercentage;
 			iw4_alias->startDelay = native_alias->startDelay;
 
-			iw4_alias->volumeFalloffCurve = local_allocator.allocate<iw4::native::SndCurve>();
-			iw4_alias->volumeFalloffCurve->filename = native_alias->volumeFalloffCurve->filename;
-			iw4_alias->volumeFalloffCurve->knotCount = std::min(static_cast<unsigned short>(8), native_alias->volumeFalloffCurve->knotCount);
-
-			if (native_alias->volumeFalloffCurve->knotCount > iw4_alias->volumeFalloffCurve->knotCount)
-			{
-				console::warn("Warning! The sound %s has too many knots in its volume falloff curve. IW4 does not support that many, so it might sound weird.\n", iw4_alias->aliasName);
-			}
-
-			for (auto side = 0; side < 2; side++)
-			{
-				for (auto knot = 0; knot < 8;knot++)
-				{
-					iw4_alias->volumeFalloffCurve->knots[knot][side] = native_alias->volumeFalloffCurve->knots[knot][side];
-				}
-			}
+			iw4_alias->volumeFalloffCurve = exporter::dump(game::native::XAssetType::ASSET_TYPE_SOUND_CURVE, { native_alias->volumeFalloffCurve }).sndCurve;
+			assert(iw4_alias->volumeFalloffCurve);
 
 			iw4_alias->envelopMin = native_alias->envelopMin;
 			iw4_alias->envelopMax = native_alias->envelopMax;
@@ -187,12 +182,6 @@ namespace asset_dumpers
 					// LOADED
 				case iw4::native::snd_alias_type_t::SAT_LOADED:
 				{
-					// Man fuck that sound in particular
-					if (iw4_alias->soundFile->u.loadSnd->name == "amb_emitters/emt_mtl_chainlink_rattle2.wav"s)
-					{
-						iw4_alias->soundFile->u.loadSnd->name[37] = '1';
-					}
-
 					// Save the LoadedSound subasset
 					exporter::dump(game::native::XAssetType::ASSET_TYPE_LOADED_SOUND, { iw4_alias->soundFile->u.loadSnd });
 				}
