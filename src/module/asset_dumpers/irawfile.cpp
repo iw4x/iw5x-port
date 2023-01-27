@@ -27,8 +27,20 @@ namespace asset_dumpers
 			saturate_vision(header.rawfile);
 		}
 
-		// No conversion
-		out.rawfile = header.rawfile;
+		if (name.ends_with(".atr"))
+		{
+			out.rawfile = local_allocator.allocate<game::native::RawFile>();
+			memcpy_s(out.rawfile, sizeof game::native::RawFile, header.rawfile, sizeof game::native::RawFile);
+
+			// We rename animtrees because they're canonically part of common_mp and will cause problems in iw4
+			out.rawfile->name = local_allocator.duplicate_string(
+				std::format("{}_5x.atr", name.substr(0, name.size() - 4))
+			);
+		}
+		else
+		{
+			out.rawfile = header.rawfile;
+		}
 	}
 
 	void irawfile::saturate_vision(game::native::RawFile* rawfile)
@@ -78,6 +90,11 @@ namespace asset_dumpers
 	{
 		assert(header.rawfile);
 		assert(header.rawfile->buffer);
+
+		if (std::string(header.rawfile->name).contains("chicken"))
+		{
+			printf("");
+		}
 
 		if (header.rawfile->len > 0)
 		{

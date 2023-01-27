@@ -357,9 +357,9 @@ void exporter::load_common_zones()
 		"localized_code_post_gfx_mp",
 		"ui_mp",
 		"localized_ui_mp",
+		"patch_mp",
 		"common_mp",
 		"localized_common_mp",
-		"patch_mp"
 	};
 
 	console::info("loading common zones...\n");
@@ -464,12 +464,21 @@ void exporter::DB_AddXAsset_Hk(game::native::XAssetType type, game::native::XAss
 		{
 
 		case game::native::XAssetType::ASSET_TYPE_SCRIPTFILE:
+		{
 			if (asset_name[0] == ',') asset_name = asset_name.substr(1);
+
+			auto readable_name = reinterpret_cast<asset_dumpers::iscriptfile*>(asset_dumpers[type])->get_script_name(asset.header.scriptfile);
+			if (readable_name.starts_with("common_scripts/_")) break; // Do not capture common scripts & animated models
+			if (readable_name.starts_with("maps/animated_models/")) break; // We dump them by parsing precache
+
 			captured_scripts.push_back(asset_name);
 			break;
+		}
 
 		case game::native::XAssetType::ASSET_TYPE_RAWFILE:
 			if (asset_name[0] == ',') asset_name = asset_name.substr(1);
+			if (asset_name.ends_with(".atr")) break; // No animtrees, we dump them manually via precache
+
 			captured_rawfiles.push_back(asset_name);
 			break;
 

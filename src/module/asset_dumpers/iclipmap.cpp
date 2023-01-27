@@ -120,8 +120,6 @@ namespace asset_dumpers
 		iw4_clipmap->brushBounds = native_clipmap->info.brushBounds;
 		iw4_clipmap->brushContents = native_clipmap->info.brushContents;
 
-		auto clip = native_clipmap;
-		
 		iw4_clipmap->mapEnts = exporter::dump(game::native::ASSET_TYPE_MAP_ENTS, { native_clipmap->mapEnts }).mapEnts;
 
 		iw4_clipmap->smodelNodeCount = native_clipmap->smodelNodeCount;
@@ -133,50 +131,53 @@ namespace asset_dumpers
 		for (auto i = 0; i < ARRAYSIZE(iw4_clipmap->dynEntDefList); i++)
 		{
 			auto count = iw4_clipmap->dynEntCount[i];
-			iw4_clipmap->dynEntDefList[i] = local_allocator.allocate_array<iw4::native::DynEntityDef>(count);
-			for (auto dyn_index = 0; dyn_index < count; dyn_index++)
+
+			if (count > 0)
 			{
-				auto iw4_def = &iw4_clipmap->dynEntDefList[i][dyn_index];
-				auto native_def = &native_clipmap->dynEntDefList[i][dyn_index];
-
-				iw4_def->pose = native_def->pose;
-
-				if (native_def->xModel)
+				iw4_clipmap->dynEntDefList[i] = local_allocator.allocate_array<iw4::native::DynEntityDef>(count);
+				for (auto dyn_index = 0; dyn_index < count; dyn_index++)
 				{
-					iw4_def->xModel = exporter::dump(game::native::ASSET_TYPE_XMODEL, { native_def->xModel }).model;
-				}
+					auto iw4_def = &iw4_clipmap->dynEntDefList[i][dyn_index];
+					auto native_def = &native_clipmap->dynEntDefList[i][dyn_index];
 
-				iw4_def->brushModel = native_def->brushModel;
-				iw4_def->physicsBrushModel = native_def->physicsBrushModel;
+					iw4_def->pose = native_def->pose;
 
-				if (native_def->destroyFx)
-				{
-					iw4_def->destroyFx = exporter::dump(game::native::ASSET_TYPE_FX, { native_def->destroyFx }).fx;
-				}
+					if (native_def->xModel)
+					{
+						iw4_def->xModel = exporter::dump(game::native::ASSET_TYPE_XMODEL, { native_def->xModel }).model;
+					}
 
-				if (native_def->physPreset)
-				{
-					iw4_def->physPreset = exporter::dump(game::native::ASSET_TYPE_PHYSPRESET, { native_def->physPreset }).physPreset;
-				}
+					iw4_def->brushModel = native_def->brushModel;
+					iw4_def->physicsBrushModel = native_def->physicsBrushModel;
 
-				iw4_def->health = native_def->health;
-				iw4_def->mass = native_def->mass;
-				iw4_def->contents = native_def->contents;
+					if (native_def->destroyFx)
+					{
+						iw4_def->destroyFx = exporter::dump(game::native::ASSET_TYPE_FX, { native_def->destroyFx }).fx;
+					}
 
-				if (native_def->type == game::native::DynEntityType::DYNENT_TYPE_HINGE)
-				{
-					iw4_def->type = iw4::native::DynEntityType::DYNENT_TYPE_INVALID; // unsupported
-					console::warn("Found non-supported hinge dynamic entity that we cannot convert (entity %i-%i)\n", i, dyn_index);
-					assert(false);
-				}
-				else
-				{
-					iw4_def->type = static_cast<iw4::native::DynEntityType>(native_def->type);
-					assert(iw4_def->type > 0);
-					assert(iw4_def->type < iw4::native::DynEntityType::DYNENT_TYPE_COUNT);
+					if (native_def->physPreset)
+					{
+						iw4_def->physPreset = exporter::dump(game::native::ASSET_TYPE_PHYSPRESET, { native_def->physPreset }).physPreset;
+					}
+
+					iw4_def->health = native_def->health;
+					iw4_def->mass = native_def->mass;
+					iw4_def->contents = native_def->contents;
+
+					if (native_def->type == game::native::DynEntityType::DYNENT_TYPE_HINGE)
+					{
+						iw4_def->type = iw4::native::DynEntityType::DYNENT_TYPE_INVALID; // unsupported
+						console::warn("Found non-supported hinge dynamic entity that we cannot convert (entity %i-%i)\n", i, dyn_index);
+						assert(false);
+					}
+					else
+					{
+						iw4_def->type = static_cast<iw4::native::DynEntityType>(native_def->type);
+						assert(iw4_def->type > 0);
+						assert(iw4_def->type < iw4::native::DynEntityType::DYNENT_TYPE_COUNT);
+					}
 				}
 			}
-
 		}
 		
 		// Useless
@@ -185,8 +186,12 @@ namespace asset_dumpers
 		// Useless too!
 		for (auto i = 0; i < ARRAYSIZE(iw4_clipmap->dynEntDefList); i++)
 		{
-			iw4_clipmap->dynEntClientList[i] = local_allocator.allocate_array<iw4::native::DynEntityClient>();
-			// and that's it? we leave null apparently ? cause this is runtime data?
+			if (iw4_clipmap->dynEntCount[i])
+			{
+				iw4_clipmap->dynEntClientList[i] = local_allocator.allocate_array<iw4::native::DynEntityClient>(iw4_clipmap->dynEntCount[i]);
+				iw4_clipmap->dynEntCollList[i] = local_allocator.allocate_array<game::native::DynEntityColl>(iw4_clipmap->dynEntCount[i]);
+				iw4_clipmap->dynEntPoseList[i] = local_allocator.allocate_array<game::native::DynEntityPose>(iw4_clipmap->dynEntCount[i]);
+			}
 		}
 
 		// Useless
@@ -346,6 +351,8 @@ namespace asset_dumpers
 				);
 			}
 
+			json_static_model.AddMember("invScaledAxis", inv_scaled_axis, allocator);
+
 			json_static_model.AddMember(
 				"absBounds",
 				bounds_to_json(static_model->absBounds),
@@ -424,7 +431,7 @@ namespace asset_dumpers
 
 			auto index = planes[node->plane];
 			auto plane_index = std::format("#{}", index);
-			json_node.AddMember("plane", RAPIDJSON_STR(plane_index.c_str()), allocator);
+			json_node.AddMember("plane", RAPIDJSON_STR(str_duplicator.duplicate_string(plane_index)), allocator);
 
 			rapidjson::Value children(rapidjson::kArrayType);
 			for (size_t j = 0; j < ARRAYSIZE(node->children); j++)
@@ -455,9 +462,51 @@ namespace asset_dumpers
 		for (size_t i = 0; i < clip_map->numLeafBrushes; i++)
 		{
 			json_brush_leafs.PushBack(clip_map->leafbrushes[i], allocator);
+			leaf_brushes[&clip_map->leafbrushes[i]] = i;
 		}
 
 		output.AddMember("leafbrushes", json_brush_leafs, allocator);
+
+
+		// LeafBrushNodes
+		rapidjson::Value json_leaf_brush_nodes(rapidjson::kArrayType);
+		for (size_t i = 0; i < clip_map->leafbrushNodesCount; i++)
+		{
+			rapidjson::Value json_leaf_brush_node(rapidjson::kObjectType);
+			auto leaf_brush_node = &clip_map->leafbrushNodes[i];
+
+			json_leaf_brush_node.AddMember("axis", leaf_brush_node->axis, allocator);
+			json_leaf_brush_node.AddMember("leafBrushCount", leaf_brush_node->leafBrushCount, allocator);
+			json_leaf_brush_node.AddMember("contents", leaf_brush_node->contents, allocator);
+
+			if (leaf_brush_node->leafBrushCount > 0)
+			{
+				assert(leaf_brushes.contains(leaf_brush_node->data.leaf.brushes));
+				auto index_str = std::format("#{}", leaf_brushes[leaf_brush_node->data.leaf.brushes]);
+				json_leaf_brush_node.AddMember("data", RAPIDJSON_STR(local_allocator.duplicate_string(index_str)), allocator);
+			}
+			else
+			{
+				rapidjson::Value data(rapidjson::kObjectType);
+
+				data.AddMember("dist", leaf_brush_node->data.children.dist, allocator);
+				data.AddMember("range", leaf_brush_node->data.children.range, allocator);
+
+				rapidjson::Value child_offset(rapidjson::kArrayType);
+				for (size_t x = 0; x < 2; x++)
+				{
+					child_offset.PushBack(leaf_brush_node->data.children.childOffset[x], allocator);
+				}
+
+				data.AddMember("childOffset", child_offset, allocator);
+
+				json_leaf_brush_node.AddMember("data", data, allocator);
+			}
+
+			json_leaf_brush_nodes.PushBack(json_leaf_brush_node, allocator);
+		}
+
+		output.AddMember("leafbrushNodes", json_leaf_brush_nodes, allocator);
 
 
 		// leafsurfaces (unused)
@@ -480,12 +529,15 @@ namespace asset_dumpers
 
 		// tris
 		rapidjson::Value json_tris(rapidjson::kArrayType);
-		for (size_t i = 0; i < clip_map->triCount * 3; i++)
+		for (size_t i = 0; i < clip_map->triCount * 3; i+=3)
 		{
+			assert(clip_map->triIndices[i] != clip_map->triIndices[i + 1]);
+			assert(clip_map->triIndices[i + 1] != clip_map->triIndices[i + 2]);
+			assert(clip_map->triIndices[i + 2] != clip_map->triIndices[i]);
 			json_tris.PushBack(ushort_to_array(&clip_map->triIndices[i], 3), allocator);
 		}
 
-		output.AddMember("tris", json_tris, allocator);
+		output.AddMember("triIndices", json_tris, allocator);
 
 		rapidjson::Value json_tris_walkable(rapidjson::kArrayType);
 		auto walkable_count = 4 * ((3 * clip_map->triCount + 31) >> 5);
@@ -528,16 +580,14 @@ namespace asset_dumpers
 			json_collision_partition.AddMember("triCount", collision_partition->triCount, allocator);
 			json_collision_partition.AddMember("firstVertSegment", collision_partition->firstVertSegment, allocator);
 			json_collision_partition.AddMember("firstTri", collision_partition->firstTri, allocator);
-
-			rapidjson::Value partition_borders(rapidjson::kArrayType);
-			for (size_t j = 0; j < collision_partition->borderCount; j++)
+			json_collision_partition.AddMember("borderCount", collision_partition->borderCount, allocator);
+			
+			if (collision_partition->borderCount)
 			{
-				auto index_str = str_duplicator.duplicate_string(std::format("#{}", borders[collision_partition->borders]));
-				partition_borders.PushBack(RAPIDJSON_STR(index_str), allocator);
+				auto index_str = str_duplicator.duplicate_string(std::format("#{}", borders[&collision_partition->borders[0]]));
+				json_collision_partition.AddMember("firstBorder", RAPIDJSON_STR(index_str), allocator);
 			}
-
-			json_collision_partition.AddMember("borders", partition_borders, allocator);
-
+		
 			json_collision_partitions.PushBack(json_collision_partition, allocator);
 		}
 
@@ -554,6 +604,7 @@ namespace asset_dumpers
 			json_aabbtree.AddMember("midPoint", float_array_to_json(aabbtree->midPoint, 3), allocator);
 			json_aabbtree.AddMember("halfSize", float_array_to_json(aabbtree->halfSize, 3), allocator);
 			json_aabbtree.AddMember("materialIndex", aabbtree->materialIndex, allocator);
+			json_aabbtree.AddMember("childCount", aabbtree->childCount, allocator);  
 			json_aabbtree.AddMember("u", aabbtree->u, allocator);
 
 			json_aabbtrees.PushBack(json_aabbtree, allocator);
@@ -571,9 +622,7 @@ namespace asset_dumpers
 
 			json_cmodel.AddMember("bounds", bounds_to_json(cmodel->bounds), allocator);
 			json_cmodel.AddMember("radius", cmodel->radius, allocator);
-
 			json_cmodel.AddMember("leaf", leaf_to_json(cmodel->leaf), allocator);
-			json_cmodel.AddMember("bounds", bounds_to_json(cmodel->bounds), allocator);
 
 			json_cmodels.PushBack(json_cmodel, allocator);
 		}
@@ -589,16 +638,14 @@ namespace asset_dumpers
 			rapidjson::Value json_brush(rapidjson::kObjectType);
 
 			json_brush.AddMember("glassPieceIndex", brush->glassPieceIndex, allocator);
+			json_brush.AddMember("numsides", brush->numsides, allocator);
 
 			// Sides
-			rapidjson::Value sides(rapidjson::kArrayType);
-			for (size_t j = 0; j < brush->numsides; j++)
+			if (brush->numsides > 0)
 			{
-				auto index_str = str_duplicator.duplicate_string(std::format("#{}", brush_sides[&brush->sides[j]]));
-				sides.PushBack(RAPIDJSON_STR(index_str), allocator);
+				auto index_str = str_duplicator.duplicate_string(std::format("#{}", brush_sides[brush->sides]));
+				json_brush.AddMember("firstSide", RAPIDJSON_STR(index_str), allocator);
 			}
-
-			json_brush.AddMember("sides", sides, allocator);
 
 			if (brush->baseAdjacentSide)
 			{
@@ -687,8 +734,8 @@ namespace asset_dumpers
 				rapidjson::Value json_trigger_hull(rapidjson::kObjectType);
 				json_trigger_hull.AddMember("bounds", bounds_to_json(ents->trigger.hulls[i].bounds), allocator);
 				json_trigger_hull.AddMember("contents", ents->trigger.hulls[i].contents, allocator);
-				json_trigger_hull.AddMember("hullCount", ents->trigger.hulls[i].slabCount, allocator);
-				json_trigger_hull.AddMember("firstHull", ents->trigger.hulls[i].firstSlab, allocator);
+				json_trigger_hull.AddMember("slabCount", ents->trigger.hulls[i].slabCount, allocator);
+				json_trigger_hull.AddMember("firstSlab", ents->trigger.hulls[i].firstSlab, allocator);
 
 				json_trigger_hulls.PushBack(json_trigger_hull, allocator);
 			}
@@ -699,7 +746,7 @@ namespace asset_dumpers
 			for (size_t i = 0; i < ents->trigger.slabCount; i++)
 			{
 				rapidjson::Value json_trigger_slab(rapidjson::kObjectType);
-				json_trigger_slab.AddMember("bounds", float_array_to_json(ents->trigger.slabs[i].dir, 3), allocator);
+				json_trigger_slab.AddMember("dir", float_array_to_json(ents->trigger.slabs[i].dir, 3), allocator);
 				json_trigger_slab.AddMember("midPoint", ents->trigger.slabs[i].midPoint, allocator);
 				json_trigger_slab.AddMember("halfSize", ents->trigger.slabs[i].halfSize, allocator);
 
@@ -749,7 +796,7 @@ namespace asset_dumpers
 		output.AddMember("smodelNodes", json_smodelnodes, allocator);
 
 		// Dynent
-		rapidjson::Value json_dyn_entities_def(rapidjson::kArrayType);
+		rapidjson::Value json_dyn_entities(rapidjson::kArrayType);
 		for (size_t i = 0; i < ARRAYSIZE(clip_map->dynEntCount); i++)
 		{
 			auto def_list = clip_map->dynEntDefList[i];
@@ -782,40 +829,42 @@ namespace asset_dumpers
 
 					json_dyn_entity_def_pack.AddMember("dynEntityDef", json_dyn_entity_def, allocator);
 
-					rapidjson::Value json_dyn_entity_pose(rapidjson::kObjectType);
-					auto pose = &clip_map->dynEntPoseList[i][j];
-					json_dyn_entity_pose.AddMember("pose", placement_to_json(pose->pose), allocator);
-					json_dyn_entity_pose.AddMember("radius", pose->radius, allocator);
-					json_dyn_entity_def_pack.AddMember("dynEntPose", json_dyn_entity_pose, allocator);
+					/// All that follows is garbage data
+					//rapidjson::Value json_dyn_entity_pose(rapidjson::kObjectType);
+					//auto pose = &clip_map->dynEntPoseList[i][j];
+					//json_dyn_entity_pose.AddMember("pose", placement_to_json(pose->pose), allocator);
+					//json_dyn_entity_pose.AddMember("radius", pose->radius, allocator);
+					//json_dyn_entity_def_pack.AddMember("dynEntPose", json_dyn_entity_pose, allocator);
 
-					rapidjson::Value json_dyn_entity_client(rapidjson::kObjectType);
-					auto client = &clip_map->dynEntClientList[i][j];
-					json_dyn_entity_client.AddMember("physObjId", client->physObjId, allocator);
-					json_dyn_entity_client.AddMember("flags", client->flags, allocator);
-					json_dyn_entity_client.AddMember("lightingHandle", client->lightingHandle, allocator);
-					json_dyn_entity_client.AddMember("health", client->health, allocator);
-					json_dyn_entity_def_pack.AddMember("dynEntClient", json_dyn_entity_client, allocator);
+					//rapidjson::Value json_dyn_entity_client(rapidjson::kObjectType);
+					//auto client = &clip_map->dynEntClientList[i][j];
+					//json_dyn_entity_client.AddMember("physObjId", client->physObjId, allocator);
+					//json_dyn_entity_client.AddMember("flags", client->flags, allocator);
+					//json_dyn_entity_client.AddMember("lightingHandle", client->lightingHandle, allocator);
+					//json_dyn_entity_client.AddMember("health", client->health, allocator);
+					//json_dyn_entity_def_pack.AddMember("dynEntClient", json_dyn_entity_client, allocator);
 
-					rapidjson::Value json_dyn_entity_coll(rapidjson::kObjectType);
-					auto coll = &clip_map->dynEntCollList[i][j];
-					json_dyn_entity_coll.AddMember("sector", coll->sector, allocator);
-					json_dyn_entity_coll.AddMember("nextEntInSector", coll->nextEntInSector, allocator);
-					json_dyn_entity_coll.AddMember("linkMins", float_array_to_json(coll->linkMins, 2), allocator);
-					json_dyn_entity_coll.AddMember("linkMaxs", float_array_to_json(coll->linkMaxs, 2), allocator);
-					json_dyn_entity_def_pack.AddMember("dynEntColl", json_dyn_entity_coll, allocator);
+					//rapidjson::Value json_dyn_entity_coll(rapidjson::kObjectType);
+					//auto coll = &clip_map->dynEntCollList[i][j];
+					//json_dyn_entity_coll.AddMember("sector", coll->sector, allocator);
+					//json_dyn_entity_coll.AddMember("nextEntInSector", coll->nextEntInSector, allocator);
+					//json_dyn_entity_coll.AddMember("linkMins", float_array_to_json(coll->linkMins, 2), allocator);
+					//json_dyn_entity_coll.AddMember("linkMaxs", float_array_to_json(coll->linkMaxs, 2), allocator);
+					//json_dyn_entity_def_pack.AddMember("dynEntColl", json_dyn_entity_coll, allocator);
+					//
 
 					json_dyn_entity_def_list.PushBack(json_dyn_entity_def_pack, allocator);
 				}
 
-				json_dyn_entities_def.PushBack(json_dyn_entity_def_list, allocator);
+				json_dyn_entities.PushBack(json_dyn_entity_def_list, allocator);
 			}
 			else
 			{
 
-				json_dyn_entities_def.PushBack(rapidjson::Value(rapidjson::kNullType), allocator);
+				json_dyn_entities.PushBack(rapidjson::Value(rapidjson::kNullType), allocator);
 			}
 		}
-		output.AddMember("dynEntitiesDef", json_dyn_entities_def, allocator);
+		output.AddMember("dynEntities", json_dyn_entities, allocator);
 
 		// Checksum
 		output.AddMember("checksum", clip_map->checksum, allocator);
@@ -826,7 +875,12 @@ namespace asset_dumpers
 		writer.SetFormatOptions(rapidjson::PrettyFormatOptions::kFormatSingleLineArray);
 		output.Accept(writer);
 
-		utils::io::write_file(std::format("{}/clipmap/{}.iw4x.json", get_export_path(), clip_map->name), buff.GetString());
+		constexpr auto prefix = "maps/mp/";
+		constexpr auto suffix = ".d3dbsp";
+
+		std::string basename(header.clipMap->name);
+		basename = basename.substr(strlen(prefix), basename.size() - strlen(suffix) - strlen(prefix));
+		utils::io::write_file(std::format("{}/clipmap/{}.iw4x.json", get_export_path(), basename), buff.GetString());
 
 	}
 
