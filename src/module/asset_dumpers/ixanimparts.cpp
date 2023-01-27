@@ -134,7 +134,7 @@ namespace asset_dumpers
 					}
 				}
 				else {
-					buffer.saveObject(delta->trans->u.frame0);
+					buffer.saveArray(delta->trans->u.frame0, 3);
 				}
 			}
 		}
