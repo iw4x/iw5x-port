@@ -48,26 +48,26 @@ namespace asset_dumpers
 		auto iw4_model = local_allocator.allocate<iw4::native::XModel>();
 		auto native_model = header.model;
 
-#define SET_MEMBER_NO_CONVERSION(member_name) iw4_model->##member_name## = (native_model->##member_name##)
+#define SET_LIGHTGRID_MEMBER(member_name) iw4_model->##member_name## = (native_model->##member_name##)
 
-		SET_MEMBER_NO_CONVERSION(name);
-		SET_MEMBER_NO_CONVERSION(numBones);
-		SET_MEMBER_NO_CONVERSION(numRootBones);
-		SET_MEMBER_NO_CONVERSION(numsurfs);
+		SET_LIGHTGRID_MEMBER(name);
+		SET_LIGHTGRID_MEMBER(numBones);
+		SET_LIGHTGRID_MEMBER(numRootBones);
+		SET_LIGHTGRID_MEMBER(numsurfs);
 
 		iw4_model->lodRampType = 0x0; // XMODEL_LOD_RAMP_RIGID
 
-		SET_MEMBER_NO_CONVERSION(scale);
+		SET_LIGHTGRID_MEMBER(scale);
 
 		static_assert(sizeof iw4_model->noScalePartBits == sizeof native_model->noScalePartBits);
 		memcpy(iw4_model->noScalePartBits, native_model->noScalePartBits, sizeof native_model->noScalePartBits);
 
-		SET_MEMBER_NO_CONVERSION(boneNames);
-		SET_MEMBER_NO_CONVERSION(parentList);
-		SET_MEMBER_NO_CONVERSION(quats);
-		SET_MEMBER_NO_CONVERSION(trans);
-		SET_MEMBER_NO_CONVERSION(partClassification);
-		SET_MEMBER_NO_CONVERSION(baseMat);
+		SET_LIGHTGRID_MEMBER(boneNames);
+		SET_LIGHTGRID_MEMBER(parentList);
+		SET_LIGHTGRID_MEMBER(quats);
+		SET_LIGHTGRID_MEMBER(trans);
+		SET_LIGHTGRID_MEMBER(partClassification);
+		SET_LIGHTGRID_MEMBER(baseMat);
 
 		const auto num_surfs = native_model->numsurfs;
 
@@ -114,17 +114,17 @@ namespace asset_dumpers
 			iw4_lod->smcBucket = 0;
 		}
 
-		SET_MEMBER_NO_CONVERSION(maxLoadedLod);
-		SET_MEMBER_NO_CONVERSION(numLods);
-		SET_MEMBER_NO_CONVERSION(collLod);
-		SET_MEMBER_NO_CONVERSION(flags);
-		SET_MEMBER_NO_CONVERSION(collSurfs);
-		SET_MEMBER_NO_CONVERSION(numCollSurfs);
-		SET_MEMBER_NO_CONVERSION(contents);
-		SET_MEMBER_NO_CONVERSION(boneInfo);
-		SET_MEMBER_NO_CONVERSION(radius);
-		SET_MEMBER_NO_CONVERSION(bounds);
-		SET_MEMBER_NO_CONVERSION(memUsage);
+		SET_LIGHTGRID_MEMBER(maxLoadedLod);
+		SET_LIGHTGRID_MEMBER(numLods);
+		SET_LIGHTGRID_MEMBER(collLod);
+		SET_LIGHTGRID_MEMBER(flags);
+		SET_LIGHTGRID_MEMBER(collSurfs);
+		SET_LIGHTGRID_MEMBER(numCollSurfs);
+		SET_LIGHTGRID_MEMBER(contents);
+		SET_LIGHTGRID_MEMBER(boneInfo);
+		SET_LIGHTGRID_MEMBER(radius);
+		SET_LIGHTGRID_MEMBER(bounds);
+		SET_LIGHTGRID_MEMBER(memUsage);
 		
 		if (native_model->quantization != 1.F)
 		{
@@ -139,7 +139,7 @@ namespace asset_dumpers
 			iw4_model->physPreset = exporter::dump(game::native::XAssetType::ASSET_TYPE_PHYSPRESET, { native_model->physPreset }).physPreset;
 		}
 
-		SET_MEMBER_NO_CONVERSION(physCollmap);
+		SET_LIGHTGRID_MEMBER(physCollmap);
 
 		out.model = iw4_model;
 	}

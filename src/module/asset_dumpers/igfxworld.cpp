@@ -22,14 +22,14 @@ namespace asset_dumpers
 		auto iw4_world = local_allocator.allocate<iw4::native::GfxWorld>();
 		auto native_world = header.gfxWorld;
 
-#define SET_MEMBER_NO_CONVERSION(member_name) iw4_world->##member_name## = (native_world->##member_name##)
+#define SET_WORLD_MEMBER(member_name) iw4_world->##member_name## = (native_world->##member_name##)
 
-		SET_MEMBER_NO_CONVERSION(name);
-		SET_MEMBER_NO_CONVERSION(baseName);
-		SET_MEMBER_NO_CONVERSION(planeCount);
-		SET_MEMBER_NO_CONVERSION(nodeCount);
-		SET_MEMBER_NO_CONVERSION(surfaceCount);
-		SET_MEMBER_NO_CONVERSION(skyCount);
+		SET_WORLD_MEMBER(name);
+		SET_WORLD_MEMBER(baseName);
+		SET_WORLD_MEMBER(planeCount);
+		SET_WORLD_MEMBER(nodeCount);
+		SET_WORLD_MEMBER(surfaceCount);
+		SET_WORLD_MEMBER(skyCount);
 
 		iw4_world->skies = local_allocator.allocate_array<iw4::native::GfxSky>(native_world->skyCount);
 		static_assert(sizeof iw4::native::GfxSky == sizeof game::native::GfxSky);
@@ -41,15 +41,15 @@ namespace asset_dumpers
 			sky->skyImage = exporter::dump(game::native::XAssetType::ASSET_TYPE_IMAGE, { native_world->skies[i].skyImage }).image;
 		}
 
-		SET_MEMBER_NO_CONVERSION(lastSunPrimaryLightIndex);
-		SET_MEMBER_NO_CONVERSION(primaryLightCount);
-		SET_MEMBER_NO_CONVERSION(sortKeyLitDecal);
-		SET_MEMBER_NO_CONVERSION(sortKeyEffectDecal);
-		SET_MEMBER_NO_CONVERSION(sortKeyEffectAuto);
-		SET_MEMBER_NO_CONVERSION(sortKeyDistortion);
-		SET_MEMBER_NO_CONVERSION(dpvsPlanes);
-		SET_MEMBER_NO_CONVERSION(aabbTreeCounts);
-		SET_MEMBER_NO_CONVERSION(aabbTrees);
+		SET_WORLD_MEMBER(lastSunPrimaryLightIndex);
+		SET_WORLD_MEMBER(primaryLightCount);
+		SET_WORLD_MEMBER(sortKeyLitDecal);
+		SET_WORLD_MEMBER(sortKeyEffectDecal);
+		SET_WORLD_MEMBER(sortKeyEffectAuto);
+		SET_WORLD_MEMBER(sortKeyDistortion);
+		SET_WORLD_MEMBER(dpvsPlanes);
+		SET_WORLD_MEMBER(aabbTreeCounts);
+		SET_WORLD_MEMBER(aabbTrees);
 
 		iw4_world->cells = local_allocator.allocate_array<iw4::native::GfxCell>(native_world->dpvsPlanes.cellCount);
 		for (auto i = 0; i < native_world->dpvsPlanes.cellCount; i++)
@@ -62,11 +62,11 @@ namespace asset_dumpers
 		iw4_world->draw = convert(native_world, native_world->draw);
 		iw4_world->lightGrid = convert(native_world, native_world->lightGrid);
 
-		SET_MEMBER_NO_CONVERSION(modelCount);
-		SET_MEMBER_NO_CONVERSION(models);
-		SET_MEMBER_NO_CONVERSION(bounds);
-		SET_MEMBER_NO_CONVERSION(checksum);
-		SET_MEMBER_NO_CONVERSION(materialMemoryCount);
+		SET_WORLD_MEMBER(modelCount);
+		SET_WORLD_MEMBER(models);
+		SET_WORLD_MEMBER(bounds);
+		SET_WORLD_MEMBER(checksum);
+		SET_WORLD_MEMBER(materialMemoryCount);
 
 		iw4_world->materialMemory = local_allocator.allocate_array<iw4::native::MaterialMemory>(iw4_world->materialMemoryCount);
 		for (auto i = 0; i < iw4_world->materialMemoryCount; i++)
@@ -97,26 +97,26 @@ namespace asset_dumpers
 			iw4_world->outdoorImage = exporter::dump(game::native::ASSET_TYPE_IMAGE, { native_world->outdoorImage }).image;
 		}
 
-		SET_MEMBER_NO_CONVERSION(cellCasterBits);
-		SET_MEMBER_NO_CONVERSION(cellHasSunLitSurfsBits);
-		SET_MEMBER_NO_CONVERSION(sceneDynModel);
-		SET_MEMBER_NO_CONVERSION(sceneDynBrush);
-		SET_MEMBER_NO_CONVERSION(primaryLightEntityShadowVis);
+		SET_WORLD_MEMBER(cellCasterBits);
+		SET_WORLD_MEMBER(cellHasSunLitSurfsBits);
+		SET_WORLD_MEMBER(sceneDynModel);
+		SET_WORLD_MEMBER(sceneDynBrush);
+		SET_WORLD_MEMBER(primaryLightEntityShadowVis);
 
 		static_assert(sizeof iw4_world->primaryLightDynEntShadowVis == sizeof native_world->primaryLightDynEntShadowVis);
 		memcpy(iw4_world->primaryLightDynEntShadowVis, native_world->primaryLightDynEntShadowVis, sizeof iw4_world->primaryLightDynEntShadowVis);
 
-		SET_MEMBER_NO_CONVERSION(nonSunPrimaryLightForModelDynEnt);
-		SET_MEMBER_NO_CONVERSION(shadowGeom);
-		SET_MEMBER_NO_CONVERSION(lightRegion);
-		SET_MEMBER_NO_CONVERSION(primaryLightEntityShadowVis);
-		SET_MEMBER_NO_CONVERSION(primaryLightEntityShadowVis);
+		SET_WORLD_MEMBER(nonSunPrimaryLightForModelDynEnt);
+		SET_WORLD_MEMBER(shadowGeom);
+		SET_WORLD_MEMBER(lightRegion);
+		SET_WORLD_MEMBER(primaryLightEntityShadowVis);
+		SET_WORLD_MEMBER(primaryLightEntityShadowVis);
 
 		iw4_world->dpvs = convert(native_world, native_world->dpvs);
 
-		SET_MEMBER_NO_CONVERSION(dpvsDyn);
-		SET_MEMBER_NO_CONVERSION(mapVtxChecksum);
-		SET_MEMBER_NO_CONVERSION(heroOnlyLightCount);
+		SET_WORLD_MEMBER(dpvsDyn);
+		SET_WORLD_MEMBER(mapVtxChecksum);
+		SET_WORLD_MEMBER(heroOnlyLightCount);
 
 		if (iw4_world->heroOnlyLightCount)
 		{
@@ -138,7 +138,7 @@ namespace asset_dumpers
 			}
 		}
 
-		SET_MEMBER_NO_CONVERSION(fogTypesAllowed);
+		SET_WORLD_MEMBER(fogTypesAllowed);
 
 		iw4_world->checksum = 0xC0D80000;
 
@@ -362,23 +362,23 @@ namespace asset_dumpers
 	{
 		iw4::native::GfxLightGrid iw4_lightgrid{};
 
-#define SET_MEMBER_NO_CONVERSION(member_name) iw4_lightgrid.##member_name## = (native_lightgrid.##member_name##)
+#define SET_LIGHTGRID_MEMBER(member_name) iw4_lightgrid.##member_name## = (native_lightgrid.##member_name##)
 
-		SET_MEMBER_NO_CONVERSION(hasLightRegions);
-		SET_MEMBER_NO_CONVERSION(lastSunPrimaryLightIndex);
+		SET_LIGHTGRID_MEMBER(hasLightRegions);
+		SET_LIGHTGRID_MEMBER(lastSunPrimaryLightIndex);
 
 		memcpy(iw4_lightgrid.mins, native_lightgrid.mins, sizeof native_lightgrid.mins);
 		memcpy(iw4_lightgrid.maxs, native_lightgrid.maxs, sizeof native_lightgrid.maxs);
 
-		SET_MEMBER_NO_CONVERSION(rowAxis);
-		SET_MEMBER_NO_CONVERSION(colAxis);
-		SET_MEMBER_NO_CONVERSION(rowDataStart);
-		SET_MEMBER_NO_CONVERSION(rawRowDataSize);
-		SET_MEMBER_NO_CONVERSION(rawRowData);
-		SET_MEMBER_NO_CONVERSION(entryCount);
-		SET_MEMBER_NO_CONVERSION(entries);
-		SET_MEMBER_NO_CONVERSION(colorCount);
-		SET_MEMBER_NO_CONVERSION(colors);
+		SET_LIGHTGRID_MEMBER(rowAxis);
+		SET_LIGHTGRID_MEMBER(colAxis);
+		SET_LIGHTGRID_MEMBER(rowDataStart);
+		SET_LIGHTGRID_MEMBER(rawRowDataSize);
+		SET_LIGHTGRID_MEMBER(rawRowData);
+		SET_LIGHTGRID_MEMBER(entryCount);
+		SET_LIGHTGRID_MEMBER(entries);
+		SET_LIGHTGRID_MEMBER(colorCount);
+		SET_LIGHTGRID_MEMBER(colors);
 
 		return iw4_lightgrid;
 	}
@@ -450,9 +450,9 @@ namespace asset_dumpers
 	{
 		iw4::native::GfxWorldDraw iw4_draw{};
 
-#define SET_MEMBER_NO_CONVERSION(member_name) iw4_draw.##member_name## = (native_draw.##member_name##)
+#define SET_DRAW_MEMBER(member_name) iw4_draw.##member_name## = (native_draw.##member_name##)
 
-		SET_MEMBER_NO_CONVERSION(reflectionProbeCount);
+		SET_DRAW_MEMBER(reflectionProbeCount);
 
 		iw4_draw.reflectionProbes = local_allocator.allocate_array<iw4::native::GfxImage*>(iw4_draw.reflectionProbeCount);
 		iw4_draw.reflectionProbeOrigins = local_allocator.allocate_array<game::native::GfxReflectionProbe>(iw4_draw.reflectionProbeCount);
@@ -467,7 +467,7 @@ namespace asset_dumpers
 			iw4_draw.reflectionProbeTextures[i] = native_draw.reflectionProbeTextures[i];
 		}
 
-		SET_MEMBER_NO_CONVERSION(lightmapCount);
+		SET_DRAW_MEMBER(lightmapCount);
 		iw4_draw.lightmaps = local_allocator.allocate_array<iw4::native::GfxLightmapArray>(iw4_draw.lightmapCount);
 		for (auto i = 0; i < iw4_draw.lightmapCount; i++)
 		{
@@ -482,8 +482,8 @@ namespace asset_dumpers
 			}
 		}
 
-		SET_MEMBER_NO_CONVERSION(lightmapPrimaryTextures);
-		SET_MEMBER_NO_CONVERSION(lightmapSecondaryTextures);
+		SET_DRAW_MEMBER(lightmapPrimaryTextures);
+		SET_DRAW_MEMBER(lightmapSecondaryTextures);
 
 		if (native_draw.lightmapOverridePrimary)
 		{
@@ -495,12 +495,12 @@ namespace asset_dumpers
 			iw4_draw.lightmapOverrideSecondary = exporter::dump(game::native::ASSET_TYPE_IMAGE, { native_draw.lightmapOverrideSecondary }).image;
 		}
 
-		SET_MEMBER_NO_CONVERSION(vertexCount);
-		SET_MEMBER_NO_CONVERSION(vd);
-		SET_MEMBER_NO_CONVERSION(vertexLayerDataSize);
-		SET_MEMBER_NO_CONVERSION(vld);
-		SET_MEMBER_NO_CONVERSION(indexCount);
-		SET_MEMBER_NO_CONVERSION(indices);
+		SET_DRAW_MEMBER(vertexCount);
+		SET_DRAW_MEMBER(vd);
+		SET_DRAW_MEMBER(vertexLayerDataSize);
+		SET_DRAW_MEMBER(vld);
+		SET_DRAW_MEMBER(indexCount);
+		SET_DRAW_MEMBER(indices);
 
 		return iw4_draw;
 	}

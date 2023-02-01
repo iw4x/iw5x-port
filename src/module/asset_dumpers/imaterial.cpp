@@ -170,7 +170,7 @@ namespace asset_dumpers
 							auto b64 = local_allocator.allocate_array<char>(BUFF_SIZE);
 							unsigned long buffLength = BUFF_SIZE;
 
-							auto result = base64_encode(&buffer.front(), buffer.size(), b64, &buffLength);
+							[[maybe_unused]] auto result = base64_encode(&buffer.front(), buffer.size(), b64, &buffLength);
 							assert(result == CRYPT_OK);
 
 							waterJson.AddMember("H0", RAPIDJSON_STR(str_duplicator.duplicate_string(b64)), allocator);
@@ -184,7 +184,7 @@ namespace asset_dumpers
 							auto b64 = local_allocator.allocate_array<char>(BUFF_SIZE);
 							unsigned long buffLength = BUFF_SIZE;
 
-							auto result = base64_encode(&buffer.front(), buffer.size(), b64, &buffLength);
+							[[maybe_unused]] auto result = base64_encode(&buffer.front(), buffer.size(), b64, &buffLength);
 							assert(result == CRYPT_OK);
 
 							waterJson.AddMember("wTerm", RAPIDJSON_STR(str_duplicator.duplicate_string(b64)), allocator);

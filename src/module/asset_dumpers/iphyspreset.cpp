@@ -25,20 +25,20 @@ namespace asset_dumpers
 		auto iw4_physpreset = local_allocator.allocate<iw4::native::PhysPreset>();
 		auto native_physpreset = header.physPreset;
 
-#define SET_MEMBER_NO_CONVERSION(member_name) iw4_physpreset->##member_name## = (native_physpreset->##member_name##)
+#define SET_LIGHTGRID_MEMBER(member_name) iw4_physpreset->##member_name## = (native_physpreset->##member_name##)
 
-		SET_MEMBER_NO_CONVERSION(name);
-		SET_MEMBER_NO_CONVERSION(type);
-		SET_MEMBER_NO_CONVERSION(mass);
-		SET_MEMBER_NO_CONVERSION(bounce);
-		SET_MEMBER_NO_CONVERSION(friction);
-		SET_MEMBER_NO_CONVERSION(bulletForceScale);
-		SET_MEMBER_NO_CONVERSION(explosiveForceScale);
-		SET_MEMBER_NO_CONVERSION(sndAliasPrefix);
-		SET_MEMBER_NO_CONVERSION(piecesSpreadFraction);
-		SET_MEMBER_NO_CONVERSION(piecesUpwardVelocity);
-		SET_MEMBER_NO_CONVERSION(tempDefaultToCylinder);
-		SET_MEMBER_NO_CONVERSION(perSurfaceSndAlias);
+		SET_LIGHTGRID_MEMBER(name);
+		SET_LIGHTGRID_MEMBER(type);
+		SET_LIGHTGRID_MEMBER(mass);
+		SET_LIGHTGRID_MEMBER(bounce);
+		SET_LIGHTGRID_MEMBER(friction);
+		SET_LIGHTGRID_MEMBER(bulletForceScale);
+		SET_LIGHTGRID_MEMBER(explosiveForceScale);
+		SET_LIGHTGRID_MEMBER(sndAliasPrefix);
+		SET_LIGHTGRID_MEMBER(piecesSpreadFraction);
+		SET_LIGHTGRID_MEMBER(piecesUpwardVelocity);
+		SET_LIGHTGRID_MEMBER(tempDefaultToCylinder);
+		SET_LIGHTGRID_MEMBER(perSurfaceSndAlias);
 
 		out.physPreset = iw4_physpreset;
 	}

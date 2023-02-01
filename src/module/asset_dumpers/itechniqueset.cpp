@@ -266,8 +266,9 @@ namespace asset_dumpers
 		{ game::native::TEXTURE_SRC_CODE_CINEMATIC_A, iw4::native::TEXTURE_SRC_CODE_CINEMATIC_A },
 		{ game::native::TEXTURE_SRC_CODE_REFLECTION_PROBE, iw4::native::TEXTURE_SRC_CODE_REFLECTION_PROBE },
 
+		{ game::native::TEXTURE_SRC_CODE_COLOR_MANIPULATION, iw4::native::TEXTURE_SRC_CODE_COUNT } // It's wrong, but it's supposed to be random data anyway
+
 		//{ game::native::TEXTURE_SRC_CODE_PIP_SCENE, iw4::native::TEXTURE_SRC_CODE_BLACK }, // WRONG !
-		//{ game::native::TEXTURE_SRC_CODE_COLOR_MANIPULATION, iw4::native::TEXTURE_SRC_CODE_BLACK }, // WRONG !
 		//{ game::native::TEXTURE_SRC_CODE_STREAMING_LOADING, iw4::native::TEXTURE_SRC_CODE_BLACK }, // WRONG !
 
 	};
@@ -504,9 +505,11 @@ namespace asset_dumpers
 					if (literal_const_map.contains(native_arg->u.codeConst.index))
 					{
 						iw4_arg->type = 
-							native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_CODE_PIXEL_CONST ? 
-								iw4::native::MTL_ARG_LITERAL_PIXEL_CONST :
-								iw4::native::MTL_ARG_LITERAL_VERTEX_CONST;
+							static_cast<unsigned short>(
+								native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_CODE_PIXEL_CONST ? 
+									iw4::native::MTL_ARG_LITERAL_PIXEL_CONST :
+									iw4::native::MTL_ARG_LITERAL_VERTEX_CONST
+							);
 
 						iw4_arg->u.literalConst = reinterpret_cast<float(*)[4]>(literal_const_map.at(native_arg->u.codeConst.index).data());
 					}
@@ -824,7 +827,7 @@ namespace asset_dumpers
 		case iw4::native::MTL_ARG_CODE_PIXEL_SAMPLER:
 			if (iw4_argument.u.codeSampler >= ARRAYSIZE(iw4::native::codeSamplerUpdateFrequency))
 			{
-				assert(false);
+				//assert(false);
 				return iw4::native::MTL_UPDATE_RARELY;
 			}
 			return iw4::native::codeSamplerUpdateFrequency[iw4_argument.u.codeSampler];

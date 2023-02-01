@@ -25,6 +25,14 @@
 
 namespace asset_dumpers
 {
+	const std::string iscriptfile::includes_to_rename[] = {
+		"maps\\mp\\_load",
+		"common_scripts\\_destructible",
+		"common_scripts\\_destructible_types",
+	};
+
+	std::string iscriptfile::common_scripts_to_dump[ARRAYSIZE(includes_to_rename)];
+	std::string iscriptfile::regex_ready_includes_to_rename[ARRAYSIZE(includes_to_rename)];
 
 	void iscriptfile::convert(const game::native::XAssetHeader& header, iw4::native::XAssetHeader& out)
 	{
@@ -65,7 +73,8 @@ namespace asset_dumpers
 
 			dump_ambient_play(script_data);
 			script_data = add_fog_init(script_data);
-			script_data = remove_compatibility_calls(script_data);
+			script_data = general_compatibility_fixes(script_data);
+			script_data = rename_common_imports(script_data);
 			///
 			////////////////////////////
 
@@ -118,20 +127,20 @@ namespace asset_dumpers
 
 				final_string << "    setDevDvar( \"scr_fog_disable\", \"0\" );\n"; // For good measure
 
-				auto i = 0;
+				auto j = 0;
 				final_string << "    setExpFog(";
 				for (auto match : m)
 				{
-					i++;
+					j++;
 
-					if (i == 1)
+					if (j == 1)
 					{
 						continue;
 					}
 
 					final_string << match.str();
 
-					if (i <= ARRAYSIZE(members))
+					if (j <= ARRAYSIZE(members))
 					{
 						final_string << ", ";
 					}
@@ -157,7 +166,7 @@ namespace asset_dumpers
 		auto script_copy = script;
 
 		// Add fog init
-		auto load_offset = script_copy.find("maps\\mp\\_load::main\(\);\n");
+		auto load_offset = script_copy.find("maps\\mp\\_load::main();\n");
 		if (load_offset != std::string::npos)
 		{
 			script_copy = script_copy.insert(
@@ -169,7 +178,7 @@ namespace asset_dumpers
 		return script_copy;
 	}
 
-	std::string iscriptfile::remove_compatibility_calls(const std::string& script)
+	std::string iscriptfile::general_compatibility_fixes(const std::string& script)
 	{
 		// General removals (things that don't exist in IW4)
 		static std::vector<std::pair<std::regex, std::string>> replacements
@@ -181,7 +190,14 @@ namespace asset_dumpers
 			{std::regex("setsunlight"), "// Commented out by iw5xport\n    // $&"},
 
 			// faceoff maps have these calls to set up spawns
-			{std::regex("maps\\\\mp\\\\gametypes\\\\faceoff"), "// Commented out by iw5xport\n    // $&"}
+			{std::regex("maps\\\\mp\\\\gametypes\\\\faceoff"), "// Commented out by iw5xport\n    // $&"},
+
+			// These don't exist in mw2, we ignore them
+			{std::regex("precachefxontag"), "    iw5xport_purge = 0;\n    // $&"},
+			{std::regex("precachetag"), "    iw5xport_purge = 0;\n    // $&"},
+			{std::regex("precachesound"), "    iw5xport_purge = 0;\n    // $&"},
+			{std::regex("precacheitem( *\"bomb_site_mp\" *);"), "    iw5xport_purge = 0;\n    // $&"},
+
 		};
 
 		std::string script_cpy = script;
@@ -189,6 +205,82 @@ namespace asset_dumpers
 		for (auto replacement : replacements)
 		{
 			script_cpy = std::regex_replace(script_cpy, replacement.first, replacement.second);
+		}
+
+		// Downgrade syntax - we can't use on the fly arrays anymore
+		{
+			std::regex inline_array_catcher = std::regex("( *)(.*) \\[ ([^,]+) \\](.*;)");
+			constexpr auto var_name_format = "iw5xport_$3_arr";
+			const auto replacement = std::format(
+				"$1{} = [];\n$1{}[{}.size] = $3;\n$1$2{}$4",
+				var_name_format, var_name_format, var_name_format, var_name_format
+			);
+
+			script_cpy = std::regex_replace(
+				script_cpy,
+				inline_array_catcher,
+				replacement
+			);
+		}
+
+		// Downgrade syntax - ternaries
+		{
+			std::regex ternary_catcher = std::regex("( *)(.*)common_scripts\\\\utility::ter_op\\( (.*), (.*), (.*) \\)(.*;)");
+			constexpr auto var_name_format = "iw5xport_ternary";
+			const auto replacement = std::format(
+				"\n$1{} = $5;\n$1if ($3)\n$1{{\n$1$1{} = $4;\n$1}}\n\n$1$2{} $6",
+				var_name_format, var_name_format, var_name_format
+			);
+
+			script_cpy = std::regex_replace(
+				script_cpy,
+				ternary_catcher,
+				replacement
+			);
+		}
+
+		// Multiple array declarations, more work
+		{
+			std::regex inline_multi_array_finder = std::regex("(.*)\\[ ((?:.)+, (?:.)+) \\](.*;)");
+			std::smatch m;
+			std::string::const_iterator search_start(script_cpy.cbegin());
+			std::stringstream final_output{};
+			bool found_anything = false;
+			while (std::regex_search(search_start, script_cpy.cend(), m, inline_multi_array_finder))
+			{
+				found_anything = true;
+				if (m.size() > 3)
+				{
+					final_output << m.prefix();
+
+					auto match = m[2];
+					auto var_names = match.str();
+
+					auto vars = utils::string::split(',', var_names);
+
+					std::stringstream final_code_block{};
+					std::string array_name = std::format("iw5xport_{}_arr", m.position());
+
+					// Init array
+					final_code_block << "// Unrolled by iw5xport because of iw4 syntax limitation\n" << array_name << " = [];\n";
+
+					// Add all elements
+					for (const auto& var : vars)
+					{
+						final_code_block << std::format("{}[{}.size] = {};\n", array_name, array_name, var);
+					}
+
+					search_start = m.suffix().first;
+
+					final_output << final_code_block.str() << m[1] << array_name << m[3];
+				}
+			}
+
+			if (found_anything)
+			{
+				final_output << m.suffix();
+				script_cpy = final_output.str();
+			}
 		}
 
 		return script_cpy;
@@ -246,13 +338,13 @@ namespace asset_dumpers
 		}
 	}
 
-	void iscriptfile::dump_map_precache(const std::string& script)
+	void iscriptfile::dump_map_precache(const std::string& script_contents)
 	{
 		static std::regex anim_script_catcher(" *(.*)::main\\(\\);");
 		std::smatch anim_script_matches;
 
-		std::string::const_iterator search_start(script.cbegin());
-		while (std::regex_search(search_start, script.cend(), anim_script_matches, anim_script_catcher))
+		std::string::const_iterator search_start(script_contents.cbegin());
+		while (std::regex_search(search_start, script_contents.cend(), anim_script_matches, anim_script_catcher))
 		{
 			if (anim_script_matches.size() > 1)
 			{
@@ -292,10 +384,12 @@ namespace asset_dumpers
 		std::smatch m;
 		
 		std::stringstream result_builder{};
+		bool found_anything = false;
 
 		std::string::const_iterator search_start(script.cbegin());
 		while (std::regex_search(search_start, script.cend(), m, animtree_catcher))
 		{
+			found_anything = true;
 			if (m.size() > 1)
 			{
 				const auto& match = m[1];
@@ -326,23 +420,15 @@ namespace asset_dumpers
 			}
 		}
 
+		if (!found_anything)
+		{
+			// No changes
+			return script;
+		}
+
 		result_builder << m.suffix();
 
 		std::string final_output = result_builder.str();
-
-		// this is not necessary
-#if false
-		// We're not done!
-		// IW5 anim scripts reference animtree elements with a percentage (%)
-		// The problem is that we're in MP and we don't have access to SP anims
-		// But they're still getting compiled, except we will miss the animtree
-		// So if the map looks like it's gonna be MP/SP modular, we replace every animtree query we find
-		static std::regex is_mp_sp_modular("utility::string_starts_with\\(.*, *\"mp_\" *\\)");
-		if (std::regex_match(final_output, is_mp_sp_modular))
-		{
-			final_output = std::regex_replace(final_output, std::regex("%(.*);"), "\"$1\"");
-		}
-#endif
 
 		return final_output;
 	}
@@ -437,6 +523,19 @@ namespace asset_dumpers
 		return result;
 	}
 
+	std::string iscriptfile::rename_common_imports(const std::string& script)
+	{
+		std::string final_output = script;
+
+		// Rename imports
+		for (size_t i = 0; i < ARRAYSIZE(includes_to_rename); i++)
+		{
+			final_output = std::regex_replace(final_output, std::regex(regex_ready_includes_to_rename[i]), std::format("{}::", "$1_5x"));
+		}
+		
+		return final_output;
+	}
+
 	std::string iscriptfile::get_decompiled_script(const game::native::ScriptFile* script)
 	{
 		std::string script_name = get_script_name(script);
@@ -477,10 +576,76 @@ namespace asset_dumpers
 		// This name has been mangled!
 		if (script_name[0] <= '9')
 		{
-			script_name = xsk::gsc::iw5::resolver::token_name(std::stoi(script_name));
+			script_name = xsk::gsc::iw5::resolver::token_name(static_cast<unsigned short>(std::stoi(script_name)));
 		}
 
 		return std::format("{}.gsc", script_name);
+	}
+
+	void iscriptfile::dump_rename_common_scripts()
+	{
+		// We have to dump and rename:
+		// - maps/mp/_load.gsc
+		// - common_scripts/_destructible.gsc
+		// - comon_script/_destructible_types.gsc
+		for (size_t i = 0; i < ARRAYSIZE(common_scripts_to_dump); i++)
+		{
+			const auto& file = includes_to_rename[i];
+
+			const auto token = xsk::gsc::iw5::resolver::token_id(common_scripts_to_dump[i]);
+			const auto obfuscated_name = token == 0 ? file : std::to_string(token);
+
+			const auto script = game::native::DB_FindXAssetHeader(game::native::XAssetType::ASSET_TYPE_SCRIPTFILE, obfuscated_name.data(), 0);
+
+			if (script.data)
+			{
+				std::string raw_script = get_decompiled_script(script.scriptfile);
+				std::string rawfile_name = std::format("{}_5x.gsc", file);
+
+				if (file.ends_with("_load"))
+				{
+					// Specific fix for _load - we have to remove this function
+					static std::regex remove_destructible_killcam("(setupdestructiblekillcaments\\(\\)\n\\{)[\\S\\s]*(\\})");
+
+					raw_script = std::regex_replace(raw_script, remove_destructible_killcam, "$1\n    // iw5xport: Nothing to see here!\n$2");
+				}
+
+				if (file.ends_with("_destructible_types"))
+				{
+					// Too many calls, which breaks the precache limit of iw4
+					// The limit is the same in iw5 but the code XSK generates makes too many explicit far calls
+					// There's a limit of 1024 but this script alone does something like 4078 lol
+					raw_script = std::format(
+						"#include common_scripts\\_destructible_5x;\n{}", 
+						std::regex_replace(raw_script, std::regex("common_scripts\\\\_destructible::"), "")
+					);
+				}
+
+				// They can contain animtrees
+				raw_script = dump_rename_map_animtrees(raw_script);
+				raw_script = general_compatibility_fixes(raw_script);
+				for (size_t j = 0; j < ARRAYSIZE(includes_to_rename); j++)
+				{
+					if (i != j)
+					{
+						raw_script = std::regex_replace(
+							raw_script,
+							std::regex(regex_ready_includes_to_rename[j]),
+							std::format("{}::", "$1_5x")
+						);
+					}
+				}
+
+				auto raw_file = local_allocator.allocate<game::native::RawFile>();
+				raw_file->buffer = local_allocator.duplicate_string(raw_script);
+				raw_file->len = raw_script.size();
+				raw_file->compressedLen = 0;
+				raw_file->name = local_allocator.duplicate_string(rawfile_name);
+
+				exporter::dump(game::native::XAssetType::ASSET_TYPE_RAWFILE, { raw_file });
+			}
+
+		}
 	}
 
 	void iscriptfile::dump_create_fx_sounds(const std::string& script)
@@ -515,6 +680,16 @@ namespace asset_dumpers
 
 	iscriptfile::iscriptfile()
 	{
+		// prepare regex
+		for (size_t i = 0; i < ARRAYSIZE(includes_to_rename); i++)
+		{
+			const auto& file = includes_to_rename[i];
+
+			// Ridiculous
+			regex_ready_includes_to_rename[i] = std::format("({})::", std::regex_replace(file, std::regex("\\\\"), "\\$&"));
+			common_scripts_to_dump[i] = std::regex_replace(file, std::regex("\\\\"), "/");
+		}
+
 		command::add("dumpScript", [this](const command::params& params)
 			{
 				if (params.size() < 2) return;

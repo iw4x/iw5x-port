@@ -120,7 +120,7 @@ namespace asset_dumpers
 		SAME_NAME_JSON_MEMBER(asset->glassSys, glass_system, initGeoDataCount);
 
 		rapidjson::Value defs(rapidjson::kArrayType);
-		for (auto i = 0; i < asset->glassSys.defCount; i++)
+		for (size_t i = 0; i < asset->glassSys.defCount; i++)
 		{
 			auto def = &asset->glassSys.defs[i];
 
@@ -147,7 +147,7 @@ namespace asset_dumpers
 		glass_system.AddMember("defs", defs, allocator);
 
 		rapidjson::Value init_pieces(rapidjson::kArrayType);
-		for (auto i = 0; i < asset->glassSys.initPieceCount; i++)
+		for (size_t i = 0; i < asset->glassSys.initPieceCount; i++)
 		{
 			auto init_piece_state = &asset->glassSys.initPieceStates[i];
 
@@ -191,7 +191,7 @@ namespace asset_dumpers
 
 
 		rapidjson::Value init_geo_json(rapidjson::kArrayType);
-		for (auto i = 0; i < asset->glassSys.initGeoDataCount; i++)
+		for (size_t i = 0; i < asset->glassSys.initGeoDataCount; i++)
 		{
 			auto init_geo = &asset->glassSys.initGeoData[i];
 

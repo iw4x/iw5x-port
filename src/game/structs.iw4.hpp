@@ -659,7 +659,7 @@ namespace iw4::native
 		game::native::cLeaf_t leaf;
 	};
 
-	struct __declspec(align(64)) clipMap_t
+	struct clipMap_t
 	{
 		const char* name;
 		int isInUse;

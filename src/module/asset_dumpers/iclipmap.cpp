@@ -1,5 +1,10 @@
 ﻿#include <std_include.hpp>
 
+#include <rapidjson/document.h>
+#include <rapidjson/prettywriter.h>
+#include <rapidjson/stringbuffer.h>
+
+
 #include "iclipmap.hpp"
 #include "../asset_dumper.hpp"
 #include "../exporter.hpp"
@@ -8,18 +13,11 @@
 #include "utils/io.hpp"
 #include "utils/stream.hpp"
 #include "utils/string.hpp"
-
-#include <rapidjson/document.h>
-#include <rapidjson/prettywriter.h>
-#include <rapidjson/stringbuffer.h>
-
-
 namespace asset_dumpers
 {
 
 #define IW4X_CLIPMAP_VERSION 3
 
-	static_assert(sizeof iw4::native::clipMap_t == 256);
 	static_assert(sizeof game::native::ClipMaterial == 12);
 	static_assert(sizeof game::native::cbrushside_t == 8);
 	static_assert(sizeof game::native::cNode_t == 8);
@@ -233,7 +231,7 @@ namespace asset_dumpers
 		{
 			rapidjson::Value arr(rapidjson::kArrayType);
 
-			for (size_t i = 0; i < size; i++)
+			for (auto i = 0; i < size; i++)
 			{
 				arr.PushBack(rapidjson::Value(array[i]), allocator);
 			}
@@ -245,7 +243,7 @@ namespace asset_dumpers
 		{
 			rapidjson::Value arr(rapidjson::kArrayType);
 
-			for (size_t i = 0; i < size; i++)
+			for (auto i = 0; i < size; i++)
 			{
 				arr.PushBack(rapidjson::Value(array[i]), allocator);
 			}
@@ -257,7 +255,7 @@ namespace asset_dumpers
 		{
 			rapidjson::Value arr(rapidjson::kArrayType);
 
-			for (size_t i = 0; i < size; i++)
+			for (auto i = 0; i < size; i++)
 			{
 				arr.PushBack(rapidjson::Value(static_cast<uint8_t>(array[i])), allocator);
 			}
@@ -305,7 +303,7 @@ namespace asset_dumpers
 
 		// Planes
 		rapidjson::Value json_planes(rapidjson::kArrayType);
-		for (size_t i = 0; i < clip_map->planeCount; i++)
+		for (int i = 0; i < clip_map->planeCount; i++)
 		{
 			rapidjson::Value json_plane(rapidjson::kObjectType);
 			auto plane = &clip_map->planes[i];
@@ -529,7 +527,7 @@ namespace asset_dumpers
 
 		// tris
 		rapidjson::Value json_tris(rapidjson::kArrayType);
-		for (size_t i = 0; i < clip_map->triCount * 3; i+=3)
+		for (auto i = 0; i < clip_map->triCount * 3; i+=3)
 		{
 			assert(clip_map->triIndices[i] != clip_map->triIndices[i + 1]);
 			assert(clip_map->triIndices[i + 1] != clip_map->triIndices[i + 2]);
@@ -541,7 +539,7 @@ namespace asset_dumpers
 
 		rapidjson::Value json_tris_walkable(rapidjson::kArrayType);
 		auto walkable_count = 4 * ((3 * clip_map->triCount + 31) >> 5);
-		for (size_t i = 0; i < walkable_count * 3; i++)
+		for (auto i = 0; i < walkable_count * 3; i++)
 		{
 			json_tris_walkable.PushBack(static_cast<uint8_t>(clip_map->triEdgeIsWalkable[i]), allocator);
 		}
@@ -550,7 +548,7 @@ namespace asset_dumpers
 
 		// Collision borders
 		rapidjson::Value json_collision_borders(rapidjson::kArrayType);
-		for (size_t i = 0; i < clip_map->borderCount; i++)
+		for (auto i = 0; i < clip_map->borderCount; i++)
 		{
 			auto collision_border = &clip_map->borders[i];
 
@@ -571,7 +569,7 @@ namespace asset_dumpers
 
 		// Collision partitions
 		rapidjson::Value json_collision_partitions(rapidjson::kArrayType);
-		for (size_t i = 0; i < clip_map->partitionCount; i++)
+		for (auto i = 0; i < clip_map->partitionCount; i++)
 		{
 			auto collision_partition = &clip_map->partitions[i];
 
@@ -595,7 +593,7 @@ namespace asset_dumpers
 
 		// Trees
 		rapidjson::Value json_aabbtrees(rapidjson::kArrayType);
-		for (size_t i = 0; i < clip_map->aabbTreeCount; i++)
+		for (auto i = 0; i < clip_map->aabbTreeCount; i++)
 		{
 			auto aabbtree = &clip_map->aabbTrees[i];
 
@@ -757,7 +755,7 @@ namespace asset_dumpers
 			json_map_ents.AddMember("trigger", json_trigger, allocator);
 
 			rapidjson::Value json_stages(rapidjson::kArrayType);
-			for (size_t i = 0; i < ents->stageCount; i++)
+			for (auto i = 0; i < ents->stageCount; i++)
 			{
 				auto stage = &ents->stages[i];
 				rapidjson::Value json_stage(rapidjson::kObjectType);

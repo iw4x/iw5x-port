@@ -49,6 +49,19 @@ namespace utils::string
 		return result;
 	}
 
+	std::vector<std::string> split(const char& delimiter, const std::string& data)
+	{
+		std::vector<std::string> result;
+		std::stringstream ss(data);
+		std::string item;
+
+		while (std::getline(ss, item, delimiter)) {
+			result.push_back(item);
+		}
+
+		return result;
+	}
+
 	std::string dump_hex(const std::string& data, const std::string& separator)
 	{
 		std::string result;

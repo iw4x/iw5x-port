@@ -106,7 +106,7 @@ namespace asset_dumpers
 				auto data_compressed = std::vector<unsigned char>();
 				data_compressed.assign(header.rawfile->buffer, header.rawfile->buffer + header.rawfile->compressedLen);
 				data_decompressed = xsk::utils::zlib::decompress(data_compressed, header.rawfile->len);
-				auto decompressed_length = data_decompressed.size();
+				[[maybe_unused]] auto decompressed_length = data_decompressed.size();
 				assert(decompressed_length == header.rawfile->len);
 				data = reinterpret_cast<char*>(data_decompressed.data());
 			}

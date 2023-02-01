@@ -108,17 +108,16 @@ void exporter::event_loop()
 	}
 }
 
-void __declspec(naked) Com_ParseCommandLine_Stub(const char* commandLineArgs)
+void Com_ParseCommandLine(const char* commandLineArgs)
 {
-	static const auto Com_ParseCommandLine = 0x553B60;
+	static const auto Com_ParseCommandLine_t = 0x553B60;
 
 	__asm
 	{
 		pushad
 		mov eax, commandLineArgs
-		call Com_ParseCommandLine
+		call Com_ParseCommandLine_t
 		popad
-		ret
 	}
 }
 
@@ -172,9 +171,8 @@ void exporter::perform_common_initialization()
 
 	export_path_dvar = game::native::Dvar_RegisterString("export_path", "iw5xport_out/default", game::native::DVAR_NONE, "export path for iw5xport");
 
-	auto com_consoleLines = (const char**)0x01CEF598;
 	auto cmdLine = GetCommandLineA();
-	Com_ParseCommandLine_Stub(cmdLine);
+	Com_ParseCommandLine(cmdLine);
 
 	initialize_exporters();
 	add_commands();
@@ -190,8 +188,7 @@ void exporter::perform_common_initialization()
 void exporter::dump_map(const command::params& params)
 {
 	if (params.size() < 2) return;
-	std::string map_name = params[1];
-	exporter::map_name = map_name;
+	map_name = params[1];
 
 	std::stringstream source{};
 
@@ -230,33 +227,41 @@ void exporter::dump_map(const command::params& params)
 	console::info("dumping gfxworld %s...\n", map_name.c_str());
 	command::execute("dumpGfxWorld", true); // This adds it to the zone source
 
+	auto script_exporter = reinterpret_cast<asset_dumpers::iscriptfile*>(asset_dumpers[game::native::XAssetType::ASSET_TYPE_SCRIPTFILE]);
+	if (script_exporter)
+	{
+		console::info("dumping common scripts...\n");
+		script_exporter->dump_rename_common_scripts();
+	}
+
 	for (const auto& script : exporter::captured_scripts)
 	{
-
 		if (
 			!script.starts_with("maps/mp/gametypes"s) // No general gameplay scripts
 		)
 		{
+			console::info("dumping script %s...\n", script.data());
 			command::execute(std::format("dumpScript {}", script), true); // This adds it to the zone source
 		}
 	}
 
-	for (const auto& rawfiles : exporter::captured_rawfiles)
+	for (const auto& rawfile : exporter::captured_rawfiles)
 	{
-		if (rawfiles == std::format("{}_load", map_name) || rawfiles == map_name)
+		if (rawfile == std::format("{}_load", map_name) || rawfile == map_name)
 		{
 			// Idk what this is, it gets captured but not dumped. Looks like an empty asset
 			// IW branding?
 			continue;
 		}
 
-		if (rawfiles.ends_with(".gsc"))
+		if (rawfile.ends_with(".gsc"))
 		{
 			// => scriptfiles
 			continue;
 		}
 
-		command::execute(std::format("dumpRawFile {}", rawfiles), true); // This adds it to the zone source
+		console::info("dumping rawfile %s...\n", rawfile.data());
+		command::execute(std::format("dumpRawFile {}", rawfile), true); // This adds it to the zone source
 	}
 
 	captured_rawfiles.clear();
@@ -454,7 +459,6 @@ void exporter::DB_AddXAsset_Hk(game::native::XAssetType type, game::native::XAss
 		return;
 	}
 
-	auto name = game::native::g_assetNames[type];
 	auto asset = game::native::XAsset{ type, *header };
 	std::string asset_name = game::native::DB_GetXAssetName(&asset);
 
@@ -552,83 +556,10 @@ int exporter::SND_SetDataHook(game::native::MssSound*, char*)
 	asset_dumpers::iloadedsound::duplicate_sound_data(loadedSound);
 	return 0;
 }
-
-
-int Mark_MaterialTechniqueSetAsset(game::native::MaterialTechniqueSet* set, int inuse)
-{
-	typedef int (*aaa_t)(game::native::MaterialTechniqueSet* set, int inuse);
-	aaa_t aaa = (aaa_t)0X4CC450;
-	
-	auto test = *set->name;
-
-	auto result = aaa(set, inuse);
-
-	return result;
-}
-
-int Mark_XModel(int unk)
-{
-	printf("");
-	auto xmodel = *reinterpret_cast<game::native::XModel**>(0x13E1FA8);
-	for (size_t i = 0; i < xmodel->numsurfs; i++)
-	{
-		auto mat = xmodel->materialHandles[i];
-		auto test = *mat->techniqueSet->name;
-	}
-	auto result = utils::hook::invoke<int>(0x4BB7D0, xmodel);
-
-	return result;
-}
-
-int Mark_FxEffectDefHandle()
-{
-	auto handle = reinterpret_cast<game::native::FxEffectDef***>(0x13E299C);
-	auto bb = *handle;
-
-	if (bb)
-	{
-		auto def_ptr = *bb;
-
-		auto count = def_ptr->elemDefCountEmission + def_ptr->elemDefCountLooping + def_ptr->elemDefCountOneShot;
-		
-		for (size_t i = 0; i < count; i++)
-		{
-			auto elem = &def_ptr->elemDefs[i];
-			auto visuals = elem->visuals;
-
-			if (elem->elemType == game::native::FX_ELEM_TYPE_DECAL)
-			{
-				// DECAL
-				if (visuals.markArray)
-				{
-					for (size_t j = 0; j < elem->visualCount; j++)
-					{
-						auto mats = visuals.markArray[j].materials;
-						
-
-						for (size_t k = 0; k < 2; k++)
-						{
-							auto mat = mats[k];
-							auto test = *mat->techniqueSet->name;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	auto result = utils::hook::invoke<int>(0x4C1320, bb);
-	return result;
-}
-
 void exporter::post_load()
 {
 	if (utils::flags::has_flag("exporter"))
 	{
-		utils::hook(0x4C51BB, Mark_FxEffectDefHandle, HOOK_CALL).install()->quick();
-		utils::hook(0x4BB890, Mark_XModel, HOOK_CALL).install()->quick();
-		utils::hook(0x004BAB54, Mark_MaterialTechniqueSetAsset, HOOK_CALL).install()->quick();
-
 		// Keep sounds around
 		utils::hook(0x4B94EC, exporter::SND_SetDataHook, HOOK_CALL).install()->quick();
 

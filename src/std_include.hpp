@@ -55,8 +55,12 @@
 
 #include <zlib.h>
 #include <zstd.h>
+
+#define PRIu64
 #include <diff.h>
 #include <patch.h>
+#undef PRIu64
+
 #include <tomcrypt.h>
 
 #include <gsl/gsl>
