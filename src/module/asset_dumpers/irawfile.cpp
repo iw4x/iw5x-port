@@ -41,6 +41,8 @@ namespace asset_dumpers
 		{
 			out.rawfile = header.rawfile;
 		}
+
+		exporter::add_to_source(game::native::XAssetType::ASSET_TYPE_RAWFILE, out.rawfile->name);
 	}
 
 	void irawfile::saturate_vision(game::native::RawFile* rawfile)

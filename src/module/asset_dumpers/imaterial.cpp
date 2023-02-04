@@ -77,6 +77,13 @@ namespace asset_dumpers
 				tex->semantic = iw4::native::TS_UNUSED_2;
 			}
 
+			if (iw4_material->info.name == "$levelbriefing"s && tex->u.image->name == "default"s)
+			{
+				// No idea why this image is ""wrong"", i suppose the game doesn't use it
+				// bad news, iw4 needs it. So let's change the name
+				tex->u.image->name = local_allocator.duplicate_string(std::format("loadscreen_{}", exporter::get_map_name()));
+			}
+
 			if (tex->u.image == nullptr)
 			{
 				// This happens sometimes! No idea why, it sounds like a big mistake to me

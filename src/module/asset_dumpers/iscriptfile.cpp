@@ -196,7 +196,7 @@ namespace asset_dumpers
 			{std::regex("precachefxontag"), "    iw5xport_purge = 0;\n    // $&"},
 			{std::regex("precachetag"), "    iw5xport_purge = 0;\n    // $&"},
 			{std::regex("precachesound"), "    iw5xport_purge = 0;\n    // $&"},
-			{std::regex("precacheitem( *\"bomb_site_mp\" *);"), "    iw5xport_purge = 0;\n    // $&"},
+			{std::regex("precacheitem\\( *\"bomb_site_mp\" *\\);"), "    iw5xport_purge = 0;\n    // $&"},
 
 		};
 
@@ -288,7 +288,7 @@ namespace asset_dumpers
 
 	void iscriptfile::dump_ambient_play(const std::string& script)
 	{
-		static std::regex ambientplay("ambientplay\\( \"(ambient_mp_seatown)\" \\);");
+		static std::regex ambientplay("ambientplay\\( \"((.*))\" \\);");
 		std::smatch matches;
 
 		if (std::regex_search(script.cbegin(), script.cend(), matches, ambientplay))

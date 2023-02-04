@@ -61,6 +61,7 @@ DEFINE_OG_FUNCTION(Com_EventLoop, 0x555880);
 
 DEFINE_OG_FUNCTION(R_RegisterDvars, 0X6678F0);
 DEFINE_OG_FUNCTION(Com_Frame, 0x556870);
+DEFINE_OG_FUNCTION(Sys_Quit, 0x5CD0E0);
 
 DEFINE_OG_FUNCTION(SL_Init, 0x5643A0);
 DEFINE_OG_FUNCTION(Swap_Init, 0x5C2800);
@@ -131,17 +132,14 @@ void exporter::perform_common_initialization()
 	Com_InitHunkMemory();
 	Scr_InitProgramHunkUser();
 	LargeLocalInit();
-	//bdCore::init(1); // ??
 	Con_OneTimeInit();
 	Sys_InitCmdEvents();
 	PMem_Init();
 
-	//mjpeg_initonce();
 	j_R_InitWorkerThrea();
 	CL_InitKeyCommands();
 	FS_InitFilesystem();
 	Con_InitChannels();
-	//LiveStorage_Init();
 
 	DB_InitThread();
 	Com_InitPreXAssets();
@@ -159,7 +157,6 @@ void exporter::perform_common_initialization()
 	R_RegisterDvars();
 	auto renderer = game::native::Dvar_FindVar("r_loadForRenderer");
 	memset(&renderer->modified, 0, sizeof game::native::dvar_t - 9);
-
 	//
 
 	auto com_frameTime = (int*)(0x1CF0B88);
@@ -293,6 +290,8 @@ void exporter::dump_map(const command::params& params)
 
 	console::info("Exporting Loadscreen...\n");
 	command::execute(std::format("dumpGfxImage loadscreen_{}", map_name.data()), true);
+	command::execute("dumpMaterial $levelbriefing", true);
+
 
 	console::info("Additional fluff...\n");
 	prepared_source.emplace_back("\n# Additional fluff (mostly destructibles)\n");
@@ -323,6 +322,7 @@ void exporter::dump_map(const command::params& params)
 		
 	source << "\n\n\n";
 	utils::io::write_file(std::format("{}/{}.csv", export_path_dvar->current.string, map_name), source.str(), false);
+	utils::io::write_file(std::format("{}/{}_load.csv", export_path_dvar->current.string, map_name), "material,$levelbriefing\n", false);
 
 	console::info("done!\n");
 
@@ -333,9 +333,10 @@ void exporter::dump_map(const command::params& params)
 
 void exporter::add_commands()
 {
-	command::add("test", []()
+	command::add("quit", []()
 		{
-			game::native::Conbuf_AppendText("hello!");
+			// Do not de-init renderer and zones and stuff
+			Sys_Quit();
 		});
 
 	command::add("dumpmap", dump_map);
@@ -360,8 +361,11 @@ void exporter::load_common_zones()
 	const std::string common_zones[] = {
 		"code_post_gfx_mp",
 		"localized_code_post_gfx_mp",
-		"ui_mp",
-		"localized_ui_mp",
+
+		// If we include these we can't loadzone some maps anymore, like mp_underground
+		//"ui_mp",
+		//"localized_ui_mp",
+
 		"patch_mp",
 		"common_mp",
 		"localized_common_mp",
@@ -544,7 +548,9 @@ void Sys_Error_Hk(LPCSTR str)
 {
 	std::string err = str;
 
-	printf("");
+	MessageBoxA(0, str, str, 0);
+
+	__debugbreak();
 }
 
 int exporter::SND_SetDataHook(game::native::MssSound*, char*)
