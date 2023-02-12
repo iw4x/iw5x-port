@@ -37,3 +37,7 @@
 	path = deps/gsc-tool
 	url = https://github.com/xensik/gsc-tool.git
 	branch = xlabs
+[submodule "deps/iw4-open-formats"]
+	path = deps/iw4-open-formats
+	url = https://github.com/Rackover/iw4-open-formats
+	branch = main
