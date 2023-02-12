@@ -1,6 +1,10 @@
 #pragma once
 #include <module/command.hpp>
 
+namespace iw4of
+{
+	class api;
+}
 
 class exporter final : public module
 {
@@ -36,9 +40,12 @@ private:
 	static std::vector<std::string> captured_snd;
 	static std::vector<std::string> captured_models;
 	static std::vector<std::string> captured_fx;
+
 	static std::string map_name;
 	static std::vector<std::string> prepared_source;
 	static bool capture;
 	static bool ready;
+
+	static iw4of::api* iw4of_api;
 };
 

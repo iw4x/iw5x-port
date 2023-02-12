@@ -9,6 +9,8 @@
 #include "utils/io.hpp"
 #include "utils/string.hpp"
 
+#include "api.hpp"
+
 #define IW4X_FX_VERSION 2
 
 namespace asset_dumpers
@@ -392,7 +394,6 @@ namespace asset_dumpers
 
 	ifx::ifx()
 	{
-
 		command::add("dumpFX", [&](const command::params& params)
 			{
 				if (params.size() < 2) return;

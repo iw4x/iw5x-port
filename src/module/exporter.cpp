@@ -4,6 +4,9 @@
 #include "game/game.hpp"
 
 #include <utils/hook.hpp>
+#include <utils/io.hpp>
+#include <utils/flags.hpp>
+
 #include <module/command.hpp>
 
 #include <module/asset_dumpers/igfximage.hpp>
@@ -26,13 +29,14 @@
 #include <module/asset_dumpers/ifx.hpp>
 #include <module/asset_dumpers/ixanimparts.hpp>
 
-#include "exporter.hpp"
 #include <module/scheduler.hpp>
 #include <module/log_file.hpp>
 #include <module/console.hpp>
+
+#include "exporter.hpp"
 #include "asset_dumper.hpp"
-#include <utils/io.hpp>
-#include <utils/flags.hpp>
+
+#include "api.hpp"
 
 const game::native::dvar_t* exporter::export_path_dvar;
 
@@ -186,6 +190,8 @@ void exporter::dump_map(const command::params& params)
 {
 	if (params.size() < 2) return;
 	map_name = params[1];
+
+	iw4of_api->set_work_path(export_path_dvar->current.string);
 
 	std::stringstream source{};
 
@@ -593,27 +599,51 @@ void exporter::post_load()
 		utils::hook(0x5CCED8, event_loop, HOOK_CALL).install()->quick();
 		utils::hook(0x5CCE4E, &perform_common_initialization, HOOK_CALL).install()->quick();
 
-		scheduler::once([]() {
+		iw4of::params_t params;
+
+		params.fs_read_file = [](const std::string& filename) 
+		{
+			return game::native::filesystem_read_big_file(filename.data(), game::native::FsThread::FS_THREAD_DATABASE);
+		};
+
+		params.get_from_string_table = [](unsigned int index)
+		{
+			return game::native::SL_ConvertToString(index);
+		};
+
+		params.print = [](int level, const std::string& message)
+		{
+			if (level)
+			{
+				console::error(message.data());
+			}
+			else 
+			{
+				console::info(message.data());
+			}
+		};
+
+		//params.find_other_asset = [](int type, const std::string& name)
+		//{
+		//	return dump(type, )
+		//};
+
+		params.work_directory = "iw5xport_out/default";
+		//params.store_in_string_table = [](const std::string & text)
+		//{
+		//	return game::native::SL_GetString(text.data(), 0);
+		//};
 
 
+		iw4of_api = new iw4of::api(params);
+
+		scheduler::once([&params]() {
 			console::info("ready!\n");
+			
 			ready = true;
+
 			}, scheduler::pipeline::main);
 	}
-
-	//// Nop demonware 
-	//utils::hook::nop(0x490CA9, 5);
-	//utils::hook::nop(0x490DD4, 5);
-	//utils::hook::set<unsigned char>(0x54CB40, 0xC3);
-
-	//command::add("map", [](const command::params& params)
-	//	{
-	//		if (params.size() < 2) return;
-	//		std::string map_name = params[1];
-
-	//		SV_Map_f(0, map_name.c_str(), 0, 0);
-	//	});
-
 }
 
 REGISTER_MODULE(exporter)
