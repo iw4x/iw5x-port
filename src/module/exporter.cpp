@@ -36,8 +36,6 @@
 #include "exporter.hpp"
 #include "asset_dumper.hpp"
 
-#include "api.hpp"
-
 const game::native::dvar_t* exporter::export_path_dvar;
 
 asset_dumper* exporter::asset_dumpers[game::native::ASSET_TYPE_COUNT]{};
@@ -617,6 +615,7 @@ void exporter::post_load()
 			if (level)
 			{
 				console::error(message.data());
+				assert(false);
 			}
 			else 
 			{

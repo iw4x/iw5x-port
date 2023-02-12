@@ -14,8 +14,6 @@
 #include "rapidjson/document.h"
 #include "rapidjson/prettywriter.h"
 
-#define IW4X_SND_CURVE 1
-
 namespace asset_dumpers
 {
 	void isndcurve::convert(const game::native::XAssetHeader& header, iw4::native::XAssetHeader& out)
@@ -45,39 +43,8 @@ namespace asset_dumpers
 
 	void isndcurve::write(const iw4::native::XAssetHeader& header)
 	{
-		auto asset = header.sndCurve;
-
-		utils::memory::allocator str_duplicator;
-		rapidjson::Document output(rapidjson::kObjectType);
-		auto& allocator = output.GetAllocator();
-
-		assert(asset->filename);
-
-		output.AddMember("version", IW4X_SND_CURVE, allocator);
-		output.AddMember("filename", RAPIDJSON_STR(asset->filename), allocator);
-		output.AddMember("knotCount", asset->knotCount, allocator);
-
-		rapidjson::Value knots_array(rapidjson::kArrayType);
-		for (auto knot = 0; knot < 16; knot++)
-		{
-			rapidjson::Value knots_sides_array(rapidjson::kArrayType);
-			for (auto side = 0; side < 2; side++)
-			{
-				knots_sides_array.PushBack(asset->knots[knot][side], allocator);
-			}
-
-			knots_array.PushBack(knots_sides_array, allocator);
-		}
-
-		output.AddMember("knots", knots_array, allocator);
-
-		rapidjson::StringBuffer buff;
-		rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buff);
-		writer.SetFormatOptions(rapidjson::PrettyFormatOptions::kFormatSingleLineArray);
-
-		output.Accept(writer);
-
-		utils::io::write_file(std::format("{}/{}/{}.iw4x.json", get_export_path(), game::native::g_assetNames[game::native::ASSET_TYPE_SOUND_CURVE], asset->filename), buff.GetString());
+		[[maybe_unused]] bool result = exporter::get_api()->write(iw4::native::ASSET_TYPE_SOUND_CURVE, header.data);
+		assert(result);
 	}
 
 	isndcurve::isndcurve()

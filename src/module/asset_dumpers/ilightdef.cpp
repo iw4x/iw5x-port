@@ -11,8 +11,6 @@
 #include "rapidjson/document.h"
 #include "rapidjson/prettywriter.h"
 
-#define IW4X_LIGHT_VERSION "0"
-
 namespace asset_dumpers
 {
 
@@ -40,30 +38,8 @@ namespace asset_dumpers
 
 	void ilightdef::write(const iw4::native::XAssetHeader& header)
 	{
-		auto asset = header.lightDef;
-
-		utils::stream buffer;
-		buffer.saveArray("IW4xLit" IW4X_LIGHT_VERSION, 8);
-
-		buffer.saveObject(*asset);
-
-		if (asset->name)
-		{
-			buffer.saveString(asset->name);
-		}
-
-		if (asset->attenuation.image)
-		{
-			buffer.saveString(asset->attenuation.image->name);
-			exporter::dump(game::native::XAssetType::ASSET_TYPE_IMAGE, { asset->attenuation.image });
-		}
-
-		assert(asset->name);
-
-		if (asset->name)
-		{
-			utils::io::write_file(std::format("{}/lights/{}.iw4xLight", get_export_path(), asset->name), buffer.toBuffer());
-		}
+		[[maybe_unused]] bool result = exporter::get_api()->write(iw4::native::ASSET_TYPE_LIGHT_DEF, header.data);
+		assert(result);
 	}
 
 	ilightdef::ilightdef()

@@ -8,7 +8,6 @@
 #include <utils/memory.hpp>
 #include <module/exporter.hpp>
 #include <module/console.hpp>
-#include <utils/io.hpp>
 #include <unordered_set>
 #include <utils\stream.hpp>
 
@@ -313,29 +312,29 @@ namespace asset_dumpers
 
 		if (name.contains("_zfeather"))
 		{
-		   native_techset->remappedTechniqueSet = 
-			   game::native::DB_FindXAssetHeader(
-				   game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, 
-				   std::regex_replace(native_techset->name, zFeatherRegx, "").data(),
-				   0
-			   ).techniqueSet;
+			native_techset->remappedTechniqueSet =
+				game::native::DB_FindXAssetHeader(
+					game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET,
+					std::regex_replace(native_techset->name, zFeatherRegx, "").data(),
+					0
+				).techniqueSet;
 
-		   iw4_techset->remappedTechniqueSet = exporter::dump(game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, { native_techset->remappedTechniqueSet }).techniqueSet;
+			iw4_techset->remappedTechniqueSet = exporter::dump(game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, { native_techset->remappedTechniqueSet }).techniqueSet;
 		}
 		else if (name.contains("_sm"))
-			{
-				auto hsm_version = std::regex_replace(native_techset->name, smRegx, "_hsm");
-			   native_techset->remappedTechniqueSet = game::native::DB_FindXAssetHeader(
-				   game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, 
-				   hsm_version.data(),
-				   0
-			   ).techniqueSet;
+		{
+			auto hsm_version = std::regex_replace(native_techset->name, smRegx, "_hsm");
+			native_techset->remappedTechniqueSet = game::native::DB_FindXAssetHeader(
+				game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET,
+				hsm_version.data(),
+				0
+			).techniqueSet;
 
-			   if (native_techset->remappedTechniqueSet)
-			   {
-				   iw4_techset->remappedTechniqueSet = exporter::dump(game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, { native_techset->remappedTechniqueSet }).techniqueSet;
-			   }
+			if (native_techset->remappedTechniqueSet)
+			{
+				iw4_techset->remappedTechniqueSet = exporter::dump(game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, { native_techset->remappedTechniqueSet }).techniqueSet;
 			}
+		}
 
 		// copy techniques to correct spots
 		for (size_t i = 0; i < iw4::native::TECHNIQUE_COUNT; i++)
@@ -345,11 +344,6 @@ namespace asset_dumpers
 			{
 				auto iw5_technique = native_techset->techniques[techniques_from_iw5_to_iw4.at(technique)];
 				iw4_techset->techniques[technique] = convert(iw5_technique);
-
-				if ((iw4_techset->techniques[technique] == nullptr) != (iw5_technique == nullptr))
-				{
-					printf("");
-				}
 			}
 			else
 			{
@@ -362,57 +356,8 @@ namespace asset_dumpers
 
 	void itechniqueset::write(const iw4::native::XAssetHeader& header)
 	{
-		const auto techset = header.techniqueSet;
-
-		rapidjson::Document output(rapidjson::kObjectType);
-		auto& allocator = output.GetAllocator();
-
-		output.AddMember("version", IW4X_TECHSET_VERSION, allocator);
-
-		if (techset->name)
-		{
-			output.AddMember("name", RAPIDJSON_STR(techset->name), allocator);
-		}
-
-		if (techset->remappedTechniqueSet)
-		{
-			output.AddMember("remappedTechniqueSet", RAPIDJSON_STR(techset->remappedTechniqueSet->name), allocator);
-		}
-
-		output.AddMember("hasBeenUploaded", techset->hasBeenUploaded, allocator);
-		output.AddMember("worldVertFormat", techset->worldVertFormat, allocator);
-
-		// This could be an array but it's practical to have the enum index in front
-		// Otherwise on a ~48 keys long array the mapping is not immediatly obvious
-		rapidjson::Value techniqueMap(rapidjson::kObjectType);
-
-		for (size_t i = 0; i < iw4::native::TECHNIQUE_COUNT; i++)
-		{
-			rapidjson::Value value = rapidjson::Value(rapidjson::kNullType);
-
-			if (techset->techniques[i])
-			{
-				write(techset->techniques[i]);
-
-				value = rapidjson::Value(
-					techset->techniques[i]->name,
-					allocator
-				);
-			}
-
-			techniqueMap.AddMember(
-				rapidjson::Value(std::to_string(i).c_str(), allocator),
-				value,
-				allocator);
-		}
-
-		output.AddMember("techniques", techniqueMap, allocator);
-
-		rapidjson::StringBuffer buff;
-		rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buff);
-		output.Accept(writer);
-
-		utils::io::write_file(std::format("{}/techsets/{}.iw4x.json", get_export_path(), techset->name), buff.GetString());
+		[[maybe_unused]] bool result = exporter::get_api()->write(iw4::native::ASSET_TYPE_TECHNIQUE_SET, header.data);
+		assert(result);
 	}
 
 	iw4::native::MaterialTechnique* itechniqueset::convert(const game::native::MaterialTechnique* native_technique)
@@ -424,18 +369,18 @@ namespace asset_dumpers
 
 		auto iw4_technique = reinterpret_cast<iw4::native::MaterialTechnique*>(
 			local_allocator.allocate(
-				sizeof iw4::native::MaterialTechnique 
+				sizeof iw4::native::MaterialTechnique
 				- sizeof iw4::native::MaterialPass
 				+ sizeof iw4::native::MaterialPass * native_technique->passCount
 			)
-		);
+			);
 
 		iw4_technique->name = local_allocator.duplicate_string(std::format("{}{}", native_technique->name, techset_suffix));
 		iw4_technique->flags = native_technique->flags;
 
 		iw4_technique->passCount = native_technique->passCount;
-		
-		for (int i = 0; i <  iw4_technique->passCount; i++)
+
+		for (int i = 0; i < iw4_technique->passCount; i++)
 		{
 			auto native_pass = &native_technique->passArray[i];
 			auto iw4_pass = &iw4_technique->passArray[i];
@@ -497,19 +442,19 @@ namespace asset_dumpers
 				iw4_arg->dest = native_arg->dest;
 				iw4_arg->u = native_arg->u;
 
-				if (native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_CODE_PIXEL_CONST 
+				if (native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_CODE_PIXEL_CONST
 					|| native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_CODE_VERTEX_CONST)
 				{
 
 					// Handling special cases
 					if (literal_const_map.contains(native_arg->u.codeConst.index))
 					{
-						iw4_arg->type = 
+						iw4_arg->type =
 							static_cast<unsigned short>(
-								native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_CODE_PIXEL_CONST ? 
-									iw4::native::MTL_ARG_LITERAL_PIXEL_CONST :
-									iw4::native::MTL_ARG_LITERAL_VERTEX_CONST
-							);
+								native_arg->type == game::native::MaterialShaderArgumentType::MTL_ARG_CODE_PIXEL_CONST ?
+								iw4::native::MTL_ARG_LITERAL_PIXEL_CONST :
+								iw4::native::MTL_ARG_LITERAL_VERTEX_CONST
+								);
 
 						iw4_arg->u.literalConst = reinterpret_cast<float(*)[4]>(literal_const_map.at(native_arg->u.codeConst.index).data());
 					}
@@ -531,7 +476,7 @@ namespace asset_dumpers
 						auto iw4_index = iw5_code_const_map.at(native_arg->u.codeConst.index);
 						iw4_arg->u.codeConst.index = iw4_index;
 
-						
+
 						assert(iw4_arg->u.codeConst.index < iw4::native::CONST_SRC_TOTAL_COUNT);
 
 					}
@@ -549,7 +494,7 @@ namespace asset_dumpers
 					else
 					{
 						code_sampler = static_cast<iw4::native::MaterialTextureSource>(iw5_sampler_table.at(native_arg->u.codeSampler));
-					
+
 						if (code_sampler == iw4::native::TEXTURE_SRC_CODE_OUTDOOR)
 						{
 							iw4_technique->flags |= 0x40; // 0x40 is necessary for outdoor sampling. I'm not exactly sure why - there is no similar example in iw3
@@ -593,133 +538,6 @@ namespace asset_dumpers
 		return iw4_technique;
 	}
 
-	void itechniqueset::write(const iw4::native::MaterialTechnique* iw4_technique)
-	{
-			if (!iw4_technique) return;
-
-			utils::memory::allocator str_duplicator;
-			rapidjson::Document output(rapidjson::kObjectType);
-			auto& allocator = output.GetAllocator();
-
-			output.AddMember("version", IW4X_TECHSET_VERSION, allocator);
-			output.AddMember("name", rapidjson::Value(iw4_technique->name, allocator), allocator);
-
-			// We complete these later
-			rapidjson::Value pass_array(rapidjson::kArrayType);
-
-			for (int i = 0; i < iw4_technique->passCount; i++)
-			{
-				auto iw4_pass = &iw4_technique->passArray[i];
-
-				rapidjson::Value json_pass(rapidjson::kObjectType);
-
-
-				if (iw4_pass->vertexDecl)
-				{
-					json_pass.AddMember("vertexDeclaration", rapidjson::Value(iw4_pass->vertexDecl->name, allocator), allocator);
-				}
-
-				if (iw4_pass->vertexShader)
-				{
-					json_pass.AddMember("vertexShader", rapidjson::Value(iw4_pass->vertexShader->name, allocator), allocator);
-				}
-
-				if (iw4_pass->pixelShader)
-				{
-					json_pass.AddMember("pixelShader", rapidjson::Value(iw4_pass->pixelShader->name, allocator), allocator);
-				}
-
-				json_pass.AddMember("perPrimArgCount", iw4_pass->perPrimArgCount, allocator);
-				json_pass.AddMember("perObjArgCount", iw4_pass->perObjArgCount, allocator);
-				json_pass.AddMember("stableArgCount", iw4_pass->stableArgCount, allocator);
-				json_pass.AddMember("customSamplerFlags", iw4_pass->customSamplerFlags, allocator);
-
-				rapidjson::Value arguments_array(rapidjson::kArrayType);
-
-				for (int k = 0; k < iw4_pass->perPrimArgCount + iw4_pass->perObjArgCount + iw4_pass->stableArgCount; ++k)
-				{
-					const game::native::MaterialShaderArgument* iw4_arg = &iw4_pass->args[k];
-
-					rapidjson::Value arg_json(rapidjson::kObjectType);
-
-					arg_json.AddMember("type", iw4_arg->type, allocator);
-
-#if DEBUG
-					arg_json.AddMember("type_debug", RAPIDJSON_STR(iw4::native::Debug_MaterialShaderArgumentTypeName[iw4_arg->type]), allocator);
-#endif
-
-					arg_json.AddMember("dest", iw4_arg->dest, allocator); // Does not need conversion
-
-
-					if (iw4_arg->type == iw4::native::MaterialShaderArgumentType::MTL_ARG_LITERAL_VERTEX_CONST ||
-						iw4_arg->type == iw4::native::MaterialShaderArgumentType::MTL_ARG_LITERAL_PIXEL_CONST)
-					{
-						rapidjson::Value literalsArray(rapidjson::kArrayType);
-
-						// always four
-						for (size_t j = 0; j < 4; j++)
-						{
-							auto cons = (*iw4_arg->u.literalConst)[j];
-							literalsArray.PushBack(cons, allocator);
-						}
-
-						arg_json.AddMember("literals", literalsArray, allocator);
-					}
-					else if (iw4_arg->type == iw4::native::MaterialShaderArgumentType::MTL_ARG_CODE_VERTEX_CONST
-						|| iw4_arg->type == iw4::native::MaterialShaderArgumentType::MTL_ARG_CODE_PIXEL_CONST)
-					{
-						rapidjson::Value code_const(rapidjson::kObjectType);
-#if DEBUG
-						assert(iw4_arg->u.codeConst.index < ARRAYSIZE(iw4::native::Debug_ShaderCodeConstantsNames));
-						code_const.AddMember("index_debug", RAPIDJSON_STR(iw4::native::Debug_ShaderCodeConstantsNames[iw4_arg->u.codeConst.index]), allocator);
-#endif
-						
-						code_const.AddMember("index", iw4_arg->u.codeConst.index, allocator);
-						code_const.AddMember("firstRow", iw4_arg->u.codeConst.firstRow, allocator);
-						code_const.AddMember("rowCount", iw4_arg->u.codeConst.rowCount, allocator);
-
-						arg_json.AddMember("codeConst", code_const, allocator);
-					}
-					else if (iw4_arg->type == iw4::native::MaterialShaderArgumentType::MTL_ARG_MATERIAL_PIXEL_SAMPLER
-						|| iw4_arg->type == iw4::native::MaterialShaderArgumentType::MTL_ARG_MATERIAL_VERTEX_CONST
-						|| iw4_arg->type == iw4::native::MaterialShaderArgumentType::MTL_ARG_MATERIAL_PIXEL_CONST)
-					{
-						arg_json.AddMember("nameHash", iw4_arg->u.nameHash, allocator);
-					}
-					else if (iw4_arg->type == iw4::native::MaterialShaderArgumentType::MTL_ARG_CODE_PIXEL_SAMPLER)
-					{
-#if DEBUG
-						arg_json.AddMember("codeSampler_debug", RAPIDJSON_STR(iw4::native::Debug_MaterialTextureSourceNames[iw4_arg->u.codeSampler]), allocator);
-#endif
-
-						arg_json.AddMember("codeSampler", iw4_arg->u.codeSampler, allocator);
-					}
-					else
-					{
-						console::error("??? This should have been caught earlier!\n");
-					}
-
-
-					arguments_array.PushBack(arg_json, allocator);
-				}
-
-				json_pass.AddMember("arguments", arguments_array, allocator);
-
-				pass_array.PushBack(json_pass, allocator);
-			}
-
-			const auto flags = std::format("{:016b}", iw4_technique->flags); // no conversion?
-			output.AddMember("flags", RAPIDJSON_STR(flags.c_str()), allocator);
-
-			output.AddMember("passArray", pass_array, allocator);
-
-			rapidjson::StringBuffer buff;
-			rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buff);
-			output.Accept(writer);
-
-			utils::io::write_file(std::format("{}/techniques/{}.iw4x.json", get_export_path(), iw4_technique->name), buff.GetString());
-	}
-
 	iw4::native::MaterialVertexDeclaration* itechniqueset::dump(const game::native::MaterialVertexDeclaration* native_decl)
 	{
 		if (!native_decl) return nullptr;
@@ -742,18 +560,7 @@ namespace asset_dumpers
 			}
 		}
 
-		utils::stream buffer;
-		buffer.saveArray("IW4xDECL", 8);
-		buffer.saveObject(static_cast<char>(IW4X_TECHSET_VERSION));
-
-		buffer.saveObject(*iw4_decl);
-
-		if (iw4_decl->name)
-		{
-			buffer.saveString(iw4_decl->name);
-		}
-
-		utils::io::write_file(std::format("{}/decl/{}.iw4xDECL", get_export_path(), iw4_decl->name), buffer.toBuffer());
+		[[maybe_unused]] bool result = exporter::get_api()->write(iw4::native::ASSET_TYPE_VERTEXDECL, iw4_decl);
 
 		return iw4_decl;
 	}
@@ -772,10 +579,9 @@ namespace asset_dumpers
 			vs_copy->name = local_allocator.duplicate_string(name);
 		}
 
-		utils::stream buffer;
-		buffer.saveArray(vs->prog.loadDef.program, vs->prog.loadDef.programSize);
 
-		utils::io::write_file(std::format("{}/vs/{}.cso", get_export_path(), name.data()), buffer.toBuffer());
+		[[maybe_unused]] bool result = exporter::get_api()->write(iw4::native::ASSET_TYPE_VERTEXSHADER, vs_copy);
+		assert(result);
 
 		return vs_copy;
 	}
@@ -792,19 +598,10 @@ namespace asset_dumpers
 		{
 			name = std::format("{}{}", ps->name, itechniqueset::techset_suffix);
 			ps_copy->name = local_allocator.duplicate_string(name);
-
-			//
-			if (name.contains("fog_foam_detail_flatn"))
-			{
-				printf("");
-			}
-			//
 		}
 
-		utils::stream buffer;
-		buffer.saveArray(ps->prog.loadDef.program, ps->prog.loadDef.programSize);
-
-		utils::io::write_file(std::format("{}/ps/{}.cso", get_export_path(), name.data()), buffer.toBuffer());
+		[[maybe_unused]] bool result = exporter::get_api()->write(iw4::native::ASSET_TYPE_PIXELSHADER, ps_copy);
+		assert(result);
 
 		return ps_copy;
 	}

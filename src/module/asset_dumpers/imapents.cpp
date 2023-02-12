@@ -72,11 +72,8 @@ namespace asset_dumpers
 
 	void imapents::write(const iw4::native::XAssetHeader& header)
 	{
-		std::string basename(header.mapEnts->name);
-		basename.erase(0, 8);
-		basename.erase(basename.end() - 7, basename.end());
-
-		utils::io::write_file(std::format("{}/mapents/{}.ents", get_export_path(), basename), header.mapEnts->entityString);
+		[[maybe_unused]] bool result = exporter::get_api()->write(iw4::native::ASSET_TYPE_MAP_ENTS, header.data);
+		assert(result);
 	}
 
 	void imapents::dump_models(const std::string& entity_string)
@@ -110,7 +107,6 @@ namespace asset_dumpers
 		}
 
 	}
-
 
 	imapents::imapents()
 	{

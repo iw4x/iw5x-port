@@ -13,6 +13,8 @@
 #include "rapidjson/document.h"
 #include "rapidjson/prettywriter.h"
 
+#include "module/exporter.hpp"
+
 namespace asset_dumpers
 {
 
@@ -45,36 +47,8 @@ namespace asset_dumpers
 
 	void iphyspreset::write(const iw4::native::XAssetHeader& header)
 	{
-		// actually... don't!
-
-		rapidjson::Document output(rapidjson::kObjectType);
-		auto& allocator = output.GetAllocator();
-
-		auto asset = header.physPreset;
-
-		output.AddMember("version", IW4X_PHYSPRESET_VERSION, allocator);
-
-		output.AddMember("name", RAPIDJSON_STR(asset->name), allocator);
-
-		output.AddMember("type", asset->type, allocator);
-		output.AddMember("mass", asset->mass, allocator);
-		output.AddMember("bounce", asset->bounce, allocator);
-		output.AddMember("friction", asset->friction, allocator);
-		output.AddMember("bulletForceScale", asset->bulletForceScale, allocator);
-		output.AddMember("explosiveForceScale", asset->explosiveForceScale, allocator);
-		output.AddMember("sndAliasPrefix", RAPIDJSON_STR(asset->sndAliasPrefix), allocator);
-		output.AddMember("piecesSpreadFraction", asset->piecesSpreadFraction, allocator);
-		output.AddMember("piecesUpwardVelocity", asset->piecesUpwardVelocity, allocator);
-		output.AddMember("tempDefaultToCylinder", asset->tempDefaultToCylinder, allocator);
-		output.AddMember("perSurfaceSndAlias", asset->perSurfaceSndAlias, allocator);
-
-		rapidjson::StringBuffer buff;
-		rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buff);
-		output.Accept(writer);
-
-		const auto& dump = buff.GetString();
-
-		utils::io::write_file(std::format("{}/{}/{}.iw4x.json", get_export_path(), game::native::g_assetNames[game::native::XAssetType::ASSET_TYPE_PHYSPRESET], asset->name), dump);
+		[[maybe_unused]] bool result = exporter::get_api()->write(iw4::native::ASSET_TYPE_PHYSPRESET, header.data);
+		assert(result);
 	}
 
 	iphyspreset::iphyspreset()

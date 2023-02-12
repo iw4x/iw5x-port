@@ -1,10 +1,7 @@
 #pragma once
 #include <module/command.hpp>
 
-namespace iw4of
-{
-	class api;
-}
+#include "api.hpp"
 
 class exporter final : public module
 {
@@ -18,6 +15,7 @@ public:
 	static iw4::native::XAssetHeader dump(game::native::XAssetType type, game::native::XAssetHeader header);
 	static std::string get_map_name() { return map_name; }
 	static void add_to_source(game::native::XAssetType type, const std::string asset);
+	static const iw4of::api* get_api() { return iw4of_api; };
 
 private:
 	static void DB_AddXAsset_Hk(game::native::XAssetType type, game::native::XAssetHeader* header);

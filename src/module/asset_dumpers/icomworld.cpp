@@ -14,8 +14,6 @@
 #include "rapidjson/document.h"
 #include "rapidjson/prettywriter.h"
 
-#define IW4X_COMMAP_VERSION 0
-
 namespace asset_dumpers
 {
 
@@ -64,49 +62,8 @@ namespace asset_dumpers
 
 	void icomworld::write(const iw4::native::XAssetHeader& header)
 	{
-		auto asset = header.comWorld;
-
-		utils::stream buffer;
-		buffer.saveArray("IW4xComW", 8);
-		buffer.saveObject(IW4X_COMMAP_VERSION);
-
-		buffer.saveObject(*asset);
-
-		if (asset->name)
-		{
-			buffer.saveString(asset->name);
-		}
-
-		if (asset->primaryLights)
-		{
-			AssertSize(iw4::native::ComPrimaryLight, 68);
-
-			buffer.saveArray(asset->primaryLights, asset->primaryLightCount);
-
-			for (unsigned int i = 0; i < asset->primaryLightCount; ++i)
-			{
-				iw4::native::ComPrimaryLight* light = &asset->primaryLights[i];
-
-				if (light->defName)
-				{
-					buffer.saveString(light->defName);
-				}
-			}
-		}
-
-		assert(asset->name);
-
-		if (asset->name)
-		{
-			std::string basename(asset->name);
-			
-			constexpr auto prefix = "maps/mp/";
-			constexpr auto suffix = ".d3dbsp";
-
-			basename = basename.substr(strlen(prefix), basename.size() - strlen(suffix) - strlen(prefix));
-
-			utils::io::write_file(std::format("{}/comworld/{}.iw4xComWorld", get_export_path(), basename), buffer.toBuffer());
-		}
+		[[maybe_unused]] bool result = exporter::get_api()->write(iw4::native::ASSET_TYPE_COMWORLD, header.data);
+		assert(result);
 	}
 
 	icomworld::icomworld()

@@ -1,5 +1,7 @@
 ﻿#include <std_include.hpp>
 
+#include "api.hpp"
+
 #include "irawfile.hpp"
 #include "../asset_dumper.hpp"
 #include "../exporter.hpp"
@@ -90,31 +92,8 @@ namespace asset_dumpers
 
 	void irawfile::write(const iw4::native::XAssetHeader& header)
 	{
-		assert(header.rawfile);
-		assert(header.rawfile->buffer);
-
-		if (std::string(header.rawfile->name).contains("chicken"))
-		{
-			printf("");
-		}
-
-		if (header.rawfile->len > 0)
-		{
-
-			auto data = header.rawfile->buffer;
-			std::vector<unsigned char> data_decompressed;
-			if (header.rawfile->compressedLen > 0)
-			{
-				auto data_compressed = std::vector<unsigned char>();
-				data_compressed.assign(header.rawfile->buffer, header.rawfile->buffer + header.rawfile->compressedLen);
-				data_decompressed = xsk::utils::zlib::decompress(data_compressed, header.rawfile->len);
-				[[maybe_unused]] auto decompressed_length = data_decompressed.size();
-				assert(decompressed_length == header.rawfile->len);
-				data = reinterpret_cast<char*>(data_decompressed.data());
-			}
-
-			utils::io::write_file(std::format("{}/{}", get_export_path(), header.rawfile->name), std::string(data, header.rawfile->len));
-		}
+		[[maybe_unused]] bool result = exporter::get_api()->write(iw4::native::ASSET_TYPE_RAWFILE, header.data);
+		assert(result);
 	}
 
 	irawfile::irawfile()

@@ -10,8 +10,8 @@
 
 #include "module/console.hpp"
 #include "module/command.hpp"
+#include <module/exporter.hpp>
 
-#define IW4X_IMG_VERSION "0"
 namespace asset_dumpers
 {
 
@@ -28,77 +28,28 @@ namespace asset_dumpers
 		auto image = header.image;
 		std::string name = image->name;
 
-		if (image->category != game::native::GfxImageCategory::IMG_CATEGORY_LOAD_FROM_FILE && image->texture.loadDef)
+		// Skip RP0
+		if (name == "*reflection_probe0"s)
 		{
-			if (name[0] == '*') name.erase(name.begin());
-
-			if (name == "reflection_probe0"s)
-			{
-				// Reflection probe 0 is "all red" for IW3, IW4, and IW5
-				// This is a sort of... tradition, i assume
-				// But some IW5 maps like mp_nola still _use_ this reflection probe
-				// On IW5 this is probably supported, but in IW4 it makes it look all red
-				// Let's skip it and write RP1 instead over RP0.
-				return;
-			}
-
-			utils::stream buffer;
-			buffer.saveArray("IW4xImg" IW4X_IMG_VERSION, 8); // just stick version in the magic since we have an extra char
-
-			buffer.saveObject(static_cast<unsigned char>(image->mapType));
-			buffer.saveObject(image->semantic);
-			buffer.saveObject(image->category);
-
-			buffer.saveObject(image->texture.loadDef->resourceSize);
-
-			buffer.saveObject(image->texture.loadDef->levelCount);
-			buffer.saveObject(static_cast<unsigned char>(image->texture.loadDef->flags));
-			buffer.saveObject(image->width);
-			buffer.saveObject(image->height);
-			buffer.saveObject(image->depth);
-			buffer.saveObject(image->texture.loadDef->format);
-			buffer.saveObject(image->texture.loadDef->resourceSize); // Yes, again
-
-			buffer.save(image->texture.loadDef->data, image->texture.loadDef->resourceSize);
-
-			utils::io::write_file(std::format("{}/images/{}.iw4xImage", get_export_path(), name), buffer.toBuffer());
-			
-			if (name.starts_with("reflection_probe"))
-			{
-				auto path_to_rp0 = std::format("{}/images/{}.iw4xImage", get_export_path(), "reflection_probe0");
-				if (!utils::io::file_exists(path_to_rp0))
-				{
-					utils::io::write_file(path_to_rp0, buffer.toBuffer());
-				}
-			}
+			// Reflection probe 0 is "all red" for IW3, IW4, and IW5
+			// This is a sort of... tradition, i assume
+			// But some IW5 maps like mp_nola still _use_ this reflection probe
+			// On IW5 this is probably supported, but in IW4 it makes it look all red
+			// Let's skip it and write RP1 instead over RP0.
+			return;
 		}
-		else
+
+		// RP1 over 0
+		if (name == "*reflection_probe1"s)
 		{
-			const auto iwi = std::format("images/{}.iwi", image->name);
-			// > 10MB cannot use FS_FileRead (breaks hunk)
-			auto contents = game::native::filesystem_read_big_file(iwi.data(), game::native::FS_THREAD_DATABASE);
-
-			if (contents.empty())
-			{
-				// Ignore that
-				if (std::string(image->name).starts_with("watersetup")) {
-					return;
-				}
-
-				console::info("Image %s not found, mapping to normalmap!\n", name.data());
-
-				contents = game::native::filesystem_read_big_file("images/$identitynormalmap.iwi", game::native::FS_THREAD_DATABASE);
-			}
-
-			if (contents.size() > 0)
-			{
-				utils::io::write_file(std::format("{}/images/{}.iwi", get_export_path(), image->name), contents);
-			}
-			else
-			{
-				console::info("Unable to map to normalmap, this should not happen!\n");
-			}
+			const auto& backup = image->name;
+			image->name = "*reflection_probe0";
+			exporter::get_api()->write(iw4::native::ASSET_TYPE_IMAGE, header.data);
+			image->name = backup;
 		}
+
+		[[maybe_unused]] bool result = exporter::get_api()->write(iw4::native::ASSET_TYPE_IMAGE, header.data);
+		assert(result);
 	}
 
 	int igfximage::store_texture_hk()
