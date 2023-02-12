@@ -1,20 +1,7 @@
 iw4of = {
-	source = path.join(dependencies.basePath, "iw4-open-formats/src"),
+	source = path.join(dependencies.basePath, "iw4-open-formats", "src"),
 }
 
-my_deps = {
-	basePath = path.join(dependencies.basePath, "iw4-open-formats", "deps")
-}
-
--- function iw4of.load()
-	-- dir = path.join(my_deps.basePath, "premake/*.lua")
-	-- deps = os.matchfiles(dir)
-
-	-- for i, dep in pairs(deps) do
-		-- dep = dep:gsub(".lua", "")
-		-- require(dep)
-	-- end
--- end
 
 function iw4of.import()
 	links { "iw4of" }
@@ -52,10 +39,15 @@ function iw4of.project()
 		}
 		
 		includedirs {
-			path.join(iw4of.source, "iw4-of")
+			path.join(iw4of.source, "iw4-of"),
+			path.join(dependencies.basePath, "iw4-open-formats", "include")
 		}
 		
-		iw4of.import()
+		libtomcrypt.includes()
+		libtommath.includes()
+		rapidjson.includes()
+		zlib.includes()
+		zstd.includes()
 end
 
 table.insert(dependencies, iw4of)
