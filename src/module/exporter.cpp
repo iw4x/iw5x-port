@@ -50,6 +50,7 @@ bool exporter::capture = false;
 bool exporter::ready = false;
 std::string exporter::map_name{};
 std::vector<std::string> exporter::prepared_source{};
+iw4of::api* exporter::iw4of_api{};
 
 
 typedef bool (*DB_Update_t)();

@@ -435,7 +435,7 @@ namespace game
 		{
 			const char* name;
 			int compressedLen;
-			int len;
+			unsigned int len;
 			int bytecodeLen;
 			unsigned char* buffer;
 			unsigned char* bytecode;

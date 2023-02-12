@@ -6,12 +6,6 @@ iw4of = {
 function iw4of.import()
 	links { "iw4of" }
 	
-	libtomcrypt.import()
-	libtommath.import()
-	rapidjson.import()
-	zlib.import()
-	zstd.import()
-	
 	iw4of.includes()
 end
 
@@ -42,12 +36,18 @@ function iw4of.project()
 			path.join(iw4of.source, "iw4-of"),
 			path.join(dependencies.basePath, "iw4-open-formats", "include")
 		}
-		
-		libtomcrypt.includes()
-		libtommath.includes()
-		rapidjson.includes()
-		zlib.includes()
-		zstd.includes()
+			
+		libtomcrypt.import()
+		libtommath.import()
+		rapidjson.import()
+		zlib.import()
+		zstd.import()
+	
+		-- libtomcrypt.includes()
+		-- libtommath.includes()
+		-- rapidjson.includes()
+		-- zlib.includes()
+		-- zstd.includes()
 end
 
 table.insert(dependencies, iw4of)
