@@ -33,6 +33,8 @@ private:
 	static class asset_dumper* asset_dumpers[game::native::ASSET_TYPE_COUNT];
 	static const game::native::dvar_t* export_path_dvar;
 
+	static std::string common_sounds[];
+
 	static std::vector<std::string> captured_scripts;
 	static std::vector<std::string> captured_rawfiles;
 	static std::vector<std::string> captured_snd;

@@ -49,6 +49,30 @@ bool exporter::ready = false;
 std::string exporter::map_name{};
 std::vector<std::string> exporter::prepared_source{};
 iw4of::api* exporter::iw4of_api{};
+std::string exporter::common_sounds[] = {
+	"rocket_explode_bark",
+	"rocket_explode_brick",
+	"rocket_explode_carpet",
+	"rocket_explode_cloth",
+	"rocket_explode_flesh",
+	"rocket_explode_foliage",
+	"rocket_explode_mud",
+	"rocket_explode_paper",
+	"rocket_explode_plaster",
+	"rocket_explode_sand",
+	"rocket_explode_wood",
+	"rocket_explode_ceramic",
+	"rocket_explode_plastic",
+	"rocket_explode_rubber",
+	"rocket_explode_cushion",
+	"rocket_explode_fruit",
+	"rocket_explode_paintedmetal",
+	"rocket_explode_riotshield",
+	"step_walk_plr_dirt",
+	"step_walk_plr_metal",
+	"step_walk_plr_sand",
+	"step_walk_plr_snow"
+};
 
 
 typedef bool (*DB_Update_t)();
@@ -297,6 +321,12 @@ void exporter::dump_map(const command::params& params)
 	command::execute(std::format("dumpGfxImage loadscreen_{}", map_name.data()), true);
 	command::execute("dumpMaterial $levelbriefing", true);
 
+	console::info("Generic sounds...\n");
+	for (size_t i = 0; i < ARRAYSIZE(common_sounds); i++)
+	{
+		prepared_source.emplace_back("\n# Generic sounds\n");
+		command::execute(std::format("dumpSound {}", common_sounds[i], true));
+	}
 
 	console::info("Additional fluff...\n");
 	prepared_source.emplace_back("\n# Additional fluff (mostly destructibles)\n");
@@ -318,6 +348,7 @@ void exporter::dump_map(const command::params& params)
 	captured_models.clear();
 	captured_snd.clear();
 	captured_fx.clear();
+
 
 	console::info("Writing source...\n");
 	for (auto s : exporter::prepared_source)

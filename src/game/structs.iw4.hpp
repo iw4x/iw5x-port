@@ -951,8 +951,7 @@ namespace iw4::native
 		TS_SPECULAR_MAP = 0x8,
 		TS_UNUSED_5 = 0x9,
 		TS_UNUSED_6 = 0xA,
-		TS_WATER_MAP = 0xB,
-		TS_DISPLACEMENT_MAP = 0xC
+		TS_WATER_MAP = 0xB
 	};
 
 	union MaterialTextureDefInfo
@@ -1683,20 +1682,22 @@ namespace iw4::native
 		const char* subtitle;
 		const char* secondaryAliasName;
 		const char* chainAliasName;
+		const char* mixerGroup;
 		game::native::SoundFile* soundFile;
-		int sequence;
+		int32_t sequence;
 		float volMin;
 		float volMax;
 		float pitchMin;
 		float pitchMax;
 		float distMin;
 		float distMax;
+		float velocityMin;
 		SoundAliasFlags flags;
 		float slavePercentage;
 		float probability;
 		float lfePercentage;
 		float centerPercentage;
-		int startDelay;
+		int32_t startDelay;
 		SndCurve* volumeFalloffCurve;
 		float envelopMin;
 		float envelopMax;

@@ -64,35 +64,40 @@ namespace asset_dumpers
 			exporter::dump(game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, game::native::XAssetHeader{ nativeTechset }).techniqueSet;
 
 		iw4_material->textureTable = utils::memory::allocate_array<iw4::native::MaterialTextureDef>(iw4_material->textureCount);
-		for (auto i = 0; i < iw4_material->textureCount; i++)
+		unsigned int iw4_texture_index = 0;
+		for (auto i = 0; i < native_material->textureCount; i++)
 		{
-			auto tex = &iw4_material->textureTable[i];
-			std::memcpy(tex, &native_material->textureTable[i], sizeof(iw4_material->textureTable[i]));
+			auto iw4_tex = &iw4_material->textureTable[iw4_texture_index];
+			auto native_tex = &native_material->textureTable[i];
+			std::memcpy(iw4_tex, native_tex, sizeof(iw4_material->textureTable[i]));
 			
-			if (tex->semantic > iw4::native::TS_WATER_MAP)
+			if (iw4_tex->semantic > iw4::native::TS_WATER_MAP)
 			{
-				// DISPLACEMENT_MAP is not in iw4
-				tex->semantic = iw4::native::TS_UNUSED_2;
+				// DISPLACEMENT_MAP is not in iw4, so we skip this image
+				iw4_material->textureCount--;
+				continue;
 			}
 
-			if (iw4_material->info.name == "$levelbriefing"s && tex->u.image->name == "default"s)
+			iw4_texture_index++;
+
+			if (iw4_material->info.name == "$levelbriefing"s && iw4_tex->u.image->name == "default"s)
 			{
 				// No idea why this image is ""wrong"", i suppose the game doesn't use it
 				// bad news, iw4 needs it. So let's change the name
-				tex->u.image->name = local_allocator.duplicate_string(std::format("loadscreen_{}", exporter::get_map_name()));
+				iw4_tex->u.image->name = local_allocator.duplicate_string(std::format("loadscreen_{}", exporter::get_map_name()));
 			}
 
-			if (tex->u.image == nullptr)
+			if (iw4_tex->u.image == nullptr)
 			{
 				// This happens sometimes! No idea why, it sounds like a big mistake to me
 				// Maybe because of dedicated server files?
 				// This will crash the game in iw4 so we gotta be very careful about it
 				auto other_image = game::native::DB_FindXAssetHeader(game::native::XAssetType::ASSET_TYPE_IMAGE, "$default", 1);
-				tex->u.image = exporter::dump(game::native::XAssetType::ASSET_TYPE_IMAGE, other_image).image;
+				iw4_tex->u.image = exporter::dump(game::native::XAssetType::ASSET_TYPE_IMAGE, other_image).image;
 				console::warn("missing image %i of material %s! This will not crash, but it will look weird...\n", i, iw4_material->info.name);
 			}
 
-			assert(tex->u.image);
+			assert(iw4_tex->u.image);
 		}
 
 		iw4_material->constantTable = native_material->constantTable;
