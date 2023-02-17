@@ -71,7 +71,10 @@ std::string exporter::common_sounds[] = {
 	"step_walk_plr_dirt",
 	"step_walk_plr_metal",
 	"step_walk_plr_sand",
-	"step_walk_plr_snow"
+	"step_walk_plr_snow",
+	"fire_vehicle_flareup_med",
+	"fire_vehicle_med",
+	"physics_tire_default"
 };
 
 
@@ -256,7 +259,7 @@ void exporter::dump_map(const command::params& params)
 	auto script_exporter = reinterpret_cast<asset_dumpers::iscriptfile*>(asset_dumpers[game::native::XAssetType::ASSET_TYPE_SCRIPTFILE]);
 	if (script_exporter)
 	{
-		console::info("dumping common scripts...\n");
+		console::info("dumping common scripts, this can take a while...\n");
 		script_exporter->dump_rename_common_scripts();
 	}
 
@@ -322,10 +325,10 @@ void exporter::dump_map(const command::params& params)
 	command::execute("dumpMaterial $levelbriefing", true);
 
 	console::info("Generic sounds...\n");
+	prepared_source.emplace_back("\n# Generic sounds\n");
 	for (size_t i = 0; i < ARRAYSIZE(common_sounds); i++)
 	{
-		prepared_source.emplace_back("\n# Generic sounds\n");
-		command::execute(std::format("dumpSound {}", common_sounds[i], true));
+		command::execute(std::format("dumpSound {}", common_sounds[i]), true);
 	}
 
 	console::info("Additional fluff...\n");

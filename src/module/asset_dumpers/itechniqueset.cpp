@@ -507,11 +507,15 @@ namespace asset_dumpers
 				arguments_to_sort.push_back(*iw4_arg);
 			}
 
-			std::sort(arguments_to_sort.begin(), arguments_to_sort.end(), [this](const game::native::MaterialShaderArgument& arg1, const game::native::MaterialShaderArgument& arg2)
+			// This fails if we put vertex arguments first for some reason
+			bool is_ocean = std::string(native_technique->name).contains("ocean");
+
+			std::sort(arguments_to_sort.begin(), arguments_to_sort.end(), [this, is_ocean](const game::native::MaterialShaderArgument& arg1, const game::native::MaterialShaderArgument& arg2)
 				{
 					auto a1_freq = get_update_frequency(arg1);
 					auto a2_freq = get_update_frequency(arg2);
-					if (a1_freq != a2_freq)
+
+					if (a1_freq != a2_freq && !is_ocean)
 					{
 						return a1_freq < a2_freq;
 					}
@@ -624,7 +628,7 @@ namespace asset_dumpers
 		case iw4::native::MTL_ARG_CODE_PIXEL_SAMPLER:
 			if (iw4_argument.u.codeSampler >= ARRAYSIZE(iw4::native::codeSamplerUpdateFrequency))
 			{
-				//assert(false);
+				assert(false);
 				return iw4::native::MTL_UPDATE_RARELY;
 			}
 			return iw4::native::codeSamplerUpdateFrequency[iw4_argument.u.codeSampler];
