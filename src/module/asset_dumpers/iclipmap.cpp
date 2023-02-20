@@ -52,7 +52,7 @@ namespace asset_dumpers
 			auto iw4_csmodel = &iw4_clipmap->staticModelList[i];
 			auto native_csmodel = &native_clipmap->staticModelList[i];
 
-			iw4_csmodel->xmodel = exporter::dump(game::native::ASSET_TYPE_XMODEL, { native_csmodel->xmodel }).model;
+			iw4_csmodel->xmodel = exporter::convert(game::native::ASSET_TYPE_XMODEL, { native_csmodel->xmodel }).model;
 		}
 
 		iw4_clipmap->numMaterials = native_clipmap->info.numMaterials;
@@ -116,8 +116,6 @@ namespace asset_dumpers
 		iw4_clipmap->brushBounds = native_clipmap->info.brushBounds;
 		iw4_clipmap->brushContents = native_clipmap->info.brushContents;
 
-		iw4_clipmap->mapEnts = exporter::dump(game::native::ASSET_TYPE_MAP_ENTS, { native_clipmap->mapEnts }).mapEnts;
-
 		iw4_clipmap->smodelNodeCount = native_clipmap->smodelNodeCount;
 		iw4_clipmap->smodelNodes = native_clipmap->smodelNodes;
 
@@ -140,7 +138,7 @@ namespace asset_dumpers
 
 					if (native_def->xModel)
 					{
-						iw4_def->xModel = exporter::dump(game::native::ASSET_TYPE_XMODEL, { native_def->xModel }).model;
+						iw4_def->xModel = exporter::convert(game::native::ASSET_TYPE_XMODEL, { native_def->xModel }).model;
 					}
 
 					iw4_def->brushModel = native_def->brushModel;
@@ -148,12 +146,12 @@ namespace asset_dumpers
 
 					if (native_def->destroyFx)
 					{
-						iw4_def->destroyFx = exporter::dump(game::native::ASSET_TYPE_FX, { native_def->destroyFx }).fx;
+						iw4_def->destroyFx = exporter::convert(game::native::ASSET_TYPE_FX, { native_def->destroyFx }).fx;
 					}
 
 					if (native_def->physPreset)
 					{
-						iw4_def->physPreset = exporter::dump(game::native::ASSET_TYPE_PHYSPRESET, { native_def->physPreset }).physPreset;
+						iw4_def->physPreset = exporter::convert(game::native::ASSET_TYPE_PHYSPRESET, { native_def->physPreset }).physPreset;
 					}
 
 					iw4_def->health = native_def->health;
@@ -194,7 +192,7 @@ namespace asset_dumpers
 		memcpy(iw4_clipmap->dynEntCollList, native_clipmap->dynEntCollList, sizeof iw4_clipmap->dynEntCollList);
 		iw4_clipmap->checksum = 0xC0D80000;
 
-		iw4_clipmap->mapEnts = exporter::dump(game::native::ASSET_TYPE_MAP_ENTS, { native_clipmap->mapEnts }).mapEnts;
+		iw4_clipmap->mapEnts = exporter::convert(game::native::ASSET_TYPE_MAP_ENTS, { native_clipmap->mapEnts }).mapEnts;
 		iw4_clipmap->mapEnts->stageCount = native_clipmap->stageCount;
 		iw4_clipmap->mapEnts->stages = native_clipmap->stages;
 
@@ -222,7 +220,7 @@ namespace asset_dumpers
 
 				if (out.data)
 				{
-					dump(out);
+					convert_and_write(out);
 					exporter::add_to_source(game::native::ASSET_TYPE_CLIPMAP, out.clipMap->name);
 				}
 			});

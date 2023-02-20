@@ -35,7 +35,7 @@ namespace asset_dumpers
 		for (auto i = 0; i < native_world->skyCount; i++)
 		{
 			auto sky = &iw4_world->skies[i];
-			sky->skyImage = exporter::dump(game::native::XAssetType::ASSET_TYPE_IMAGE, { native_world->skies[i].skyImage }).image;
+			sky->skyImage = exporter::convert(game::native::XAssetType::ASSET_TYPE_IMAGE, { native_world->skies[i].skyImage }).image;
 		}
 
 		SET_WORLD_MEMBER(lastSunPrimaryLightIndex);
@@ -69,7 +69,7 @@ namespace asset_dumpers
 		for (auto i = 0; i < iw4_world->materialMemoryCount; i++)
 		{
 			iw4_world->materialMemory[i].memory = native_world->materialMemory[i].memory;
-			iw4_world->materialMemory[i].material = exporter::dump(game::native::ASSET_TYPE_MATERIAL, {native_world->materialMemory[i].material}).material;
+			iw4_world->materialMemory[i].material = exporter::convert(game::native::ASSET_TYPE_MATERIAL, {native_world->materialMemory[i].material}).material;
 		}
 
 		// sun
@@ -78,12 +78,12 @@ namespace asset_dumpers
 
 		if (native_world->sun.flareMaterial)
 		{
-			iw4_world->sun.flareMaterial = exporter::dump(game::native::ASSET_TYPE_MATERIAL, { native_world->sun.flareMaterial }).material;
+			iw4_world->sun.flareMaterial = exporter::convert(game::native::ASSET_TYPE_MATERIAL, { native_world->sun.flareMaterial }).material;
 		}
 
 		if (native_world->sun.spriteMaterial)
 		{
-			iw4_world->sun.spriteMaterial = exporter::dump(game::native::ASSET_TYPE_MATERIAL, { native_world->sun.spriteMaterial }).material;
+			iw4_world->sun.spriteMaterial = exporter::convert(game::native::ASSET_TYPE_MATERIAL, { native_world->sun.spriteMaterial }).material;
 		}
 
 		static_assert(sizeof iw4_world->outdoorLookupMatrix == sizeof native_world->outdoorLookupMatrix);
@@ -91,7 +91,7 @@ namespace asset_dumpers
 
 		if (native_world->outdoorImage)
 		{
-			iw4_world->outdoorImage = exporter::dump(game::native::ASSET_TYPE_IMAGE, { native_world->outdoorImage }).image;
+			iw4_world->outdoorImage = exporter::convert(game::native::ASSET_TYPE_IMAGE, { native_world->outdoorImage }).image;
 		}
 
 		SET_WORLD_MEMBER(cellCasterBits);
@@ -170,6 +170,8 @@ namespace asset_dumpers
 		SET_LIGHTGRID_MEMBER(colorCount);
 		SET_LIGHTGRID_MEMBER(colors);
 
+#undef SET_LIGHTGRID_MEMBER
+
 		return iw4_lightgrid;
 	}
 
@@ -205,7 +207,7 @@ namespace asset_dumpers
 
 				if (iw4_surface->material)
 				{
-					iw4_surface->material = exporter::dump(game::native::XAssetType::ASSET_TYPE_MATERIAL, { iw4_surface->material }).material;
+					iw4_surface->material = exporter::convert(game::native::XAssetType::ASSET_TYPE_MATERIAL, { iw4_surface->material }).material;
 				}
 			}
 		}
@@ -216,7 +218,7 @@ namespace asset_dumpers
 			for (unsigned int i = 0; i < iw4_dpvs_static.smodelCount; i++)
 			{
 				auto inst = &iw4_dpvs_static.smodelDrawInsts[i];
-				inst->model = exporter::dump(game::native::XAssetType::ASSET_TYPE_XMODEL, { inst->model }).model;
+				inst->model = exporter::convert(game::native::XAssetType::ASSET_TYPE_XMODEL, { inst->model }).model;
 			}
 		}
 
@@ -252,7 +254,7 @@ namespace asset_dumpers
 		{
 			assert(native_draw.reflectionProbes[i]);
 			
-			iw4_draw.reflectionProbes[i] = exporter::dump(game::native::ASSET_TYPE_IMAGE, { native_draw.reflectionProbes[i] }).image;
+			iw4_draw.reflectionProbes[i] = exporter::convert(game::native::ASSET_TYPE_IMAGE, { native_draw.reflectionProbes[i] }).image;
 			iw4_draw.reflectionProbeOrigins[i] = native_draw.reflectionProbeOrigins[i];
 			iw4_draw.reflectionProbeTextures[i] = native_draw.reflectionProbeTextures[i];
 		}
@@ -263,12 +265,12 @@ namespace asset_dumpers
 		{
 			if (native_draw.lightmaps[i].primary)
 			{
-				iw4_draw.lightmaps[i].primary = exporter::dump(game::native::ASSET_TYPE_IMAGE, { native_draw.lightmaps[i].primary }).image;
+				iw4_draw.lightmaps[i].primary = exporter::convert(game::native::ASSET_TYPE_IMAGE, { native_draw.lightmaps[i].primary }).image;
 			}
 
 			if (native_draw.lightmaps[i].secondary)
 			{
-				iw4_draw.lightmaps[i].secondary = exporter::dump(game::native::ASSET_TYPE_IMAGE, { native_draw.lightmaps[i].secondary }).image;
+				iw4_draw.lightmaps[i].secondary = exporter::convert(game::native::ASSET_TYPE_IMAGE, { native_draw.lightmaps[i].secondary }).image;
 			}
 		}
 
@@ -277,12 +279,12 @@ namespace asset_dumpers
 
 		if (native_draw.lightmapOverridePrimary)
 		{
-			iw4_draw.lightmapOverridePrimary = exporter::dump(game::native::ASSET_TYPE_IMAGE, { native_draw.lightmapOverridePrimary }).image;
+			iw4_draw.lightmapOverridePrimary = exporter::convert(game::native::ASSET_TYPE_IMAGE, { native_draw.lightmapOverridePrimary }).image;
 		}
 
 		if (native_draw.lightmapOverrideSecondary)
 		{
-			iw4_draw.lightmapOverrideSecondary = exporter::dump(game::native::ASSET_TYPE_IMAGE, { native_draw.lightmapOverrideSecondary }).image;
+			iw4_draw.lightmapOverrideSecondary = exporter::convert(game::native::ASSET_TYPE_IMAGE, { native_draw.lightmapOverrideSecondary }).image;
 		}
 
 		SET_DRAW_MEMBER(vertexCount);
@@ -291,6 +293,8 @@ namespace asset_dumpers
 		SET_DRAW_MEMBER(vld);
 		SET_DRAW_MEMBER(indexCount);
 		SET_DRAW_MEMBER(indices);
+
+#undef SET_DRAW_MEMBER
 
 		return iw4_draw;
 	}
@@ -309,7 +313,7 @@ namespace asset_dumpers
 
 				if (out.data)
 				{
-					dump(out);
+					convert_and_write(out);
 					exporter::add_to_source(game::native::ASSET_TYPE_GFXWORLD, out.gfxWorld->name);
 				}
 			});

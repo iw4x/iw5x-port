@@ -15,48 +15,6 @@
 
 namespace asset_dumpers
 {
-	void ifx::write(const iw4::native::FxElemVisuals* visuals, char elemType, utils::stream* buffer)
-	{
-		switch (elemType)
-		{
-		case game::native::FX_ELEM_TYPE_MODEL:
-			if (visuals->model)
-			{
-				buffer->saveString(visuals->model->name);
-			}
-
-			break;
-
-		case game::native::FX_ELEM_TYPE_OMNI_LIGHT:
-		case game::native::FX_ELEM_TYPE_SPOT_LIGHT:
-			break;
-
-		case game::native::FX_ELEM_TYPE_SOUND:
-			if (visuals->soundName)
-			{
-				buffer->saveString(visuals->soundName);
-			}
-
-			break;
-
-		case game::native::FX_ELEM_TYPE_RUNNER:
-			if (visuals->effectDef.handle)
-			{
-				buffer->saveString(visuals->effectDef.handle->name);
-			}
-
-			break;
-
-		default:
-			if (visuals->material)
-			{
-				buffer->saveString(visuals->material->info.name);
-			}
-
-			break;
-		}
-	}
-
 	void ifx::convert(const game::native::FxElemVisuals* visuals, iw4::native::FxElemVisuals* into, char elemType)
 	{
 		switch (elemType)
@@ -68,7 +26,7 @@ namespace asset_dumpers
 			if (visuals->model)
 			{
 				into->model =
-					exporter::dump(game::native::XAssetType::ASSET_TYPE_XMODEL, { visuals->model })
+					exporter::convert(game::native::XAssetType::ASSET_TYPE_XMODEL, { visuals->model })
 					.model;
 			}
 
@@ -86,17 +44,7 @@ namespace asset_dumpers
 
 			if (visuals->soundName)
 			{
-				auto sound = game::native::DB_FindXAssetHeader(
-					game::native::XAssetType::ASSET_TYPE_SOUND, 
-					visuals->soundName, 
-					1 // Create default asset if missing - ON DLC MAPS THIS HAPPENS!
-				);
-
-				if (sound.data)
-				{
-					into->soundName = visuals->soundName;
-					exporter::dump(game::native::XAssetType::ASSET_TYPE_SOUND, { sound });
-				}
+				into->soundName = local_allocator.duplicate_string(visuals->soundName);
 			}
 
 			break;
@@ -109,7 +57,7 @@ namespace asset_dumpers
 			if (visuals->effectDef.handle)
 			{
 				into->effectDef.handle
-					= exporter::dump(game::native::XAssetType::ASSET_TYPE_FX, { visuals->effectDef.handle })
+					= exporter::convert(game::native::XAssetType::ASSET_TYPE_FX, { visuals->effectDef.handle })
 					.fx;
 			}
 
@@ -129,7 +77,7 @@ namespace asset_dumpers
 				visuals->material->info.name = local_allocator.duplicate_string(suffixed_name);
 
 				into->material =
-					exporter::dump(game::native::XAssetType::ASSET_TYPE_MATERIAL, { visuals->material })
+					exporter::convert(game::native::XAssetType::ASSET_TYPE_MATERIAL, { visuals->material })
 					.material;
 
 				assert(into->material);
@@ -189,7 +137,7 @@ namespace asset_dumpers
 							if (native_def->visuals.markArray[j].materials[k])
 							{
 								materials[k] =
-									exporter::dump(
+									exporter::convert(
 										game::native::XAssetType::ASSET_TYPE_MATERIAL,
 										{ native_def->visuals.markArray[j].materials[k] }
 								).material;
@@ -219,17 +167,17 @@ namespace asset_dumpers
 
 			if (native_def->effectOnImpact.handle)
 			{
-				iw4_def->effectOnImpact.handle = exporter::dump(game::native::ASSET_TYPE_FX, { native_def->effectOnImpact.handle }).fx;
+				iw4_def->effectOnImpact.handle = exporter::convert(game::native::ASSET_TYPE_FX, { native_def->effectOnImpact.handle }).fx;
 			}
 
 			if (native_def->effectOnDeath.handle)
 			{
-				iw4_def->effectOnDeath.handle = exporter::dump(game::native::ASSET_TYPE_FX, { native_def->effectOnDeath.handle }).fx;
+				iw4_def->effectOnDeath.handle = exporter::convert(game::native::ASSET_TYPE_FX, { native_def->effectOnDeath.handle }).fx;
 			}
 
 			if (native_def->effectEmitted.handle)
 			{
-				iw4_def->effectEmitted.handle = exporter::dump(game::native::ASSET_TYPE_FX, { native_def->effectEmitted.handle }).fx;
+				iw4_def->effectEmitted.handle = exporter::convert(game::native::ASSET_TYPE_FX, { native_def->effectEmitted.handle }).fx;
 			}
 
 			if (native_def->elemType == game::native::FX_ELEM_TYPE_TRAIL)
@@ -250,146 +198,12 @@ namespace asset_dumpers
 			}
 		}
 
-		//
-		if (iw4_fx->name == "props/car_glass_med"s)
-		{
-			printf("");
-		}
-		//
-
 		out.fx = iw4_fx;
 	}
 
 	void ifx::write(const iw4::native::XAssetHeader& header)
 	{
-		AssertSize(iw4::native::FxEffectDef, 32);
-
-		utils::stream buffer;
-		buffer.saveArray("IW4xFx  ", 8); // No idea what to fill in
-		buffer.saveObject(IW4X_FX_VERSION);
-
-		auto asset = header.fx;
-		buffer.saveObject(*asset);
-
-		if (asset->name)
-		{
-			buffer.saveString(asset->name);
-		}
-
-		if (asset->elemDefs)
-		{
-			buffer.saveArray(asset->elemDefs, asset->elemDefCountEmission + asset->elemDefCountLooping + asset->elemDefCountOneShot);
-
-			for (int i = 0; i < (asset->elemDefCountEmission + asset->elemDefCountLooping + asset->elemDefCountOneShot); ++i)
-			{
-				iw4::native::FxElemDef* elem_def = &asset->elemDefs[i];
-
-				if (elem_def->velSamples)
-				{
-					AssertSize(game::native::FxElemVelStateSample, 96);
-					buffer.saveArray(elem_def->velSamples, elem_def->velIntervalCount + 1);
-				}
-
-				if (elem_def->visSamples)
-				{
-					AssertSize(game::native::FxElemVisStateSample, 48);
-					buffer.saveArray(elem_def->visSamples, elem_def->visStateIntervalCount + 1);
-				}
-
-				// Save_FxElemDefVisuals
-				{
-					if (elem_def->elemType == game::native::FX_ELEM_TYPE_DECAL)
-					{
-						if (elem_def->visuals.markArray)
-						{
-							buffer.saveArray(elem_def->visuals.markArray, elem_def->visualCount);
-
-							for (char j = 0; j < elem_def->visualCount; ++j)
-							{
-								if (elem_def->visuals.markArray[j].materials[0])
-								{
-									buffer.saveString(elem_def->visuals.markArray[j].materials[0]->info.name);
-								}
-
-								if (elem_def->visuals.markArray[j].materials[1])
-								{
-									buffer.saveString(elem_def->visuals.markArray[j].materials[1]->info.name);
-								}
-							}
-						}
-					}
-					else if (elem_def->visualCount > 1)
-					{
-						if (elem_def->visuals.array)
-						{
-							buffer.saveArray(elem_def->visuals.array, elem_def->visualCount);
-
-							for (char j = 0; j < elem_def->visualCount; ++j)
-							{
-								write(&elem_def->visuals.array[j], elem_def->elemType, &buffer);
-							}
-						}
-					}
-					else if (elem_def->visualCount == 1)
-					{
-						write(&elem_def->visuals.instance, elem_def->elemType, &buffer);
-					}
-				}
-
-				if (elem_def->effectOnImpact.handle)
-				{
-					buffer.saveString(elem_def->effectOnImpact.name);
-				}
-
-				if (elem_def->effectOnDeath.handle)
-				{
-					buffer.saveString(elem_def->effectOnDeath.name);
-				}
-
-				if (elem_def->effectEmitted.handle)
-				{
-					buffer.saveString(elem_def->effectEmitted.name);
-				}
-
-				// Save_FxElemExtendedDefPtr
-				{
-					if (elem_def->elemType == game::native::FX_ELEM_TYPE_TRAIL)
-					{
-						// Save_FxTrailDef
-						{
-							if (elem_def->extended.trailDef)
-							{
-								AssertSize(game::native::FxTrailDef, 36);
-
-								game::native::FxTrailDef* trailDef = elem_def->extended.trailDef;
-								buffer.saveObject(*trailDef);
-
-								if (trailDef->verts)
-								{
-									AssertSize(game::native::FxTrailVertex, 20);
-
-									buffer.saveArray(trailDef->verts, trailDef->vertCount);
-								}
-
-								if (trailDef->inds)
-								{
-									buffer.saveArray(trailDef->inds, trailDef->indCount);
-								}
-							}
-						}
-					}
-					else if (elem_def->elemType == game::native::FX_ELEM_TYPE_SPARKFOUNTAIN)
-					{
-						if (elem_def->extended.sparkFountainDef)
-						{
-							buffer.saveObject(*elem_def->extended.sparkFountainDef);
-						}
-					}
-				}
-			}
-		}
-
-		utils::io::write_file(std::format("{}/fx/{}.iw4xFx", get_export_path(), asset->name), buffer.toBuffer());
+		exporter::get_api()->write(iw4::native::ASSET_TYPE_FX, header.data);
 	}
 
 	ifx::ifx()
@@ -413,7 +227,7 @@ namespace asset_dumpers
 
 					for (auto header : headers)
 					{
-						dump(header, true);
+						convert_and_write(header, true);
 					}
 				}
 				else
@@ -427,7 +241,7 @@ namespace asset_dumpers
 							exporter::add_to_source(game::native::XAssetType::ASSET_TYPE_FX, name);
 						}
 
-						dump(header);
+						convert_and_write(header);
 					}
 					else
 					{

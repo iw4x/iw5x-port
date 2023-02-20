@@ -54,27 +54,15 @@ namespace asset_dumpers
 			{
 				script_data = get_converted_fog(script_data);
 			}
-			else if (script_name.ends_with("_fx.gsc"))
+			if (script_name.ends_with("_fx.gsc") && script_name.starts_with("maps/createfx/"))
 			{
-				if (script_name.starts_with("maps/createfx/"))
-				{
-					dump_create_fx_sounds(script_data);
-					script_data = convert_to_strict_createfx(script_data);
-				}
-				else
-				{
-					dump_map_fx(script_data);
-				}
-			}
-			else if (script_name.ends_with("_precache.gsc"))
-			{
-				dump_map_precache(script_data);
+				script_data = convert_to_strict_createfx(script_data);
 			}
 
-			dump_ambient_play(script_data);
 			script_data = add_fog_init(script_data);
 			script_data = general_compatibility_fixes(script_data);
 			script_data = rename_common_imports(script_data);
+			script_data = rename_map_animtrees(script_data);
 			///
 			////////////////////////////
 
@@ -86,7 +74,7 @@ namespace asset_dumpers
 			iw4_rawfile->name = local_allocator.duplicate_string(script_name);
 		}
 
-		out.rawfile = exporter::dump(game::native::ASSET_TYPE_RAWFILE, {iw4_rawfile}).rawfile;
+		out.rawfile = exporter::convert(game::native::ASSET_TYPE_RAWFILE, {iw4_rawfile}).rawfile;
 	}
 
 	std::string iscriptfile::get_converted_fog(const std::string& original)
@@ -286,99 +274,7 @@ namespace asset_dumpers
 		return script_cpy;
 	}
 
-	void iscriptfile::dump_ambient_play(const std::string& script)
-	{
-		static std::regex ambientplay("ambientplay\\( \"((.*))\" \\);");
-		std::smatch matches;
-
-		if (std::regex_search(script.cbegin(), script.cend(), matches, ambientplay))
-		{
-			if (matches.size() > 1)
-			{
-				const auto& match = matches[1];
-				auto sound_name = match.str();
-
-				auto sound = game::native::DB_FindXAssetHeader(game::native::ASSET_TYPE_SOUND, sound_name.data(), 0);
-
-				if (sound.data)
-				{
-					exporter::dump(game::native::ASSET_TYPE_SOUND, sound);
-					exporter::add_to_source(game::native::ASSET_TYPE_SOUND, sound_name);
-				}
-			}
-		}
-	}
-
-	void iscriptfile::dump_map_fx(const std::string& script)
-	{
-		static std::regex fx_catcher("\\] = loadfx\\( *\"(.+)\" *\\);");
-		std::smatch m;
-		std::string::const_iterator search_start(script.cbegin());
-		while (std::regex_search(search_start, script.cend(), m, fx_catcher))
-		{
-			bool skip = true;
-			for (auto match : m)
-			{
-				if (skip)
-				{
-					skip = false;
-					continue;
-				}
-
-				auto fx_name = match.str();
-				auto fx = game::native::DB_FindXAssetHeader(game::native::ASSET_TYPE_FX, fx_name.data(), 0);
-				search_start = m.suffix().first;
-
-				if (fx.data)
-				{
-					exporter::dump(game::native::ASSET_TYPE_FX, fx);
-					exporter::add_to_source(game::native::ASSET_TYPE_FX, fx_name);
-				}
-			}
-		}
-	}
-
-	void iscriptfile::dump_map_precache(const std::string& script_contents)
-	{
-		static std::regex anim_script_catcher(" *(.*)::main\\(\\);");
-		std::smatch anim_script_matches;
-
-		std::string::const_iterator search_start(script_contents.cbegin());
-		while (std::regex_search(search_start, script_contents.cend(), anim_script_matches, anim_script_catcher))
-		{
-			if (anim_script_matches.size() > 1)
-			{
-				const auto& match = anim_script_matches[1];
-				auto script_name = std::format("{}", match.str());
-				std::replace(script_name.begin(), script_name.end(), '\\', '/');
-				auto token = xsk::gsc::iw5::resolver::token_id(script_name);
-				auto obfuscated_name = token == 0 ? script_name : std::to_string(token);
-
-				auto script = game::native::DB_FindXAssetHeader(game::native::ASSET_TYPE_SCRIPTFILE, obfuscated_name.data(), 0);
-				search_start = anim_script_matches.suffix().first;
-
-				assert(script.data);
-				if (script.data)
-				{
-					std::string raw_script = get_decompiled_script(script.scriptfile);
-					std::string rawfile_name = get_script_name(script.scriptfile);
-
-					raw_script = dump_rename_map_animtrees(raw_script);
-					dump_map_animated_model_anim(raw_script);
-
-					auto raw_file = local_allocator.allocate<game::native::RawFile>();
-					raw_file->buffer = local_allocator.duplicate_string(raw_script);
-					raw_file->len = raw_script.size();
-					raw_file->compressedLen = 0;
-					raw_file->name = local_allocator.duplicate_string(rawfile_name);
-
-					exporter::dump(game::native::ASSET_TYPE_RAWFILE, { raw_file });
-				}
-			}
-		}
-	}
-
-	std::string iscriptfile::dump_rename_map_animtrees(const std::string& script)
+	std::string iscriptfile::rename_map_animtrees(const std::string& script)
 	{
 		static std::regex animtree_catcher("#using_animtree\\(\"(.*)\"\\);");
 		std::smatch m;
@@ -399,9 +295,9 @@ namespace asset_dumpers
 
 				if (animtree.rawfile)
 				{
-					auto rawfile = exporter::dump(game::native::ASSET_TYPE_RAWFILE, animtree);
+					auto rawfile = exporter::convert(game::native::ASSET_TYPE_RAWFILE, animtree);
 					auto new_name = std::string(rawfile.rawfile->name);
-					exporter::add_to_source(game::native::ASSET_TYPE_RAWFILE, new_name);
+					exporter::add_rename_asset(animtree_name, new_name);
 
 					std::string short_name = new_name.substr(ARRAYSIZE("animtrees")); // Remove path
 					short_name = short_name.substr(0, short_name.size() - 4); // Remove extension
@@ -431,39 +327,6 @@ namespace asset_dumpers
 		std::string final_output = result_builder.str();
 
 		return final_output;
-	}
-
-	void iscriptfile::dump_map_animated_model_anim(const std::string& script)
-	{
-		// We use % because it's used for MP and SP (on destructibles for instance it's for both)
-		// but we also have to use "" for mp_specific anims
-		static std::regex anim_catchers[] = {
-			std::regex("%(.*);"),				// SP & MP sometimes
-			std::regex("\"\\] *= \"*(.*)\";")		// MP only
-		};
-		
-		for (size_t i = 0; i < ARRAYSIZE(anim_catchers); i++)
-		{
-			const auto anim_catcher = anim_catchers[i];
-			std::smatch m;
-			std::string::const_iterator search_start(script.cbegin());
-			while (std::regex_search(search_start, script.cend(), m, anim_catcher))
-			{
-				if (m.size() > 1)
-				{
-					const auto& match = m[1];
-					auto anim_name = match.str();
-					auto anim = game::native::DB_FindXAssetHeader(game::native::ASSET_TYPE_XANIMPARTS, anim_name.data(), 0);
-					search_start = m.suffix().first;
-
-					if (anim.data)
-					{
-						exporter::dump(game::native::ASSET_TYPE_XANIMPARTS, anim);
-						exporter::add_to_source(game::native::ASSET_TYPE_XANIMPARTS, anim_name);
-					}
-				}
-			}
-		}
 	}
 
 	std::string iscriptfile::convert_to_strict_createfx(const std::string& script)
@@ -569,7 +432,7 @@ namespace asset_dumpers
 		return final_output;
 	}
 
-	std::string iscriptfile::get_script_name(const game::native::ScriptFile* script)
+	std::string iscriptfile::get_script_name(const game::native::ScriptFile* script) const
 	{
 		std::string script_name = script->name;
 
@@ -580,6 +443,17 @@ namespace asset_dumpers
 		}
 
 		return std::format("{}.gsc", script_name);
+	}
+
+	std::string iscriptfile::get_obfuscated_string(const std::string& name) const
+	{
+		auto id = xsk::gsc::iw5::resolver::token_id(name);
+		if (id)
+		{
+			return std::to_string(id);
+		}
+
+		return name;
 	}
 
 	void iscriptfile::dump_rename_common_scripts()
@@ -622,7 +496,7 @@ namespace asset_dumpers
 				}
 
 				// They can contain animtrees
-				raw_script = dump_rename_map_animtrees(raw_script);
+				raw_script = rename_map_animtrees(raw_script);
 				raw_script = general_compatibility_fixes(raw_script);
 				for (size_t j = 0; j < ARRAYSIZE(includes_to_rename); j++)
 				{
@@ -642,39 +516,9 @@ namespace asset_dumpers
 				raw_file->compressedLen = 0;
 				raw_file->name = local_allocator.duplicate_string(rawfile_name);
 
-				exporter::dump(game::native::XAssetType::ASSET_TYPE_RAWFILE, { raw_file });
+				exporter::convert_and_write(game::native::XAssetType::ASSET_TYPE_RAWFILE, { raw_file });
 			}
 
-		}
-	}
-
-	void iscriptfile::dump_create_fx_sounds(const std::string& script)
-	{
-		static std::regex sound_catcher("(?:\\.v\\[\"soundalias\"\\] *= *\"(.+)\")");
-		std::smatch m;
-
-		std::string::const_iterator search_start(script.cbegin());
-		while (std::regex_search(search_start, script.cend(), m, sound_catcher))
-		{
-			bool skip = true;
-			for (auto match : m)
-			{
-				if (skip)
-				{
-					skip = false;
-					continue;
-				}
-
-				auto sound_name = match.str();
-				auto sound = game::native::DB_FindXAssetHeader(game::native::ASSET_TYPE_SOUND, sound_name.data(), 0);
-				search_start = m.suffix().first;
-
-				if (sound.data)
-				{
-					exporter::dump(game::native::ASSET_TYPE_SOUND, sound);
-					exporter::add_to_source(game::native::ASSET_TYPE_SOUND, sound_name);
-				}
-			}
 		}
 	}
 
@@ -699,8 +543,8 @@ namespace asset_dumpers
 
 				if (entry)
 				{
-					auto rawfile = dump(entry->asset.header).rawfile;
-					exporter::dump(game::native::ASSET_TYPE_RAWFILE, { rawfile });
+					auto rawfile = convert_and_write(entry->asset.header).rawfile;
+					exporter::convert_and_write(game::native::ASSET_TYPE_RAWFILE, { rawfile });
 					exporter::add_to_source(game::native::ASSET_TYPE_RAWFILE, rawfile->name);
 				}
 				else

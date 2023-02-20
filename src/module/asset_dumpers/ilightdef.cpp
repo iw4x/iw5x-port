@@ -30,7 +30,7 @@ namespace asset_dumpers
 		if (iw4_lightdef->attenuation.image)
 		{
 			iw4_lightdef->attenuation.image = 
-				exporter::dump(game::native::XAssetType::ASSET_TYPE_IMAGE, { native_lightdef->attenuation.image }).image;
+				exporter::convert(game::native::XAssetType::ASSET_TYPE_IMAGE, { native_lightdef->attenuation.image }).image;
 		}
 
 		out.lightDef = iw4_lightdef;

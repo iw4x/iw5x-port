@@ -50,11 +50,6 @@ namespace asset_dumpers
 			iw4_light->rotationLimit = native_light->rotationLimit;
 			iw4_light->translationLimit = native_light->translationLimit;
 			iw4_light->defName = native_light->defName;
-
-			if (iw4_light->defName)
-			{
-				exporter::dump(game::native::XAssetType::ASSET_TYPE_LIGHT_DEF, { game::native::DB_FindXAssetHeader(game::native::ASSET_TYPE_LIGHT_DEF, iw4_light->defName, 0).lightDef });
-			}
 		}
 
 		out.comWorld = iw4_comworld;
@@ -78,7 +73,7 @@ namespace asset_dumpers
 
 				if (com_header.data)
 				{
-					dump(com_header);
+					convert_and_write(com_header);
 					exporter::add_to_source(game::native::ASSET_TYPE_COMWORLD, com_header.comWorld->name);
 				}
 			});

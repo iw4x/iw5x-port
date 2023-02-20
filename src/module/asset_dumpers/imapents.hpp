@@ -15,6 +15,5 @@ namespace asset_dumpers
 	protected:
 		void convert(const game::native::XAssetHeader& header, iw4::native::XAssetHeader& out) override;
 		void write(const iw4::native::XAssetHeader& header) override;
-		void dump_models(const std::string& entity_string);
 	};
 }

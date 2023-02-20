@@ -48,7 +48,7 @@ namespace asset_dumpers
 
 				if (out.data)
 				{
-					dump(out);
+					convert_and_write(out);
 					exporter::add_to_source(game::native::ASSET_TYPE_GLASSWORLD, out.glassWorld->name);
 				}
 			});

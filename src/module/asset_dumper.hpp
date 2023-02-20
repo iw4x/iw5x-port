@@ -17,7 +17,22 @@ public:
 
 	asset_dumper();
 
-	iw4::native::XAssetHeader dump(game::native::XAssetHeader header, bool clear_memory = false)
+	iw4::native::XAssetHeader convert_and_write(game::native::XAssetHeader header, bool clear_memory = false)
+	{
+		auto out = convert(header, clear_memory);
+
+		write(out);
+		
+		if (clear_memory)
+		{
+			local_allocator.clear();
+			converted_assets.erase(header.data); // In case
+		}
+
+		return out;
+	}
+
+	iw4::native::XAssetHeader convert(game::native::XAssetHeader header, bool clear_memory = false)
 	{
 		if (converted_assets.contains(header.data) && !clear_memory)
 		{
@@ -31,14 +46,6 @@ public:
 		if (!clear_memory)
 		{
 			converted_assets[header.data] = out.data;
-		}
-
-		write(out);
-		
-		if (clear_memory)
-		{
-			local_allocator.clear();
-			converted_assets.erase(header.data); // In case
 		}
 
 		return out;

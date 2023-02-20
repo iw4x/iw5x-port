@@ -72,7 +72,7 @@ namespace asset_dumpers
 
 					for (auto header : headers)
 					{
-						dump(header, true);
+						convert_and_write(header, true);
 					}
 				}
 				else
@@ -81,7 +81,7 @@ namespace asset_dumpers
 
 					if (header.data)
 					{
-						dump(header, true);
+						convert_and_write(header, true);
 						console::info("successfullly dumped image %s!\n", name);
 					}
 					else

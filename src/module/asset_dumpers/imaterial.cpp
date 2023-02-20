@@ -61,7 +61,7 @@ namespace asset_dumpers
 
 		auto nativeTechset = native_material->techniqueSet;
 		iw4_material->techniqueSet = 
-			exporter::dump(game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, game::native::XAssetHeader{ nativeTechset }).techniqueSet;
+			exporter::convert(game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, game::native::XAssetHeader{ nativeTechset }).techniqueSet;
 
 		iw4_material->textureTable = utils::memory::allocate_array<iw4::native::MaterialTextureDef>(iw4_material->textureCount);
 		unsigned int iw4_texture_index = 0;
@@ -93,7 +93,7 @@ namespace asset_dumpers
 				// Maybe because of dedicated server files?
 				// This will crash the game in iw4 so we gotta be very careful about it
 				auto other_image = game::native::DB_FindXAssetHeader(game::native::XAssetType::ASSET_TYPE_IMAGE, "$default", 1);
-				iw4_tex->u.image = exporter::dump(game::native::XAssetType::ASSET_TYPE_IMAGE, other_image).image;
+				iw4_tex->u.image = exporter::convert(game::native::XAssetType::ASSET_TYPE_IMAGE, other_image).image;
 				console::warn("missing image %i of material %s! This will not crash, but it will look weird...\n", i, iw4_material->info.name);
 			}
 
@@ -125,7 +125,7 @@ namespace asset_dumpers
 						m.lock();
 						auto asset_dmper = reinterpret_cast<asset_dumper*>(data);
 
-						asset_dmper->dump(header, true);
+						asset_dmper->convert_and_write(header, true);
 						m.unlock();
 
 						}, this, false);
@@ -136,7 +136,7 @@ namespace asset_dumpers
 
 					if (header.data)
 					{
-						dump(header, true);
+						convert_and_write(header, true);
 						exporter::add_to_source(game::native::ASSET_TYPE_MATERIAL, name);
 						console::info("successfullly dumped material %s!\n", name);
 					}

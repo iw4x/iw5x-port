@@ -17,6 +17,5 @@ namespace asset_dumpers
 		void convert(const game::native::FxElemVisuals* visuals, iw4::native::FxElemVisuals* into, char elemType);
 		void convert(const game::native::XAssetHeader& header, iw4::native::XAssetHeader& out) override;
 		void write(const iw4::native::XAssetHeader& header) override;
-		void write(const iw4::native::FxElemVisuals* into, char elemType, utils::stream* buffer);
 	};
 }

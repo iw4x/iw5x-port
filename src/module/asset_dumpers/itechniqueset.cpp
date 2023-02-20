@@ -319,7 +319,7 @@ namespace asset_dumpers
 					0
 				).techniqueSet;
 
-			iw4_techset->remappedTechniqueSet = exporter::dump(game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, { native_techset->remappedTechniqueSet }).techniqueSet;
+			iw4_techset->remappedTechniqueSet = exporter::convert(game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, { native_techset->remappedTechniqueSet }).techniqueSet;
 		}
 		else if (name.contains("_sm"))
 		{
@@ -332,7 +332,7 @@ namespace asset_dumpers
 
 			if (native_techset->remappedTechniqueSet)
 			{
-				iw4_techset->remappedTechniqueSet = exporter::dump(game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, { native_techset->remappedTechniqueSet }).techniqueSet;
+				iw4_techset->remappedTechniqueSet = exporter::convert(game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, { native_techset->remappedTechniqueSet }).techniqueSet;
 			}
 		}
 
@@ -651,7 +651,7 @@ namespace asset_dumpers
 					game::native::DB_EnumXAssets(game::native::XAssetType::ASSET_TYPE_TECHNIQUE_SET, [](game::native::XAssetHeader header, void* data) {
 						auto asset_dmper = reinterpret_cast<asset_dumper*>(data);
 
-						asset_dmper->dump(header, true);
+						asset_dmper->convert_and_write(header, true);
 						}, this, false);
 				}
 				else
@@ -660,7 +660,7 @@ namespace asset_dumpers
 
 					if (header.data)
 					{
-						asset_dumper::dump(header);
+						asset_dumper::convert_and_write(header);
 						console::info("successfullly dumped techset %s!\n", name);
 					}
 					else

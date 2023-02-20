@@ -55,9 +55,9 @@ namespace asset_dumpers
 			static_assert(sizeof iw4::native::FxGlassDef == sizeof game::native::FxGlassDef);
 			memcpy(iw4_def, native_def, sizeof game::native::FxGlassDef);
 
-			iw4_def->material = exporter::dump(game::native::ASSET_TYPE_MATERIAL, { native_def->material }).material;
-			iw4_def->materialShattered = exporter::dump(game::native::ASSET_TYPE_MATERIAL, { native_def->materialShattered }).material;
-			iw4_def->physPreset = exporter::dump(game::native::ASSET_TYPE_PHYSPRESET, { native_def->physPreset }).physPreset;
+			iw4_def->material = exporter::convert(game::native::ASSET_TYPE_MATERIAL, { native_def->material }).material;
+			iw4_def->materialShattered = exporter::convert(game::native::ASSET_TYPE_MATERIAL, { native_def->materialShattered }).material;
+			iw4_def->physPreset = exporter::convert(game::native::ASSET_TYPE_PHYSPRESET, { native_def->physPreset }).physPreset;
 		}
 
 		SET_GLASS_SYS_MEMBER(piecePlaces);
@@ -103,7 +103,7 @@ namespace asset_dumpers
 
 				if (out.data)
 				{
-					dump(out);
+					convert_and_write(out);
 					exporter::add_to_source(game::native::ASSET_TYPE_FXWORLD, out.fxWorld->name);
 				}
 			});

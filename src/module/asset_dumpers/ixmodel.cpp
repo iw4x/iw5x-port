@@ -74,7 +74,7 @@ namespace asset_dumpers
 		iw4_model->materialHandles = local_allocator.allocate_array<iw4::native::Material*>(num_surfs);
 		for (auto i = 0; i < num_surfs; i++)
 		{
-			iw4_model->materialHandles[i] = exporter::dump(game::native::XAssetType::ASSET_TYPE_MATERIAL, { native_model->materialHandles[i] }).material;
+			iw4_model->materialHandles[i] = exporter::convert(game::native::XAssetType::ASSET_TYPE_MATERIAL, { native_model->materialHandles[i] }).material;
 		}
 
 		static_assert(sizeof iw4_model->lodInfo == sizeof native_model->lodInfo);
@@ -136,7 +136,7 @@ namespace asset_dumpers
 
 		if (native_model->physPreset)
 		{
-			iw4_model->physPreset = exporter::dump(game::native::XAssetType::ASSET_TYPE_PHYSPRESET, { native_model->physPreset }).physPreset;
+			iw4_model->physPreset = exporter::convert(game::native::XAssetType::ASSET_TYPE_PHYSPRESET, { native_model->physPreset }).physPreset;
 		}
 
 		SET_LIGHTGRID_MEMBER(physCollmap);
@@ -165,7 +165,7 @@ namespace asset_dumpers
 					m.lock();
 					auto asset_dmper = reinterpret_cast<asset_dumper*>(data);
 
-					asset_dmper->dump(header, true);
+					asset_dmper->convert_and_write(header, true);
 					m.unlock();
 
 					}, this, false);
@@ -181,7 +181,7 @@ namespace asset_dumpers
 						exporter::add_to_source(game::native::XAssetType::ASSET_TYPE_XMODEL, name);
 					}
 
-					dump(header);
+					convert_and_write(header);
 				}
 				else
 				{

@@ -48,6 +48,58 @@ bool exporter::capture = false;
 bool exporter::ready = false;
 std::string exporter::map_name{};
 std::vector<std::string> exporter::prepared_source{};
+std::unordered_map<std::string, std::string> exporter::rawfile_rename_map{};
+std::unordered_map<iw4::native::XAssetType, game::native::XAssetType> exporter::iw4_to_iw5_type_table =
+{
+		{ iw4::native::ASSET_TYPE_PHYSPRESET, game::native::ASSET_TYPE_PHYSPRESET },
+		{ iw4::native::ASSET_TYPE_PHYSCOLLMAP, game::native::ASSET_TYPE_PHYSCOLLMAP },
+		{ iw4::native::ASSET_TYPE_XANIMPARTS, game::native::ASSET_TYPE_XANIMPARTS },
+		{ iw4::native::ASSET_TYPE_XMODEL_SURFS, game::native::ASSET_TYPE_XMODEL_SURFS },
+		{ iw4::native::ASSET_TYPE_XMODEL, game::native::ASSET_TYPE_XMODEL },
+		{ iw4::native::ASSET_TYPE_MATERIAL, game::native::ASSET_TYPE_MATERIAL },
+		{ iw4::native::ASSET_TYPE_PIXELSHADER, game::native::ASSET_TYPE_PIXELSHADER },
+		{ iw4::native::ASSET_TYPE_VERTEXSHADER, game::native::ASSET_TYPE_VERTEXSHADER },
+		{ iw4::native::ASSET_TYPE_VERTEXDECL, game::native::ASSET_TYPE_VERTEXDECL },
+		{ iw4::native::ASSET_TYPE_TECHNIQUE_SET, game::native::ASSET_TYPE_TECHNIQUE_SET },
+		{ iw4::native::ASSET_TYPE_IMAGE, game::native::ASSET_TYPE_IMAGE },
+		{ iw4::native::ASSET_TYPE_SOUND, game::native::ASSET_TYPE_SOUND },
+		{ iw4::native::ASSET_TYPE_SOUND_CURVE, game::native::ASSET_TYPE_SOUND_CURVE },
+		{ iw4::native::ASSET_TYPE_LOADED_SOUND, game::native::ASSET_TYPE_LOADED_SOUND },
+		{ iw4::native::ASSET_TYPE_CLIPMAP_SP, game::native::ASSET_TYPE_CLIPMAP },
+		{ iw4::native::ASSET_TYPE_CLIPMAP_MP, game::native::ASSET_TYPE_CLIPMAP },
+		{ iw4::native::ASSET_TYPE_COMWORLD, game::native::ASSET_TYPE_COMWORLD },
+		{ iw4::native::ASSET_TYPE_GAMEWORLD_SP, game::native::ASSET_TYPE_GLASSWORLD },
+		{ iw4::native::ASSET_TYPE_GAMEWORLD_MP, game::native::ASSET_TYPE_GLASSWORLD },
+		{ iw4::native::ASSET_TYPE_MAP_ENTS, game::native::ASSET_TYPE_MAP_ENTS },
+		{ iw4::native::ASSET_TYPE_FXWORLD, game::native::ASSET_TYPE_FXWORLD },
+		{ iw4::native::ASSET_TYPE_GFXWORLD, game::native::ASSET_TYPE_GFXWORLD },
+		{ iw4::native::ASSET_TYPE_LIGHT_DEF, game::native::ASSET_TYPE_LIGHT_DEF },
+		{ iw4::native::ASSET_TYPE_UI_MAP, game::native::ASSET_TYPE_UI_MAP },
+		{ iw4::native::ASSET_TYPE_FONT, game::native::ASSET_TYPE_FONT },
+		{ iw4::native::ASSET_TYPE_MENULIST, game::native::ASSET_TYPE_MENULIST },
+		{ iw4::native::ASSET_TYPE_MENU, game::native::ASSET_TYPE_MENU },
+		{ iw4::native::ASSET_TYPE_LOCALIZE_ENTRY, game::native::ASSET_TYPE_LOCALIZE_ENTRY },
+		{ iw4::native::ASSET_TYPE_WEAPON, game::native::ASSET_TYPE_WEAPON },
+		{ iw4::native::ASSET_TYPE_SNDDRIVER_GLOBALS, game::native::ASSET_TYPE_SNDDRIVER_GLOBALS },
+		{ iw4::native::ASSET_TYPE_FX, game::native::ASSET_TYPE_FX },
+		{ iw4::native::ASSET_TYPE_IMPACT_FX, game::native::ASSET_TYPE_IMPACT_FX },
+		{ iw4::native::ASSET_TYPE_AITYPE, game::native::ASSET_TYPE_AITYPE },
+		{ iw4::native::ASSET_TYPE_MPTYPE, game::native::ASSET_TYPE_MPTYPE },
+		{ iw4::native::ASSET_TYPE_CHARACTER, game::native::ASSET_TYPE_CHARACTER },
+		{ iw4::native::ASSET_TYPE_XMODELALIAS, game::native::ASSET_TYPE_XMODELALIAS },
+		{ iw4::native::ASSET_TYPE_RAWFILE, game::native::ASSET_TYPE_RAWFILE },
+		{ iw4::native::ASSET_TYPE_STRINGTABLE, game::native::ASSET_TYPE_STRINGTABLE },
+		{ iw4::native::ASSET_TYPE_LEADERBOARD, game::native::ASSET_TYPE_LEADERBOARD },
+		{ iw4::native::ASSET_TYPE_STRUCTURED_DATA_DEF, game::native::ASSET_TYPE_STRUCTURED_DATA_DEF },
+		{ iw4::native::ASSET_TYPE_TRACER, game::native::ASSET_TYPE_TRACER },
+		{ iw4::native::ASSET_TYPE_VEHICLE, game::native::ASSET_TYPE_VEHICLE },
+		{ iw4::native::ASSET_TYPE_ADDON_MAP_ENTS, game::native::ASSET_TYPE_ADDON_MAP_ENTS },
+		{ iw4::native::ASSET_TYPE_COUNT, game::native::ASSET_TYPE_COUNT },
+		{ iw4::native::ASSET_TYPE_STRING, game::native::ASSET_TYPE_STRING },
+		{ iw4::native::ASSET_TYPE_ASSETLIST, game::native::ASSET_TYPE_ASSETLIST },
+
+};
+
 iw4of::api* exporter::iw4of_api{};
 std::string exporter::common_sounds[] = {
 	"rocket_explode_bark",
@@ -217,6 +269,7 @@ void exporter::dump_map(const command::params& params)
 	if (params.size() < 2) return;
 	map_name = params[1];
 
+	iw4of_api->clear_writes();
 	iw4of_api->set_work_path(export_path_dvar->current.string);
 
 	std::stringstream source{};
@@ -256,18 +309,11 @@ void exporter::dump_map(const command::params& params)
 	console::info("dumping gfxworld %s...\n", map_name.c_str());
 	command::execute("dumpGfxWorld", true); // This adds it to the zone source
 
-	auto script_exporter = reinterpret_cast<asset_dumpers::iscriptfile*>(asset_dumpers[game::native::XAssetType::ASSET_TYPE_SCRIPTFILE]);
-	if (script_exporter)
-	{
-		console::info("dumping common scripts, this can take a while...\n");
-		script_exporter->dump_rename_common_scripts();
-	}
-
 	for (const auto& script : exporter::captured_scripts)
 	{
 		if (
 			!script.starts_with("maps/mp/gametypes"s) // No general gameplay scripts
-		)
+			)
 		{
 			console::info("dumping script %s...\n", script.data());
 			command::execute(std::format("dumpScript {}", script), true); // This adds it to the zone source
@@ -291,6 +337,13 @@ void exporter::dump_map(const command::params& params)
 
 		console::info("dumping rawfile %s...\n", rawfile.data());
 		command::execute(std::format("dumpRawFile {}", rawfile), true); // This adds it to the zone source
+	}
+
+	auto script_exporter = reinterpret_cast<asset_dumpers::iscriptfile*>(asset_dumpers[game::native::XAssetType::ASSET_TYPE_SCRIPTFILE]);
+	if (script_exporter)
+	{
+		console::info("dumping common scripts, this can take a while...\n");
+		script_exporter->dump_rename_common_scripts();
 	}
 
 	captured_rawfiles.clear();
@@ -358,7 +411,7 @@ void exporter::dump_map(const command::params& params)
 	{
 		source << s << "\n";
 	}
-		
+
 	source << "\n\n\n";
 	utils::io::write_file(std::format("{}/{}.csv", export_path_dvar->current.string, map_name), source.str(), false);
 	utils::io::write_file(std::format("{}/{}_load.csv", export_path_dvar->current.string, map_name), "material,$levelbriefing\n", false);
@@ -462,15 +515,28 @@ bool exporter::exporter_exists(game::native::XAssetType assetType)
 	return asset_dumpers[assetType];
 }
 
-iw4::native::XAssetHeader exporter::dump(game::native::XAssetType type, game::native::XAssetHeader header)
+iw4::native::XAssetHeader exporter::convert_and_write(game::native::XAssetType type, game::native::XAssetHeader header)
 {
 	if (exporter_exists(type))
 	{
-		return asset_dumpers[type]->dump(header);
+		return asset_dumpers[type]->convert_and_write(header);
 	}
 	else
 	{
-		console::warn("Cannot dump type %s, no asset dumper found\n", game::native::g_assetNames[type]);
+		console::warn("Cannot dump type %s, no asset handler found\n", game::native::g_assetNames[type]);
+		return iw4::native::XAssetHeader{};
+	}
+}
+
+iw4::native::XAssetHeader exporter::convert(game::native::XAssetType type, game::native::XAssetHeader header)
+{
+	if (exporter_exists(type))
+	{
+		return asset_dumpers[type]->convert(header);
+	}
+	else
+	{
+		console::warn("Cannot convert type %s, no asset handler found\n", game::native::g_assetNames[type]);
 		return iw4::native::XAssetHeader{};
 	}
 }
@@ -492,6 +558,11 @@ void exporter::add_to_source(game::native::XAssetType type, const std::string as
 		// No dupes in mah source!
 		prepared_source.emplace_back(line);
 	}
+}
+
+void exporter::add_rename_asset(const std::string& old_name, const std::string& new_name)
+{
+	rawfile_rename_map[old_name] = new_name;
 }
 
 void exporter::DB_AddXAsset_Hk(game::native::XAssetType type, game::native::XAssetHeader* header)
@@ -533,7 +604,7 @@ void exporter::DB_AddXAsset_Hk(game::native::XAssetType type, game::native::XAss
 			if (asset_name.contains("body")) break; // Multiplayer team bodies (maybe ultimately we could keep them)
 			if (asset_name.contains("viewhands")) break; // Multiplayer viewhands
 			if (asset_name.contains("head_")) break; // Multiplayer heads
-			
+
 			if (asset_name[0] == ',') asset_name = asset_name.substr(1);
 
 			// Destructibles
@@ -634,7 +705,9 @@ void exporter::post_load()
 
 		iw4of::params_t params;
 
-		params.fs_read_file = [](const std::string& filename) 
+		params.write_only_once = true;
+
+		params.fs_read_file = [](const std::string& filename)
 		{
 			return game::native::filesystem_read_big_file(filename.data(), game::native::FsThread::FS_THREAD_DATABASE);
 		};
@@ -651,33 +724,96 @@ void exporter::post_load()
 				console::error(message.data());
 				assert(false);
 			}
-			else 
+			else
 			{
 				console::info(message.data());
 			}
 		};
 
-		//params.find_other_asset = [](int type, const std::string& name)
-		//{
-		//	return dump(type, )
-		//};
+		params.find_other_asset = [](int iw4_type, const std::string& name)
+		{
+			auto iw5_type = iw4_to_iw5_type_table[static_cast<iw4::native::XAssetType>(iw4_type)];
+			game::native::XAssetHeader header{};
+
+			if (iw4_type == iw4::native::ASSET_TYPE_RAWFILE)
+			{
+				if (name.ends_with(".gsc"))
+				{
+					auto dumper = reinterpret_cast<asset_dumpers::iscriptfile*>(asset_dumpers[game::native::ASSET_TYPE_SCRIPTFILE]);
+					if (dumper)
+					{
+						auto script_name = name.substr(0, name.size() - 4);
+						script_name = dumper->get_obfuscated_string(script_name);
+						auto script = game::native::DB_FindXAssetHeader(game::native::ASSET_TYPE_SCRIPTFILE, script_name.data(), 0);
+						header = { script };
+						iw5_type = game::native::ASSET_TYPE_SCRIPTFILE;
+					}
+				}
+				else
+				{
+					auto previous_name = name;
+
+					for (const auto& kv : rawfile_rename_map)
+					{
+						if (kv.second == name)
+						{
+							previous_name = kv.first;
+							break;
+						}
+					}
+
+					header = game::native::DB_FindXAssetHeader(iw5_type, previous_name.data(), 0);
+				}
+			}
+			else
+			{
+				header = game::native::DB_FindXAssetHeader(iw5_type, name.data(), 0);
+			}
+
+			if (header.data)
+			{
+				const char* backup_name{};
+				std::string new_name;
+
+				if (iw4_type == iw4::native::ASSET_TYPE_RAWFILE)
+				{
+					std::string original_name = header.rawfile->name;
+					if (rawfile_rename_map.contains(original_name))
+					{
+						new_name = rawfile_rename_map[original_name];
+						backup_name = header.rawfile->name;
+						header.rawfile->name = new_name.data();
+					}
+				}
+
+				add_to_source(iw5_type, name);
+				auto result = convert(iw5_type, header).data;
+
+				if (backup_name)
+				{
+					// Restore
+					header.rawfile->name = backup_name;
+				}
+
+				return result;
+			}
+
+			return reinterpret_cast<void*>(0);
+		};
 
 		params.work_directory = "iw5xport_out/default";
-		//params.store_in_string_table = [](const std::string & text)
-		//{
-		//	return game::native::SL_GetString(text.data(), 0);
-		//};
 
 
 		iw4of_api = new iw4of::api(params);
 
 		scheduler::once([&params]() {
 			console::info("ready!\n");
-			
+
 			ready = true;
 
 			}, scheduler::pipeline::main);
 	}
 }
+
 
 REGISTER_MODULE(exporter)

@@ -166,7 +166,7 @@ namespace asset_dumpers
 			iw4_alias->centerPercentage = native_alias->centerPercentage;
 			iw4_alias->startDelay = native_alias->startDelay;
 
-			iw4_alias->volumeFalloffCurve = exporter::dump(game::native::XAssetType::ASSET_TYPE_SOUND_CURVE, { native_alias->volumeFalloffCurve }).sndCurve;
+			iw4_alias->volumeFalloffCurve = exporter::convert(game::native::XAssetType::ASSET_TYPE_SOUND_CURVE, { native_alias->volumeFalloffCurve }).sndCurve;
 			assert(iw4_alias->volumeFalloffCurve);
 
 			iw4_alias->envelopMin = native_alias->envelopMin;
@@ -183,7 +183,7 @@ namespace asset_dumpers
 				case iw4::native::snd_alias_type_t::SAT_LOADED:
 				{
 					// Save the LoadedSound subasset
-					exporter::dump(game::native::XAssetType::ASSET_TYPE_LOADED_SOUND, { iw4_alias->soundFile->u.loadSnd });
+					iw4_alias->soundFile->u.loadSnd = exporter::convert(game::native::XAssetType::ASSET_TYPE_LOADED_SOUND, { iw4_alias->soundFile->u.loadSnd }).loadSnd;
 				}
 					break;
 
@@ -254,7 +254,7 @@ namespace asset_dumpers
 
 					for (auto header : headers)
 					{
-						dump(header, true);
+						convert_and_write(header, true);
 					}
 				}
 				else
@@ -268,7 +268,7 @@ namespace asset_dumpers
 							exporter::add_to_source(game::native::XAssetType::ASSET_TYPE_SOUND, name);
 						}
 
-						dump(header, true);
+						convert_and_write(header, true);
 					}
 					else
 					{
