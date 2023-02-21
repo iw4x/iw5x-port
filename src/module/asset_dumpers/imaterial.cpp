@@ -75,6 +75,7 @@ namespace asset_dumpers
 			{
 				// DISPLACEMENT_MAP is not in iw4, so we skip this image
 				iw4_material->textureCount--;
+				console::warn("killing image %i (%s) of material %s! The texture semantic %i is not supported.\n", i, iw4_tex->u.image->name, iw4_material->info.name, iw4_tex->semantic);
 				continue;
 			}
 
