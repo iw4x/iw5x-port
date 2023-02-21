@@ -24,6 +24,8 @@ private:
 	static void DB_AddXAsset_stub();
 	static int SND_SetDataHook(game::native::MssSound*, char*);
 
+	static void* find_asset_for_api(int iw4_type, const std::string& name);
+
 	static void load_common_zones();
 	static void initialize_exporters();
 	static bool exporter_exists(game::native::XAssetType assetType);

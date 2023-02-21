@@ -543,13 +543,14 @@ iw4::native::XAssetHeader exporter::convert(game::native::XAssetType type, game:
 
 void exporter::add_to_source(game::native::XAssetType type, const std::string asset)
 {
-
 	auto name = game::native::g_assetNames[type];
 
 	if (type == game::native::ASSET_TYPE_GLASSWORLD)
 	{
 		name = "game_map_mp"; // Special case for iw4
 	}
+
+	assert(type != game::native::ASSET_TYPE_SCRIPTFILE);
 
 	auto line = std::format("{},{}", name, asset);
 
@@ -672,6 +673,84 @@ int exporter::SND_SetDataHook(game::native::MssSound*, char*)
 	asset_dumpers::iloadedsound::duplicate_sound_data(loadedSound);
 	return 0;
 }
+
+void* exporter::find_asset_for_api(int iw4_type, const std::string& name)
+{
+	auto iw5_type = iw4_to_iw5_type_table[static_cast<iw4::native::XAssetType>(iw4_type)];
+	game::native::XAssetHeader header{};
+
+	if (iw4_type == iw4::native::ASSET_TYPE_RAWFILE)
+	{
+		if (name.ends_with(".gsc"))
+		{
+			auto dumper = reinterpret_cast<asset_dumpers::iscriptfile*>(asset_dumpers[game::native::ASSET_TYPE_SCRIPTFILE]);
+			if (dumper)
+			{
+				auto script_name = name.substr(0, name.size() - 4);
+				script_name = dumper->get_obfuscated_string(script_name);
+				auto script = game::native::DB_FindXAssetHeader(game::native::ASSET_TYPE_SCRIPTFILE, script_name.data(), 0);
+				header = { script };
+				iw5_type = game::native::ASSET_TYPE_SCRIPTFILE;
+			}
+		}
+		else
+		{
+			auto previous_name = name;
+
+			for (const auto& kv : rawfile_rename_map)
+			{
+				if (kv.second == name)
+				{
+					previous_name = kv.first;
+					break;
+				}
+			}
+
+			header = game::native::DB_FindXAssetHeader(iw5_type, previous_name.data(), 0);
+		}
+	}
+	else
+	{
+		header = game::native::DB_FindXAssetHeader(iw5_type, name.data(), 0);
+	}
+
+	if (header.data)
+	{
+		const char* backup_name{};
+		std::string new_name;
+
+		if (iw4_type == iw4::native::ASSET_TYPE_RAWFILE)
+		{
+			std::string original_name = header.rawfile->name;
+			if (rawfile_rename_map.contains(original_name))
+			{
+				new_name = rawfile_rename_map[original_name];
+				backup_name = header.rawfile->name;
+				header.rawfile->name = new_name.data();
+			}
+		}
+
+		auto result = convert(iw5_type, header).data;
+
+		if (iw5_type == game::native::ASSET_TYPE_SCRIPTFILE)
+		{
+			iw5_type = game::native::ASSET_TYPE_RAWFILE;
+		}
+
+		add_to_source(iw5_type, name);
+
+		if (backup_name)
+		{
+			// Restore
+			header.rawfile->name = backup_name;
+		}
+
+		return result;
+	}
+
+	return reinterpret_cast<void*>(0);
+}
+
 void exporter::post_load()
 {
 	if (utils::flags::has_flag("exporter"))
@@ -730,76 +809,7 @@ void exporter::post_load()
 			}
 		};
 
-		params.find_other_asset = [](int iw4_type, const std::string& name)
-		{
-			auto iw5_type = iw4_to_iw5_type_table[static_cast<iw4::native::XAssetType>(iw4_type)];
-			game::native::XAssetHeader header{};
-
-			if (iw4_type == iw4::native::ASSET_TYPE_RAWFILE)
-			{
-				if (name.ends_with(".gsc"))
-				{
-					auto dumper = reinterpret_cast<asset_dumpers::iscriptfile*>(asset_dumpers[game::native::ASSET_TYPE_SCRIPTFILE]);
-					if (dumper)
-					{
-						auto script_name = name.substr(0, name.size() - 4);
-						script_name = dumper->get_obfuscated_string(script_name);
-						auto script = game::native::DB_FindXAssetHeader(game::native::ASSET_TYPE_SCRIPTFILE, script_name.data(), 0);
-						header = { script };
-						iw5_type = game::native::ASSET_TYPE_SCRIPTFILE;
-					}
-				}
-				else
-				{
-					auto previous_name = name;
-
-					for (const auto& kv : rawfile_rename_map)
-					{
-						if (kv.second == name)
-						{
-							previous_name = kv.first;
-							break;
-						}
-					}
-
-					header = game::native::DB_FindXAssetHeader(iw5_type, previous_name.data(), 0);
-				}
-			}
-			else
-			{
-				header = game::native::DB_FindXAssetHeader(iw5_type, name.data(), 0);
-			}
-
-			if (header.data)
-			{
-				const char* backup_name{};
-				std::string new_name;
-
-				if (iw4_type == iw4::native::ASSET_TYPE_RAWFILE)
-				{
-					std::string original_name = header.rawfile->name;
-					if (rawfile_rename_map.contains(original_name))
-					{
-						new_name = rawfile_rename_map[original_name];
-						backup_name = header.rawfile->name;
-						header.rawfile->name = new_name.data();
-					}
-				}
-
-				add_to_source(iw5_type, name);
-				auto result = convert(iw5_type, header).data;
-
-				if (backup_name)
-				{
-					// Restore
-					header.rawfile->name = backup_name;
-				}
-
-				return result;
-			}
-
-			return reinterpret_cast<void*>(0);
-		};
+		params.find_other_asset = find_asset_for_api;
 
 		params.work_directory = "iw5xport_out/default";
 
