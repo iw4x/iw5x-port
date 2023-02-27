@@ -29,6 +29,18 @@ namespace asset_dumpers
 
 		// No conversion
 		out.loadSnd = header.loadSnd;
+
+		if (available_sound_data.contains(header.loadSnd->name))
+		{
+			out.loadSnd->sound.data = available_sound_data[header.loadSnd->name];
+		}
+		else
+		{
+			// !
+			console::warn("Missing sound data for sound {}\n", header.loadSnd->name);
+			out.loadSnd->sound.data = local_allocator.allocate_array<char>(out.loadSnd->sound.info.data_len);
+		}
+
 	}
 
 	void iloadedsound::write(const iw4::native::XAssetHeader& header)
@@ -36,8 +48,6 @@ namespace asset_dumpers
 		// copy sound data
 		if (header.loadSnd)
 		{
-			header.loadSnd->sound.data = available_sound_data[header.loadSnd->name];
-
 			[[maybe_unused]] bool result = exporter::get_api()->write(iw4::native::ASSET_TYPE_LOADED_SOUND, header.data);
 			assert(result);
 		}
