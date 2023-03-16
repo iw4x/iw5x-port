@@ -6,10 +6,7 @@
 ![watchers](https://img.shields.io/github/watchers/momo5502/open-iw5.svg)
 
 
-# Open-IW5
+# IW5xport
 
-Open source MW3 singleplayer and multiplayer client.  
-Requires the MW3 dedicated server files.  
-Very experimental and unfinished. Will probably never be finished though.
-
-[Download MW3](https://steamdb.info/app/42750/)
+Based on Open-IW5!
+Open source IW5 asset exporter / converted using IW4-open-formats, targeting IW4x zonebuilder!
