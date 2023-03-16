@@ -383,6 +383,18 @@ namespace asset_dumpers
 		}
 
 		auto result = new_data.str();
+
+		// Replace inline entity initialization with delay
+		static std::regex inline_delayed_one_shot_fx("ent = createOneshotEffect\\( \"((?:[0-z]|_)*)\" \\);\n *ent set_origin_and_angles\\( \\((.*)\\), \\((.*)\\) \\);\n( *ent\\.v\\[ \"delay\" \\] = .*;)");
+		constexpr auto multiline_delayed_one_shot_fx("ent = createOneshotEffect( \"$1\" );\n	ent.v[ \"origin\" ] = ($2);\n	ent.v[ \"angles\" ] = ($3);\n	ent.v[ \"fxid\" ] = \"$1\";\n$4");
+		result = std::regex_replace(result, inline_delayed_one_shot_fx, multiline_delayed_one_shot_fx);
+
+
+		// and without delay
+		static std::regex inline_one_shot_fx("ent = createOneshotEffect\\( \"((?:[0-z]|_)*)\" \\);\n *ent set_origin_and_angles\\( \\((.*)\\), \\((.*)\\) \\);");
+		constexpr auto multiline_one_shot_fx("ent = createOneshotEffect( \"$1\" );\n	ent.v[ \"origin\" ] = ($2);\n	ent.v[ \"angles\" ] = ($3);\n	ent.v[ \"fxid\" ] = \"$1\";\n	ent.v[ \"delay\" ] = -1;");
+		result = std::regex_replace(result, inline_one_shot_fx, multiline_one_shot_fx);
+
 		return result;
 	}
 
