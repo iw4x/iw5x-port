@@ -34,6 +34,7 @@ namespace game
 
 		G_RunFrame_t G_RunFrame;
 		G_GetWeaponForName_t G_GetWeaponForName;
+		Info_ValueForKey_t Info_ValueForKey;
 
 		MSG_ReadData_t MSG_ReadData;
 
@@ -55,11 +56,16 @@ namespace game
 		Scr_ErrorInternal_t Scr_ErrorInternal;
 
 		GetObjectType_t GetObjectType;
+		StringTable_Lookup_t StringTable_Lookup;
+		StringTable_GetColumnValueForRow_t StringTable_GetColumnValueForRow;
+		StringTable_LookupRowNumForValue_t StringTable_LookupRowNumForValue;
 
 		Sys_ShowConsole_t Sys_ShowConsole;
 		Sys_Error_t Sys_Error;
 		Sys_Milliseconds_t Sys_Milliseconds;
 		Sys_Sleep_t Sys_Sleep;
+
+		UI_SafeLocalizeTextMessage_t UI_SafeLocalizeTextMessage;
 
 		PMem_AllocFromSource_NoDebug_t PMem_AllocFromSource_NoDebug;
 
@@ -753,6 +759,7 @@ namespace game
 
 		native::G_RunFrame = native::G_RunFrame_t(SELECT_VALUE(0x52EAA0, 0x50CB70));
 		native::G_GetWeaponForName = native::G_GetWeaponForName_t(SELECT_VALUE(0x495E40, 0x531070));
+		native::Info_ValueForKey = native::Info_ValueForKey_t(0x5C2DB0);
 
 		native::MSG_ReadData = native::MSG_ReadData_t(SELECT_VALUE(0, 0x5592A0));
 
@@ -775,11 +782,16 @@ namespace game
 		native::Scr_ErrorInternal = native::Scr_ErrorInternal_t(SELECT_VALUE(0x42B910, 0x568FD0));
 
 		native::GetObjectType = native::GetObjectType_t(SELECT_VALUE(0x4D8FE0, 0x565C60));
+		native::StringTable_Lookup = native::StringTable_Lookup_t(0x5B86E0);
+		native::StringTable_GetColumnValueForRow = native::StringTable_GetColumnValueForRow_t(0x5B86A0);
+		native::StringTable_LookupRowNumForValue = native::StringTable_LookupRowNumForValue_t(0x5B8610);
 
 		native::Sys_ShowConsole = native::Sys_ShowConsole_t(SELECT_VALUE(0x470AF0, 0x5CF590));
 		native::Sys_Error = native::Sys_Error_t(SELECT_VALUE(0x490D90, 0x5CC3B0));
 		native::Sys_Milliseconds = native::Sys_Milliseconds_t(SELECT_VALUE(0x4A1610, 0x5CE740));
 		native::Sys_Sleep = native::Sys_Sleep_t(SELECT_VALUE(0x438600, 0x55F460));
+
+		native::UI_SafeLocalizeTextMessage = native::UI_SafeLocalizeTextMessage_t(0x58F7A0);
 
 		native::PMem_AllocFromSource_NoDebug = native::PMem_AllocFromSource_NoDebug_t(SELECT_VALUE(0x449E50, 0x5C15C0));
 

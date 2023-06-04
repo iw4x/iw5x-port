@@ -66,6 +66,12 @@ namespace asset_dumpers
 			///
 			////////////////////////////
 
+			// Character dumping
+			if (script_name.starts_with("mptype/") || script_name.starts_with("xmodelalias/") || script_name.starts_with("character/"))
+			{
+				dump_character_related_script_recursively(script_data);
+			}
+
 
 			iw4_rawfile->buffer = local_allocator.allocate_array<char>(script_data.size());
 			memcpy(iw4_rawfile->buffer, script_data.data(), script_data.size());
@@ -466,6 +472,70 @@ namespace asset_dumpers
 		}
 
 		return name;
+	}
+
+	void iscriptfile::dump_character_related_script_recursively(const std::string& contents)
+	{
+		// Models (precache)
+		static std::regex model_catcher("precachemodel\\( ?\"(.*)\" ?\\);");
+		{
+			std::smatch matches;
+			std::string::const_iterator search_start(contents.cbegin());
+
+			while (std::regex_search(search_start, contents.cend(), matches, model_catcher))
+			{
+				if (matches.size() > 1)
+				{
+					const auto& match = matches[1];
+					auto model_name = match.str();
+					command::execute(std::format("dumpXModel {}", model_name), true);
+				}
+
+				search_start = matches.suffix().first;
+			}
+		}
+
+		// Models (heads)
+		static std::regex head_catcher("var_0\\[[0-9]+\\] ?= ?\"(.*)\";");
+		{
+			std::smatch matches;
+			std::string::const_iterator search_start(contents.cbegin());
+
+			while (std::regex_search(search_start, contents.cend(), matches, head_catcher))
+			{
+				if (matches.size() > 1)
+				{
+					const auto& match = matches[1];
+					auto model_name = match.str();
+
+					command::execute(std::format("dumpXModel {}", model_name), true);
+				}
+
+				search_start = matches.suffix().first;
+			}
+		}
+
+		// Sub scripts
+		static std::regex subscript_catcher("((?:character|xmodelalias)\\\\(?:.+))::");
+		{
+			std::smatch matches;
+			std::string::const_iterator search_start(contents.cbegin());
+
+			while (std::regex_search(search_start, contents.cend(), matches, subscript_catcher))
+			{
+				if (matches.size() > 1)
+				{
+					const auto& match = matches[1];
+					auto script_name = match.str();
+					std::replace(script_name.begin(), script_name.end(), '\\', '/');
+
+					const auto obfuscated_name = get_obfuscated_string(script_name);
+					command::execute(std::format("dumpScript {}", obfuscated_name), true);
+				}
+
+				search_start = matches.suffix().first;
+			}
+		}
 	}
 
 	void iscriptfile::dump_rename_common_scripts()

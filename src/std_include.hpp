@@ -15,6 +15,8 @@
 #pragma warning(disable: 26495)
 #pragma warning(disable: 28020)
 
+#define _REGEX_MAX_STACK_COUNT 0
+
 #define _CRT_SECURE_NO_WARNINGS
 #define WIN32_LEAN_AND_MEAN
 

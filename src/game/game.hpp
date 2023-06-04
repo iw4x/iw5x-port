@@ -73,6 +73,9 @@ namespace game
 		typedef Weapon (*G_GetWeaponForName_t)(const char* name);
 		extern G_GetWeaponForName_t G_GetWeaponForName;
 
+		typedef char* (*Info_ValueForKey_t)(const char* a1, const char* a2);
+		extern Info_ValueForKey_t Info_ValueForKey;
+
 		typedef void (*MSG_ReadData_t)(msg_t* msg, void* data, int len);
 		extern MSG_ReadData_t MSG_ReadData;
 
@@ -118,6 +121,15 @@ namespace game
 		typedef unsigned int(*GetObjectType_t)(unsigned int id);
 		extern GetObjectType_t GetObjectType;
 
+		typedef char* (*StringTable_Lookup_t)(StringTable* table, const int comparisonColumn, const char* value, const int valueColumn);
+		extern StringTable_Lookup_t StringTable_Lookup;
+
+		typedef char* (*StringTable_GetColumnValueForRow_t)(const StringTable* a1, int rowIndex, int columnIndex);
+		extern StringTable_GetColumnValueForRow_t StringTable_GetColumnValueForRow;
+
+		typedef int (*StringTable_LookupRowNumForValue_t)(StringTable* csvTable, int columnNumber, const char* value);
+		extern StringTable_LookupRowNumForValue_t StringTable_LookupRowNumForValue;
+
 		typedef void (*Sys_ShowConsole_t)();
 		extern Sys_ShowConsole_t Sys_ShowConsole;
 
@@ -129,6 +141,9 @@ namespace game
 
 		typedef void (*Sys_Sleep_t)(int msec);
 		extern Sys_Sleep_t Sys_Sleep;
+
+		typedef char* (*UI_SafeLocalizeTextMessage_t)(const char* msg);
+		extern UI_SafeLocalizeTextMessage_t UI_SafeLocalizeTextMessage;
 
 		typedef void* (*PMem_AllocFromSource_NoDebug_t)(unsigned int size, unsigned int alignment, unsigned int type, int source);
 		extern PMem_AllocFromSource_NoDebug_t PMem_AllocFromSource_NoDebug;

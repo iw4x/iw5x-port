@@ -475,7 +475,6 @@ namespace game
 		struct Font_s;
 		struct MenuList;
 		struct menuDef_t;
-		struct LocalizeEntry;
 		struct WeaponAttachment;
 		struct WeaponCompleteDef;
 		struct FxEffectDef;
@@ -489,6 +488,26 @@ namespace game
 		struct TracerDef;
 		struct VehicleDef;
 		struct AddonMapEnts;
+
+		struct LocalizeEntry
+		{
+			const char* value;
+			const char* name;
+		};
+
+		struct StringTableCell
+		{
+			const char* string;
+			int hash;
+		};
+
+		struct StringTable
+		{
+			const char* name;
+			int columnCount;
+			int rowCount;
+			StringTableCell* values;
+		};
 
 		union XAssetHeader
 		{

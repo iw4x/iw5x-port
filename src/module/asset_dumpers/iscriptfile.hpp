@@ -25,6 +25,7 @@ namespace asset_dumpers
 		static std::string common_scripts_to_dump[];
 		static std::string regex_ready_includes_to_rename[];
 
+		void dump_character_related_script_recursively(const std::string& obfuscated_name);
 		std::string add_fog_init(const std::string& script);
 		std::string general_compatibility_fixes(const std::string& script);
 		std::string rename_map_animtrees(const std::string& script);
