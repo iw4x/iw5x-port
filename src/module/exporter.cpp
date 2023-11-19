@@ -30,6 +30,7 @@
 #include <module/asset_dumpers/ifx.hpp>
 #include <module/asset_dumpers/ixanimparts.hpp>
 #include <module/asset_dumpers/itracerdef.hpp>
+#include <module/asset_dumpers/iweapon.hpp>
 
 #include <module/scheduler.hpp>
 #include <module/log_file.hpp>
@@ -557,6 +558,7 @@ void exporter::initialize_exporters()
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_FXWORLD] = new asset_dumpers::ifxworld();
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_FX] = new asset_dumpers::ifx();
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_XANIMPARTS] = new asset_dumpers::ixanimparts();
+	asset_dumpers[game::native::XAssetType::ASSET_TYPE_WEAPON] = new asset_dumpers::iweapon();
 	asset_dumpers[game::native::XAssetType::ASSET_TYPE_TRACER] = new asset_dumpers::itracerdef();
 }
 
