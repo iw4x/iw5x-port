@@ -509,6 +509,1034 @@ namespace game
 			StringTableCell* values;
 		};
 
+		struct TracerDef
+		{
+			const char* name;
+			Material* material;
+			unsigned int drawInterval;
+			float speed;
+			float beamLength;
+			float beamWidth;
+			float screwRadius;
+			float screwDist;
+			float colors[5][4];
+		};
+
+		enum activeReticleType_t
+		{
+			VEH_ACTIVE_RETICLE_NONE = 0x0,
+			VEH_ACTIVE_RETICLE_PIP_ON_A_STICK = 0x1,
+			VEH_ACTIVE_RETICLE_BOUNCING_DIAMOND = 0x2,
+			VEH_ACTIVE_RETICLE_COUNT = 0x3,
+		};
+
+		enum weapType_t
+		{
+			WEAPTYPE_NONE = 0x0,
+			WEAPTYPE_BULLET = 0x1,
+			WEAPTYPE_GRENADE = 0x2,
+			WEAPTYPE_PROJECTILE = 0x3,
+			WEAPTYPE_RIOTSHIELD = 0x4,
+			WEAPTYPE_NUM = 0x5
+		};
+
+		enum weapClass_t
+		{
+			WEAPCLASS_RIFLE = 0x0,
+			WEAPCLASS_SNIPER = 0x1,
+			WEAPCLASS_MG = 0x2,
+			WEAPCLASS_SMG = 0x3,
+			WEAPCLASS_SPREAD = 0x4,
+			WEAPCLASS_PISTOL = 0x5,
+			WEAPCLASS_GRENADE = 0x6,
+			WEAPCLASS_ROCKETLAUNCHER = 0x7,
+			WEAPCLASS_TURRET = 0x8,
+			WEAPCLASS_THROWINGKNIFE = 0x9,
+			WEAPCLASS_NON_PLAYER = 0xA,
+			WEAPCLASS_ITEM = 0xB,
+			WEAPCLASS_NUM = 0xC,
+		};
+
+
+		enum PenetrateType
+		{
+			PENETRATE_TYPE_NONE = 0x0,
+			PENETRATE_TYPE_SMALL = 0x1,
+			PENETRATE_TYPE_MEDIUM = 0x2,
+			PENETRATE_TYPE_LARGE = 0x3,
+			PENETRATE_TYPE_COUNT = 0x4
+		};
+
+		enum ImpactType
+		{
+			IMPACT_TYPE_NONE = 0x0,
+			IMPACT_TYPE_BULLET_SMALL = 0x1,
+			IMPACT_TYPE_BULLET_LARGE = 0x2,
+			IMPACT_TYPE_BULLET_AP = 0x3,
+			IMPACT_TYPE_BULLET_EXPLODE = 0x4,
+			IMPACT_TYPE_SHOTGUN = 0x5,
+			IMPACT_TYPE_SHOTGUN_EXPLODE = 0x6,
+			IMPACT_TYPE_GRENADE_BOUNCE = 0x7,
+			IMPACT_TYPE_GRENADE_EXPLODE = 0x8,
+			IMPACT_TYPE_ROCKET_EXPLODE = 0x9,
+			IMPACT_TYPE_PROJECTILE_DUD = 0xA,
+			IMPACT_TYPE_COUNT = 0xB
+		};
+
+		enum weapInventoryType_t
+		{
+			WEAPINVENTORY_PRIMARY = 0x0,
+			WEAPINVENTORY_OFFHAND = 0x1,
+			WEAPINVENTORY_ITEM = 0x2,
+			WEAPINVENTORY_ALTMODE = 0x3,
+			WEAPINVENTORY_EXCLUSIVE = 0x4,
+			WEAPINVENTORY_SCAVENGER = 0x5,
+			WEAPINVENTORYCOUNT = 0x6
+		};
+
+		enum weapFireType_t
+		{
+			WEAPON_FIRETYPE_FULLAUTO = 0x0,
+			WEAPON_FIRETYPE_SINGLESHOT = 0x1,
+			WEAPON_FIRETYPE_BURSTFIRE2 = 0x2,
+			WEAPON_FIRETYPE_BURSTFIRE3 = 0x3,
+			WEAPON_FIRETYPE_BURSTFIRE4 = 0x4,
+			WEAPON_FIRETYPE_DOUBLEBARREL = 0x5,
+			WEAPON_FIRETYPECOUNT = 0x6,
+			WEAPON_FIRETYPE_BURSTFIRE_FIRST = 0x2,
+			WEAPON_FIRETYPE_BURSTFIRE_LAST = 0x4,
+		};
+
+		enum OffhandClass
+		{
+			OFFHAND_CLASS_NONE = 0x0,
+			OFFHAND_CLASS_FRAG_GRENADE = 0x1,
+			OFFHAND_CLASS_SMOKE_GRENADE = 0x2,
+			OFFHAND_CLASS_FLASH_GRENADE = 0x3,
+			OFFHAND_CLASS_THROWINGKNIFE = 0x4,
+			OFFHAND_CLASS_OTHER = 0x5,
+			OFFHAND_CLASS_COUNT = 0x6,
+		};
+
+		enum weapStance_t
+		{
+			WEAPSTANCE_STAND = 0x0,
+			WEAPSTANCE_DUCK = 0x1,
+			WEAPSTANCE_PRONE = 0x2,
+			WEAPSTANCE_NUM = 0x3
+		};
+
+		enum weaponIconRatioType_t
+		{
+			WEAPON_ICON_RATIO_1TO1 = 0x0,
+			WEAPON_ICON_RATIO_2TO1 = 0x1,
+			WEAPON_ICON_RATIO_4TO1 = 0x2,
+			WEAPON_ICON_RATIO_COUNT = 0x3
+		};
+
+		enum ammoCounterClipType_t
+		{
+			AMMO_COUNTER_CLIP_NONE = 0x0,
+			AMMO_COUNTER_CLIP_MAGAZINE = 0x1,
+			AMMO_COUNTER_CLIP_SHORTMAGAZINE = 0x2,
+			AMMO_COUNTER_CLIP_SHOTGUN = 0x3,
+			AMMO_COUNTER_CLIP_ROCKET = 0x4,
+			AMMO_COUNTER_CLIP_BELTFED = 0x5,
+			AMMO_COUNTER_CLIP_ALTWEAPON = 0x6,
+			AMMO_COUNTER_CLIP_COUNT = 0x7
+		};
+
+
+		struct StateTimers
+		{
+			int iFireDelay;
+			int iMeleeDelay;
+			int meleeChargeDelay;
+			int iDetonateDelay;
+			int iRechamberTime;
+			int rechamberTimeOneHanded;
+			int iRechamberBoltTime;
+			int iHoldFireTime;
+			int iDetonateTime;
+			int iMeleeTime;
+			int meleeChargeTime;
+			int iReloadTime;
+			int reloadShowRocketTime;
+			int iReloadEmptyTime;
+			int iReloadAddTime;
+			int iReloadStartTime;
+			int iReloadStartAddTime;
+			int iReloadEndTime;
+			int iDropTime;
+			int iRaiseTime;
+			int iAltDropTime;
+			int quickDropTime;
+			int quickRaiseTime;
+			int iBreachRaiseTime;
+			int iEmptyRaiseTime;
+			int iEmptyDropTime;
+			int sprintInTime;
+			int sprintLoopTime;
+			int sprintOutTime;
+			int stunnedTimeBegin;
+			int stunnedTimeLoop;
+			int stunnedTimeEnd;
+			int nightVisionWearTime;
+			int nightVisionWearTimeFadeOutEnd;
+			int nightVisionWearTimePowerUp;
+			int nightVisionRemoveTime;
+			int nightVisionRemoveTimePowerDown;
+			int nightVisionRemoveTimeFadeInStart;
+			int fuseTime;
+			int aiFuseTime;
+			int blastFrontTime;
+			int blastRightTime;
+			int blastBackTime;
+			int blastLeftTime;
+			int raiseInterruptableTime;
+			int firstRaiseInterruptableTime;
+			int reloadInterruptableTime;
+			int reloadEmptyInterruptableTime;
+			int fireInterruptableTime;
+		};
+
+		enum weapOverlayReticle_t
+		{
+			WEAPOVERLAYRETICLE_NONE = 0x0,
+			WEAPOVERLAYRETICLE_CROSSHAIR = 0x1,
+			WEAPOVERLAYRETICLE_NUM = 0x2
+		};
+
+		struct ADSOverlay
+		{
+			Material* shader;
+			Material* shaderLowRes;
+			Material* shaderEMP;
+			Material* shaderEMPLowRes;
+			weapOverlayReticle_t reticle;
+			float width;
+			float height;
+			float widthSplitscreen;
+			float heightSplitscreen;
+		};
+
+		enum WeapOverlayInteface_t
+		{
+			WEAPOVERLAYINTERFACE_NONE = 0x0,
+			WEAPOVERLAYINTERFACE_JAVELIN = 0x1,
+			WEAPOVERLAYINTERFACE_TURRETSCOPE = 0x2,
+			WEAPOVERLAYINTERFACECOUNT = 0x3
+		};
+
+		enum weapProjExposion_t
+		{
+			WEAPPROJEXP_GRENADE = 0x0,
+			WEAPPROJEXP_ROCKET = 0x1,
+			WEAPPROJEXP_FLASHBANG = 0x2,
+			WEAPPROJEXP_NONE = 0x3,
+			WEAPPROJEXP_DUD = 0x4,
+			WEAPPROJEXP_SMOKE = 0x5,
+			WEAPPROJEXP_HEAVY = 0x6,
+			WEAPPROJEXP_NUM = 0x7
+		};
+
+		enum WeapStickinessType
+		{
+			WEAPSTICKINESS_NONE = 0x0,
+			WEAPSTICKINESS_ALL = 0x1,
+			WEAPSTICKINESS_ALL_ORIENT = 0x2,
+			WEAPSTICKINESS_GROUND = 0x3,
+			WEAPSTICKINESS_GROUND_WITH_YAW = 0x4,
+			WEAPSTICKINESS_KNIFE = 0x5,
+			WEAPSTICKINESS_COUNT = 0x6
+		};
+
+		enum guidedMissileType_t
+		{
+			MISSILE_GUIDANCE_NONE = 0x0,
+			MISSILE_GUIDANCE_SIDEWINDER = 0x1,
+			MISSILE_GUIDANCE_HELLFIRE = 0x2,
+			MISSILE_GUIDANCE_JAVELIN = 0x3,
+			MISSILE_GUIDANCE_COUNT = 0x4
+		};
+
+		struct WeaponDef
+		{
+			const char* szOverlayName;
+			XModel** gunXModel;
+			XModel* handXModel;
+			const char** szXAnimsRightHanded;
+			const char** szXAnimsLeftHanded;
+			const char* szModeName;
+			unsigned short* notetrackSoundMapKeys;
+			unsigned short* notetrackSoundMapValues;
+			unsigned short* notetrackRumbleMapKeys;
+			unsigned short* notetrackRumbleMapValues;
+			int playerAnimType;
+			weapType_t weapType;
+			weapClass_t weapClass;
+			PenetrateType penetrateType;
+			weapInventoryType_t inventoryType;
+			weapFireType_t fireType;
+			OffhandClass offhandClass;
+			weapStance_t stance;
+			FxEffectDef* viewFlashEffect;
+			FxEffectDef* worldFlashEffect;
+			snd_alias_list_t* pickupSound;
+			snd_alias_list_t* pickupSoundPlayer;
+			snd_alias_list_t* ammoPickupSound;
+			snd_alias_list_t* ammoPickupSoundPlayer;
+			snd_alias_list_t* projectileSound;
+			snd_alias_list_t* pullbackSound;
+			snd_alias_list_t* pullbackSoundPlayer;
+			snd_alias_list_t* fireSound;
+			snd_alias_list_t* fireSoundPlayer;
+			snd_alias_list_t* fireSoundPlayerAkimbo;
+			snd_alias_list_t* fireLoopSound;
+			snd_alias_list_t* fireLoopSoundPlayer;
+			snd_alias_list_t* fireStopSound;
+			snd_alias_list_t* fireStopSoundPlayer;
+			snd_alias_list_t* fireLastSound;
+			snd_alias_list_t* fireLastSoundPlayer;
+			snd_alias_list_t* emptyFireSound;
+			snd_alias_list_t* emptyFireSoundPlayer;
+			snd_alias_list_t* meleeSwipeSound;
+			snd_alias_list_t* meleeSwipeSoundPlayer;
+			snd_alias_list_t* meleeHitSound;
+			snd_alias_list_t* meleeMissSound;
+			snd_alias_list_t* rechamberSound;
+			snd_alias_list_t* rechamberSoundPlayer;
+			snd_alias_list_t* reloadSound;
+			snd_alias_list_t* reloadSoundPlayer;
+			snd_alias_list_t* reloadEmptySound;
+			snd_alias_list_t* reloadEmptySoundPlayer;
+			snd_alias_list_t* reloadStartSound;
+			snd_alias_list_t* reloadStartSoundPlayer;
+			snd_alias_list_t* reloadEndSound;
+			snd_alias_list_t* reloadEndSoundPlayer;
+			snd_alias_list_t* detonateSound;
+			snd_alias_list_t* detonateSoundPlayer;
+			snd_alias_list_t* nightVisionWearSound;
+			snd_alias_list_t* nightVisionWearSoundPlayer;
+			snd_alias_list_t* nightVisionRemoveSound;
+			snd_alias_list_t* nightVisionRemoveSoundPlayer;
+			snd_alias_list_t* altSwitchSound;
+			snd_alias_list_t* altSwitchSoundPlayer;
+			snd_alias_list_t* raiseSound;
+			snd_alias_list_t* raiseSoundPlayer;
+			snd_alias_list_t* firstRaiseSound;
+			snd_alias_list_t* firstRaiseSoundPlayer;
+			snd_alias_list_t* putawaySound;
+			snd_alias_list_t* putawaySoundPlayer;
+			snd_alias_list_t* scanSound;
+			snd_alias_list_t* changeVariableZoomSound;
+			snd_alias_list_t** bounceSound;
+			snd_alias_list_t** rollingSound;
+			FxEffectDef* viewShellEjectEffect;
+			FxEffectDef* worldShellEjectEffect;
+			FxEffectDef* viewLastShotEjectEffect;
+			FxEffectDef* worldLastShotEjectEffect;
+			Material* reticleCenter;
+			Material* reticleSide;
+			int iReticleCenterSize;
+			int iReticleSideSize;
+			int iReticleMinOfs;
+			activeReticleType_t activeReticleType;
+			float vStandMove[3];
+			float vStandRot[3];
+			float strafeMove[3];
+			float strafeRot[3];
+			float vDuckedOfs[3];
+			float vDuckedMove[3];
+			float vDuckedRot[3];
+			float vProneOfs[3];
+			float vProneMove[3];
+			float vProneRot[3];
+			float fPosMoveRate;
+			float fPosProneMoveRate;
+			float fStandMoveMinSpeed;
+			float fDuckedMoveMinSpeed;
+			float fProneMoveMinSpeed;
+			float fPosRotRate;
+			float fPosProneRotRate;
+			float fStandRotMinSpeed;
+			float fDuckedRotMinSpeed;
+			float fProneRotMinSpeed;
+			XModel** worldModel;
+			XModel* worldClipModel;
+			XModel* rocketModel;
+			XModel* knifeModel;
+			XModel* worldKnifeModel;
+			Material* hudIcon;
+			weaponIconRatioType_t hudIconRatio;
+			Material* pickupIcon;
+			weaponIconRatioType_t pickupIconRatio;
+			Material* ammoCounterIcon;
+			weaponIconRatioType_t ammoCounterIconRatio;
+			ammoCounterClipType_t ammoCounterClip;
+			int iStartAmmo;
+			const char* szAmmoName;
+			int iAmmoIndex;
+			const char* szClipName;
+			int iClipIndex;
+			int iMaxAmmo;
+			int shotCount;
+			const char* szSharedAmmoCapName;
+			int iSharedAmmoCapIndex;
+			int iSharedAmmoCap;
+			int damage;
+			int playerDamage;
+			int iMeleeDamage;
+			int iDamageType;
+			StateTimers stateTimers;
+			StateTimers akimboStateTimers;
+			float autoAimRange;
+			float aimAssistRange;
+			float aimAssistRangeAds;
+			float aimPadding;
+			float enemyCrosshairRange;
+			float moveSpeedScale;
+			float adsMoveSpeedScale;
+			float sprintDurationScale;
+			float fAdsZoomInFrac;
+			float fAdsZoomOutFrac;
+			ADSOverlay overlay;
+			WeapOverlayInteface_t overlayInterface;
+			float fAdsBobFactor;
+			float fAdsViewBobMult;
+			float fHipSpreadStandMin;
+			float fHipSpreadDuckedMin;
+			float fHipSpreadProneMin;
+			float hipSpreadStandMax;
+			float hipSpreadDuckedMax;
+			float hipSpreadProneMax;
+			float fHipSpreadDecayRate;
+			float fHipSpreadFireAdd;
+			float fHipSpreadTurnAdd;
+			float fHipSpreadMoveAdd;
+			float fHipSpreadDuckedDecay;
+			float fHipSpreadProneDecay;
+			float fHipReticleSidePos;
+			float fAdsIdleAmount;
+			float fHipIdleAmount;
+			float adsIdleSpeed;
+			float hipIdleSpeed;
+			float fIdleCrouchFactor;
+			float fIdleProneFactor;
+			float fGunMaxPitch;
+			float fGunMaxYaw;
+			float adsIdleLerpStartTime;
+			float adsIdleLerpTime;
+			float swayMaxAngle;
+			float swayLerpSpeed;
+			float swayPitchScale;
+			float swayYawScale;
+			float swayHorizScale;
+			float swayVertScale;
+			float swayShellShockScale;
+			float adsSwayMaxAngle;
+			float adsSwayLerpSpeed;
+			float adsSwayPitchScale;
+			float adsSwayYawScale;
+			float adsSwayHorizScale;
+			float adsSwayVertScale;
+			float adsViewErrorMin;
+			float adsViewErrorMax;
+			PhysCollmap* physCollmap;
+			float dualWieldViewModelOffset;
+			weaponIconRatioType_t killIconRatio;
+			int iReloadAmmoAdd;
+			int iReloadStartAdd;
+			int ammoDropStockMin;
+			int ammoDropClipPercentMin;
+			int ammoDropClipPercentMax;
+			int iExplosionRadius;
+			int iExplosionRadiusMin;
+			int iExplosionInnerDamage;
+			int iExplosionOuterDamage;
+			float damageConeAngle;
+			float bulletExplDmgMult;
+			float bulletExplRadiusMult;
+			int iProjectileSpeed;
+			int iProjectileSpeedUp;
+			int iProjectileSpeedForward;
+			int iProjectileActivateDist;
+			float projLifetime;
+			float timeToAccelerate;
+			float projectileCurvature;
+			XModel* projectileModel;
+			weapProjExposion_t projExplosion;
+			FxEffectDef* projExplosionEffect;
+			FxEffectDef* projDudEffect;
+			snd_alias_list_t* projExplosionSound;
+			snd_alias_list_t* projDudSound;
+			WeapStickinessType stickiness;
+			float lowAmmoWarningThreshold;
+			float ricochetChance;
+			bool riotShieldEnableDamage;
+			int riotShieldHealth;
+			float riotShieldDamageMult;
+			float* parallelBounce;
+			float* perpendicularBounce;
+			FxEffectDef* projTrailEffect;
+			FxEffectDef* projBeaconEffect;
+			float vProjectileColor[3];
+			guidedMissileType_t guidedMissileType;
+			float maxSteeringAccel;
+			int projIgnitionDelay;
+			FxEffectDef* projIgnitionEffect;
+			snd_alias_list_t* projIgnitionSound;
+			float fAdsAimPitch;
+			float fAdsCrosshairInFrac;
+			float fAdsCrosshairOutFrac;
+			int adsGunKickReducedKickBullets;
+			float adsGunKickReducedKickPercent;
+			float fAdsGunKickPitchMin;
+			float fAdsGunKickPitchMax;
+			float fAdsGunKickYawMin;
+			float fAdsGunKickYawMax;
+			float fAdsGunKickAccel;
+			float fAdsGunKickSpeedMax;
+			float fAdsGunKickSpeedDecay;
+			float fAdsGunKickStaticDecay;
+			float fAdsViewKickPitchMin;
+			float fAdsViewKickPitchMax;
+			float fAdsViewKickYawMin;
+			float fAdsViewKickYawMax;
+			float fAdsViewScatterMin;
+			float fAdsViewScatterMax;
+			float fAdsSpread;
+			int hipGunKickReducedKickBullets;
+			float hipGunKickReducedKickPercent;
+			float fHipGunKickPitchMin;
+			float fHipGunKickPitchMax;
+			float fHipGunKickYawMin;
+			float fHipGunKickYawMax;
+			float fHipGunKickAccel;
+			float fHipGunKickSpeedMax;
+			float fHipGunKickSpeedDecay;
+			float fHipGunKickStaticDecay;
+			float fHipViewKickPitchMin;
+			float fHipViewKickPitchMax;
+			float fHipViewKickYawMin;
+			float fHipViewKickYawMax;
+			float fHipViewScatterMin;
+			float fHipViewScatterMax;
+			float fightDist;
+			float maxDist;
+			const char* accuracyGraphName[2];
+			float(*originalAccuracyGraphKnots[2])[2];
+			unsigned short originalAccuracyGraphKnotCount[2];
+			int iPositionReloadTransTime;
+			float leftArc;
+			float rightArc;
+			float topArc;
+			float bottomArc;
+			float accuracy;
+			float aiSpread;
+			float playerSpread;
+			float minTurnSpeed[2];
+			float maxTurnSpeed[2];
+			float pitchConvergenceTime;
+			float yawConvergenceTime;
+			float suppressTime;
+			float maxRange;
+			float fAnimHorRotateInc;
+			float fPlayerPositionDist;
+			const char* szUseHintString;
+			const char* dropHintString;
+			int iUseHintStringIndex;
+			int dropHintStringIndex;
+			float horizViewJitter;
+			float vertViewJitter;
+			float scanSpeed;
+			float scanAccel;
+			int scanPauseTime;
+			const char* szScript;
+			float fOOPosAnimLength[2];
+			int minDamage;
+			int minPlayerDamage;
+			float fMaxDamageRange;
+			float fMinDamageRange;
+			float destabilizationRateTime;
+			float destabilizationCurvatureMax;
+			int destabilizeDistance;
+			float* locationDamageMultipliers;
+			const char* fireRumble;
+			const char* meleeImpactRumble;
+			TracerDef* tracerType;
+			bool turretADSEnabled;
+			float turretADSTime;
+			float turretFov;
+			float turretFovADS;
+			float turretScopeZoomRate;
+			float turretScopeZoomMin;
+			float turretScopeZoomMax;
+			float turretOverheatUpRate;
+			float turretOverheatDownRate;
+			float turretOverheatPenalty;
+			snd_alias_list_t* turretOverheatSound;
+			FxEffectDef* turretOverheatEffect;
+			const char* turretBarrelSpinRumble;
+			float turretBarrelSpinSpeed;
+			float turretBarrelSpinUpTime;
+			float turretBarrelSpinDownTime;
+			snd_alias_list_t* turretBarrelSpinMaxSnd;
+			snd_alias_list_t* turretBarrelSpinUpSnd[4];
+			snd_alias_list_t* turretBarrelSpinDownSnd[4];
+			snd_alias_list_t* missileConeSoundAlias;
+			snd_alias_list_t* missileConeSoundAliasAtBase;
+			float missileConeSoundRadiusAtTop;
+			float missileConeSoundRadiusAtBase;
+			float missileConeSoundHeight;
+			float missileConeSoundOriginOffset;
+			float missileConeSoundVolumescaleAtCore;
+			float missileConeSoundVolumescaleAtEdge;
+			float missileConeSoundVolumescaleCoreSize;
+			float missileConeSoundPitchAtTop;
+			float missileConeSoundPitchAtBottom;
+			float missileConeSoundPitchTopSize;
+			float missileConeSoundPitchBottomSize;
+			float missileConeSoundCrossfadeTopSize;
+			float missileConeSoundCrossfadeBottomSize;
+			bool sharedAmmo;
+			bool lockonSupported;
+			bool requireLockonToFire;
+			bool isAirburstWeapon;
+			bool bigExplosion;
+			bool noAdsWhenMagEmpty;
+			bool avoidDropCleanup;
+			bool inheritsPerks;
+			bool crosshairColorChange;
+			bool bRifleBullet;
+			bool armorPiercing;
+			bool bBoltAction;
+			bool aimDownSight;
+			bool canHoldBreath;
+			bool canVariableZoom;
+			bool bRechamberWhileAds;
+			bool bBulletExplosiveDamage;
+			bool bCookOffHold;
+			bool bClipOnly;
+			bool noAmmoPickup;
+			bool adsFireOnly;
+			bool cancelAutoHolsterWhenEmpty;
+			bool disableSwitchToWhenEmpty;
+			bool suppressAmmoReserveDisplay;
+			bool laserSightDuringNightvision;
+			bool markableViewmodel;
+			bool noDualWield;
+			bool flipKillIcon;
+			bool bNoPartialReload;
+			bool bSegmentedReload;
+			bool blocksProne;
+			bool silenced;
+			bool isRollingGrenade;
+			bool projExplosionEffectForceNormalUp;
+			bool bProjImpactExplode;
+			bool stickToPlayers;
+			bool stickToVehicles;
+			bool stickToTurrets;
+			bool hasDetonator;
+			bool disableFiring;
+			bool timedDetonation;
+			bool rotate;
+			bool holdButtonToThrow;
+			bool freezeMovementWhenFiring;
+			bool thermalScope;
+			bool altModeSameWeapon;
+			bool turretBarrelSpinEnabled;
+			bool missileConeSoundEnabled;
+			bool missileConeSoundPitchshiftEnabled;
+			bool missileConeSoundCrossfadeEnabled;
+			bool offhandHoldIsCancelable;
+			bool doNotAllowAttachmentsToOverrideSpread;
+			unsigned short stowTag;
+			XModel* stowOffsetModel;
+		};
+
+
+
+
+		struct AnimOverrideEntry
+		{
+			unsigned short attachment1;
+			unsigned short attachment2;
+			const char* overrideAnim;
+			const char* altmodeAnim;
+			unsigned int animTreeType;
+			int animTime;
+			int altTime;
+		};
+
+		struct SoundOverrideEntry
+		{
+			unsigned short attachment1;
+			unsigned short attachment2;
+			snd_alias_list_t* overrideSound;
+			snd_alias_list_t* altmodeSound;
+			unsigned int soundType;
+		};
+
+		struct FXOverrideEntry
+		{
+			unsigned short attachment1;
+			unsigned short attachment2;
+			FxEffectDef* overrideFX;
+			FxEffectDef* altmodeFX;
+			unsigned int fxType;
+		};
+
+		struct ReloadStateTimerEntry
+		{
+			int attachment;
+			int reloadAddTime;
+			int reloadStartAddTime;
+		};
+
+		struct NoteTrackToSoundEntry
+		{
+			int attachment;
+			unsigned short* notetrackSoundMapKeys;
+			unsigned short* notetrackSoundMapValues;
+		};
+
+		enum AttachmentType
+		{
+			ATTACHMENT_SCOPE = 0x0,
+			ATTACHMENT_UNDERBARREL = 0x1,
+			ATTACHMENT_OTHER = 0x2,
+			ATTACHMENT_COUNT = 0x3
+		};
+
+		struct AttGeneral
+		{
+			bool boltAction;
+			bool inheritsPerks;
+			float enemyCrosshairRange;
+			Material* reticleCenter;
+			Material* reticleSide;
+			int reticleCenterSize;
+			int reticleSideSize;
+			float moveSpeedScale;
+			float adsMoveSpeedScale;
+		};
+
+
+		struct AttAmmoGeneral
+		{
+			PenetrateType penetrateType;
+			float penetrateMultiplier;
+			ImpactType impactType;
+			weapFireType_t fireType;
+			TracerDef* tracerType;
+			bool rifleBullet;
+			bool armorPiercing;
+		};
+
+		struct AttSight
+		{
+			bool aimDownSight;
+			bool adsFire;
+			bool rechamberWhileAds;
+			bool noAdsWhenMagEmpty;
+			bool canHoldBreath;
+			bool canVariableZoom;
+			bool hideRailWithThisScope;
+		};
+
+		struct AttDamage
+		{
+			int damage;
+			int minDamage;
+			int meleeDamage;
+			float maxDamageRange;
+			float minDamageRange;
+			int playerDamage;
+			int minPlayerDamage;
+		};
+
+		struct AttReload
+		{
+			bool noPartialReload;
+			bool segmentedReload;
+		};
+
+		struct AttAmmunition
+		{
+			int maxAmmo;
+			int startAmmo;
+			int clipSize;
+			int shotCount;
+			int reloadAmmoAdd;
+			int reloadStartAdd;
+		};
+
+		struct AttAddOns
+		{
+			bool motionTracker;
+			bool silenced;
+		};
+
+		struct AttAimAssist
+		{
+			float autoAimRange;
+			float aimAssistRange;
+			float aimAssistRangeAds;
+		};
+
+		struct AttLocationDamage
+		{
+			float locNone;
+			float locHelmet;
+			float locHead;
+			float locNeck;
+			float locTorsoUpper;
+			float locTorsoLower;
+			float locRightArmUpper;
+			float locRightArmLower;
+			float locRightHand;
+			float locLeftArmUpper;
+			float locLeftArmLower;
+			float locLeftHand;
+			float locRightLegUpper;
+			float locRightLegLower;
+			float locRightFoot;
+			float locLeftLegUpper;
+			float locLeftLegLower;
+			float locLeftFoot;
+			float locGun;
+		};
+
+		struct AttIdleSettings
+		{
+			float hipIdleAmount;
+			float hipIdleSpeed;
+			float idleCrouchFactor;
+			float idleProneFactor;
+			float adsIdleLerpStartTime;
+			float adsIdleLerpTime;
+		};
+
+		struct AttADSSettings
+		{
+			float adsSpread;
+			float adsAimPitch;
+			float adsTransInTime;
+			float adsTransOutTime;
+			int adsReloadTransTime;
+			float adsCrosshairInFrac;
+			float adsCrosshairOutFrac;
+			float adsZoomFov;
+			float adsZoomInFrac;
+			float adsZoomOutFrac;
+			float adsBobFactor;
+			float adsViewBobMult;
+			float adsViewErrorMin;
+			float adsViewErrorMax;
+		};
+
+		struct AttHipSpread
+		{
+			float hipSpreadStandMin;
+			float hipSpreadDuckedMin;
+			float hipSpreadProneMin;
+			float hipSpreadMax;
+			float hipSpreadDuckedMax;
+			float hipSpreadProneMax;
+			float hipSpreadFireAdd;
+			float hipSpreadTurnAdd;
+			float hipSpreadMoveAdd;
+			float hipSpreadDecayRate;
+			float hipSpreadDuckedDecay;
+			float hipSpreadProneDecay;
+		};
+
+		struct AttGunKick
+		{
+			int hipGunKickReducedKickBullets;
+			float hipGunKickReducedKickPercent;
+			float hipGunKickPitchMin;
+			float hipGunKickPitchMax;
+			float hipGunKickYawMin;
+			float hipGunKickYawMax;
+			float hipGunKickAccel;
+			float hipGunKickSpeedMax;
+			float hipGunKickSpeedDecay;
+			float hipGunKickStaticDecay;
+			int adsGunKickReducedKickBullets;
+			float adsGunKickReducedKickPercent;
+			float adsGunKickPitchMin;
+			float adsGunKickPitchMax;
+			float adsGunKickYawMin;
+			float adsGunKickYawMax;
+			float adsGunKickAccel;
+			float adsGunKickSpeedMax;
+			float adsGunKickSpeedDecay;
+			float adsGunKickStaticDecay;
+		};
+
+
+
+		struct AttViewKick
+		{
+			float hipViewKickPitchMin;
+			float hipViewKickPitchMax;
+			float hipViewKickYawMin;
+			float hipViewKickYawMax;
+			float hipViewKickCenterSpeed;
+			float adsViewKickPitchMin;
+			float adsViewKickPitchMax;
+			float adsViewKickYawMin;
+			float adsViewKickYawMax;
+			float adsViewKickCenterSpeed;
+		};
+
+		struct AttADSOverlay
+		{
+			ADSOverlay overlay;
+			bool thermalScope;
+		};
+
+		struct AttUI
+		{
+			Material* dpadIcon;
+			Material* ammoCounterIcon;
+			weaponIconRatioType_t dpadIconRatio;
+			weaponIconRatioType_t ammoCounterIconRatio;
+			ammoCounterClipType_t ammoCounterClip;
+		};
+
+		struct AttRumbles
+		{
+			const char* fireRumble;
+			const char* meleeImpactRumble;
+		};
+
+		struct AttProjectile
+		{
+			int explosionRadius;
+			int explosionInnerDamage;
+			int explosionOuterDamage;
+			float damageConeAngle;
+			int projectileSpeed;
+			int projectileSpeedUp;
+			int projectileActivateDist;
+			float projectileLifetime;
+			XModel* projectileModel;
+			weapProjExposion_t projExplosionType;
+			FxEffectDef* projExplosionEffect;
+			bool projExplosionEffectForceNormalUp;
+			snd_alias_list_t* projExplosionSound;
+			FxEffectDef* projDudEffect;
+			snd_alias_list_t* projDudSound;
+			bool projImpactExplode;
+			float destabilizationRateTime;
+			float destabilizationCurvatureMax;
+			int destabilizeDistance;
+			FxEffectDef* projTrailEffect;
+			int projIgnitionDelay;
+			FxEffectDef* projIgnitionEffect;
+			snd_alias_list_t* projIgnitionSound;
+		};
+
+		struct WeaponAttachment
+		{
+			const char* szInternalName;
+			const char* szDisplayName;
+			AttachmentType type;
+			weapType_t weaponType;
+			weapClass_t weapClass;
+			XModel** worldModels;
+			XModel** viewModels;
+			XModel** reticleViewModels;
+			AttAmmoGeneral* ammogeneral; // Tracer
+			AttSight* sight;
+			AttReload* reload;
+			AttAddOns* addOns;
+			AttGeneral* general; // Reticle
+			AttAimAssist* aimAssist;
+			AttAmmunition* ammunition;
+			AttDamage* damage;
+			AttLocationDamage* locationDamage;
+			AttIdleSettings* idleSettings;
+			AttADSSettings* adsSettings;
+			AttADSSettings* adsSettingsMain;
+			AttHipSpread* hipSpread;
+			AttGunKick* gunKick;
+			AttViewKick* viewKick;
+			AttADSOverlay* adsOverlay; // Reticle materials
+			AttUI* ui; // DPad Icon
+			AttRumbles* rumbles;
+			AttProjectile* projectile; // Proj (probably ignorable)
+			float ammunitionScale;
+			float damageScale;
+			float damageScaleMin;
+			float stateTimersScale;
+			float fireTimersScale;
+			float idleSettingsScale;
+			float adsSettingsScale;
+			float adsSettingsScaleMain;
+			float hipSpreadScale;
+			float gunKickScale;
+			float viewKickScale;
+			float viewCenterScale;
+			int loadIndex;
+			bool hideIronSightsWithThisAttachment;
+			bool shareAmmoWithAlt;
+		};
+
+		struct WeaponCompleteDef
+		{
+			const char* szInternalName;
+			WeaponDef* weapDef;
+			const char* szDisplayName;
+			unsigned short* hideTags;
+			WeaponAttachment** scopes;
+			WeaponAttachment** underBarrels;
+			WeaponAttachment** others;
+			const char** szXAnims;
+			unsigned int numAnimOverrides;
+			AnimOverrideEntry* animOverrides;
+			unsigned int numSoundOverrides;
+			SoundOverrideEntry* soundOverrides;
+			unsigned int numFXOverrides;
+			FXOverrideEntry* fxOverrides;
+			unsigned int numReloadStateTimerOverrides;
+			ReloadStateTimerEntry* reloadOverrides;
+			unsigned int numNotetrackOverrides;
+			NoteTrackToSoundEntry* notetrackOverrides;
+			float fAdsZoomFov;
+			int iAdsTransInTime;
+			int iAdsTransOutTime;
+			int iClipSize;
+			ImpactType impactType;
+			int iFireTime;
+			int iFireTimeAkimbo;
+			weaponIconRatioType_t dpadIconRatio;
+			float penetrateMultiplier;
+			float fAdsViewKickCenterSpeed;
+			float fHipViewKickCenterSpeed;
+			const char* szAltWeaponName;
+			int altWeapon;
+			int iAltRaiseTime;
+			int iAltRaiseTimeAkimbo;
+			Material* killIcon;
+			Material* dpadIcon;
+			int fireAnimLength;
+			int fireAnimLengthAkimbo;
+			int iFirstRaiseTime;
+			int iFirstRaiseTimeAkimbo;
+			int ammoDropStockMax;
+			float adsDofStart;
+			float adsDofEnd;
+			unsigned short accuracyGraphKnotCount[2];
+			float(*accuracyGraphKnots[2])[2];
+			bool motionTracker;
+			bool enhanced;
+			bool dpadIconShowsAmmo;
+		};
+
 		union XAssetHeader
 		{
 			void* data;
@@ -733,7 +1761,7 @@ namespace game
 			TECHNIQUE_LIT_INSTANCED_DFOG,
 			TECHNIQUE_LIT_INSTANCED_SUN,
 			TECHNIQUE_LIT_INSTANCED_SUN_DFOG,
-			TECHNIQUE_LIT_INSTANCED_SUN_SHADOW ,
+			TECHNIQUE_LIT_INSTANCED_SUN_SHADOW,
 			TECHNIQUE_LIT_INSTANCED_SUN_SHADOW_DFOG,
 			TECHNIQUE_LIT_INSTANCED_SPOT,
 			TECHNIQUE_LIT_INSTANCED_SPOT_DFOG,
@@ -795,7 +1823,7 @@ namespace game
 			CONST_SRC_CODE_COLOR_MATRIX_R,
 			CONST_SRC_CODE_COLOR_MATRIX_G,
 			CONST_SRC_CODE_COLOR_MATRIX_B,
-				CONST_SRC_CODE_UNK1,
+			CONST_SRC_CODE_UNK1,
 			CONST_SRC_CODE_SHADOWMAP_POLYGON_OFFSET,
 			CONST_SRC_CODE_RENDER_TARGET_SIZE,
 			CONST_SRC_CODE_RENDER_SOURCE_SIZE,
@@ -1123,7 +2151,7 @@ namespace game
 			unsigned short passCount;
 			MaterialPass passArray[1];
 		};
-		
+
 		struct MaterialTechniqueSet
 		{
 			const char* name;
@@ -1409,28 +2437,28 @@ namespace game
 		// Taken from wii, might be 100% correct
 		enum SndChannel
 		{
-			SND_CHANNEL_PHYSICS		 = 0,		// CONFIRMED
-			SND_CHANNEL_AMBDIST1	 = 1,		// CONFIRMED
-			SND_CHANNEL_AMBDIST2	 = 2,
-				SND_CHANNEL_ALARM1,
-			SND_CHANNEL_AUTO		= 4,		// CONFIRMED
+			SND_CHANNEL_PHYSICS = 0,		// CONFIRMED
+			SND_CHANNEL_AMBDIST1 = 1,		// CONFIRMED
+			SND_CHANNEL_AMBDIST2 = 2,
+			SND_CHANNEL_ALARM1,
+			SND_CHANNEL_AUTO = 4,		// CONFIRMED
 			SND_CHANNEL_AUTO2,
-			SND_CHANNEL_AUTO2D		= 6,		// CONFIRMED
+			SND_CHANNEL_AUTO2D = 6,		// CONFIRMED
 			SND_CHANNEL_AUTODOG,
-			SND_CHANNEL_EXPLOSIONDIST1	= 8,	// CONFIRMED => should become EFFECTS1
-			SND_CHANNEL_EXPLOSIONDIST2	= 9,	// CONFIRMED => should become AUTO
+			SND_CHANNEL_EXPLOSIONDIST1 = 8,	// CONFIRMED => should become EFFECTS1
+			SND_CHANNEL_EXPLOSIONDIST2 = 9,	// CONFIRMED => should become AUTO
 			SND_CHANNEL_EXPLOSIVEIMPACT,
-			SND_CHANNEL_ELEMENT			= 11,	// CONFIRMED
-			SND_CHANNEL_ELEMENT_INT		= 12,	// CONFIRMED => should become AUTO
-			SND_CHANNEL_ELEMENT_EXT		= 13,	// CONFIRMED => should become AUTO
-			SND_CHANNEL_BULLETIMPACT	= 14,	// CONFIRMED
+			SND_CHANNEL_ELEMENT = 11,	// CONFIRMED
+			SND_CHANNEL_ELEMENT_INT = 12,	// CONFIRMED => should become AUTO
+			SND_CHANNEL_ELEMENT_EXT = 13,	// CONFIRMED => should become AUTO
+			SND_CHANNEL_BULLETIMPACT = 14,	// CONFIRMED
 			SND_CHANNEL_BULLETFLESH1,
 			SND_CHANNEL_BULLETFLESH2,
 			SND_CHANNEL_BULLETWHIZBY,
 			SND_CHANNEL_VEHICLE,
 			SND_CHANNEL_VEHICLELIMITED,
-			SND_CHANNEL_MENU			= 20,	// CONFIRMED
-			SND_CHANNEL_BODY			= 21,	// CONFIRMED
+			SND_CHANNEL_MENU = 20,	// CONFIRMED
+			SND_CHANNEL_BODY = 21,	// CONFIRMED
 			SND_CHANNEL_BODY2D,
 			SND_CHANNEL_RELOAD,
 			SND_CHANNEL_RELOAD2D,
@@ -1461,8 +2489,8 @@ namespace game
 			SND_CHANNEL_LOCAL,
 			SND_CHANNEL_LOCAL2,
 			SND_CHANNEL_LOCAL3,
-			SND_CHANNEL_AMBIENT		= 52,	// CONFIRMED
-			SND_CHANNEL_HURT		= 53,	// CONFIRMED
+			SND_CHANNEL_AMBIENT = 52,	// CONFIRMED
+			SND_CHANNEL_HURT = 53,	// CONFIRMED
 			SND_CHANNEL_PLAYER1,
 			SND_CHANNEL_PLAYER2,
 			SND_CHANNEL_MUSIC,
@@ -1619,7 +2647,7 @@ namespace game
 			const char* name;
 			const char* autoCompleteDir;
 			const char* autoCompleteExt;
-			void (__cdecl *function)();
+			void(__cdecl* function)();
 			int flags;
 		};
 
@@ -3151,7 +4179,7 @@ namespace game
 			float radiusSquared;
 		};
 
-		
+
 
 		struct XModel
 		{
@@ -3163,8 +4191,8 @@ namespace game
 			unsigned int noScalePartBits[6];
 			unsigned short* boneNames;
 			unsigned char* parentList;
-			short(*quats)[4];
-			float(*trans)[3];
+			short* quats;
+			float * trans;
 			unsigned char* partClassification;
 			DObjAnimMat* baseMat;
 			Material** materialHandles;

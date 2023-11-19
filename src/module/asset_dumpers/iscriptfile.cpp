@@ -87,7 +87,7 @@ namespace asset_dumpers
 	{
 		// Fog works completely differently in iw5 but the settings are very similar
 
-		auto regex_str_template = "(?:{} *= *((?:[0-9]|\\.)*))";
+		const auto regex_str_template = "(?:{} *= *((?:[0-9]|\\.)*))";
 		const std::string members[] =
 		{
 			"startdist", "halfwaydist", "red", "green" ,"blue", "maxopacity", "transitiontime"
