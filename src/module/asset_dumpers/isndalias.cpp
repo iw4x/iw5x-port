@@ -134,14 +134,6 @@ namespace asset_dumpers
 				assert(false);
 			}
 
-			//
-			if (native_alias->aliasName == "emt_mtl_chainlink_rattle_ext"s)
-			{
-				printf("");
-			}
-			//
-
-
 			iw4_alias->flags.intValue = 0;
 			iw4_alias->flags.looping = native_alias->flags.looping;
 			iw4_alias->flags.isMaster = native_alias->flags.isMaster;
@@ -268,7 +260,7 @@ namespace asset_dumpers
 							exporter::add_to_source(game::native::XAssetType::ASSET_TYPE_SOUND, name);
 						}
 
-						convert_and_write(header, true);
+						convert_and_write(header);
 					}
 					else
 					{

@@ -137,7 +137,7 @@ namespace asset_dumpers
 
 					if (header.data)
 					{
-						convert_and_write(header, true);
+						convert_and_write(header);
 						exporter::add_to_source(game::native::ASSET_TYPE_MATERIAL, name);
 						console::info("successfullly dumped material %s!\n", name);
 					}
