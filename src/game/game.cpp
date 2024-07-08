@@ -19,6 +19,7 @@ namespace game
 		DB_FindXAssetHeader_t DB_FindXAssetHeader;
 		DB_IsXAssetDefault_t DB_IsXAssetDefault;
 		DB_EnumXAssets_t DB_EnumXAssets;
+		DB_GetXAssetSizeHandler_t DB_GetXAssetSizeHandler;
 
 		Dvar_RegisterBool_t Dvar_RegisterBool;
 		Dvar_RegisterString_t Dvar_RegisterString;
@@ -131,6 +132,8 @@ namespace game
 
 		int* g_script_error_level;
 		jmp_buf* g_script_error;
+		int* g_poolSize;
+		void** DB_XAssetPool;
 
 		scr_classStruct_t* g_classMap;
 
@@ -744,6 +747,7 @@ namespace game
 		native::DB_FindXAssetHeader = native::DB_FindXAssetHeader_t(SELECT_VALUE(0x4FF000, 0x4CA620));
 		native::DB_IsXAssetDefault = native::DB_IsXAssetDefault_t(SELECT_VALUE(0x4868E0, 0x4CA800));
 		native::DB_EnumXAssets = native::DB_EnumXAssets_t(0x5B6A60);
+		native::DB_GetXAssetSizeHandler = native::DB_GetXAssetSizeHandler_t(0x4B7C50);
 
 		native::Dvar_RegisterBool = native::Dvar_RegisterBool_t(SELECT_VALUE(0x4914D0, 0x5BE9F0));
 		native::Dvar_RegisterString = native::Dvar_RegisterString_t(SELECT_VALUE(0x5197F0, 0x5BEC90));
@@ -863,6 +867,9 @@ namespace game
 
 		native::g_script_error_level = reinterpret_cast<int*>(SELECT_VALUE(0x1BEFCFC, 0x20B21FC));
 		native::g_script_error = reinterpret_cast<jmp_buf*>(SELECT_VALUE(0x1BF1D18, 0x20B4218));
+		native::g_poolSize = reinterpret_cast<int*>(0x8AAF78);
+
+		native::DB_XAssetPool = reinterpret_cast<void**>(0x8AB258);
 
 		native::g_classMap = reinterpret_cast<native::scr_classStruct_t*>(SELECT_VALUE(0x92D140, 0x8B4300));
 

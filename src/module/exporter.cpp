@@ -492,25 +492,32 @@ void exporter::add_commands()
 			info.allocFlags = 0;
 			info.freeFlags = 0;
 
-			game::native::DB_LoadXAssets(&info, 1, 0);
+			game::native::DB_LoadXAssets(&info, 1, game::native::DB_LOAD_SYNC);
+
 			console::info("successfully loaded %s!\n", info.name);
 		});
 }
 
 void exporter::load_common_zones()
 {
-	const std::string common_zones[] = {
-		"code_post_gfx_mp",
-		"localized_code_post_gfx_mp",
-
-		// If we include these we can't loadzone some maps anymore, like mp_underground
-		//"ui_mp",
-		//"localized_ui_mp",
-
-		"patch_mp",
-		"common_mp",
-		"localized_common_mp",
-	};
+	std::vector<std::string> common_zones{};
+	
+	
+	if (utils::flags::has_flag("dump_sp"))
+	{
+		common_zones.emplace_back("code_post_gfx");
+		common_zones.emplace_back("ui");
+		common_zones.emplace_back("common");
+		common_zones.emplace_back("patch");
+	}
+	else
+	{
+		common_zones.emplace_back("code_post_gfx_mp");
+		common_zones.emplace_back("localized_code_post_gfx_mp");
+		common_zones.emplace_back("localized_common_mp");
+		common_zones.emplace_back("patch_mp");
+		common_zones.emplace_back("common_mp");
+	}
 
 	console::info("loading common zones...\n");
 
@@ -734,10 +741,11 @@ void __declspec(naked) exporter::DB_AddXAsset_stub()
 void Sys_Error_Hk(LPCSTR str)
 {
 	std::string err = str;
+	
+	__debugbreak();
 
 	MessageBoxA(0, str, str, 0);
 
-	__debugbreak();
 }
 
 int exporter::SND_SetDataHook(game::native::MssSound*, char*)
@@ -831,6 +839,17 @@ void exporter::post_load()
 {
 	if (utils::flags::has_flag("exporter"))
 	{
+		// Increase pool sizes
+		increase_pool_size(game::native::ASSET_TYPE_IMAGE, 8000);
+		increase_pool_size(game::native::ASSET_TYPE_FONT, 16 * 2);
+		increase_pool_size(game::native::ASSET_TYPE_LOCALIZE_ENTRY, 8200 * 4);
+		increase_pool_size(game::native::ASSET_TYPE_FX, 1024 * 2);
+		increase_pool_size(game::native::ASSET_TYPE_LOADED_SOUND, 1650 * 2);
+		increase_pool_size(game::native::ASSET_TYPE_XMODEL, 2208 * 2);
+
+		// allow loading insecure zones
+		utils::hook::nop(0x4B8986, 2);
+
 		// Keep sounds around
 		utils::hook(0x4B94EC, exporter::SND_SetDataHook, HOOK_CALL).install()->quick();
 
@@ -851,6 +870,9 @@ void exporter::post_load()
 
 		// Kill command whitelist
 		utils::hook::set<unsigned char>(0X00553BA0, 0xC3);
+
+		// Put breakpoint on default asset failure
+		utils::hook::set<unsigned char>(0x4CA561, 0xCC);
 
 		// catch sys_error
 		utils::hook(0x5CC43E, Sys_Error_Hk, HOOK_CALL).install()->quick();
@@ -893,6 +915,13 @@ void exporter::post_load()
 		iw4of_api = new iw4of::api(params);
 
 		scheduler::once([&params]() {
+
+			const auto g_loadingZone = reinterpret_cast<bool*>(0x148A98E);
+			while (*g_loadingZone)
+			{
+				game::native::Sys_Sleep(0);
+			}
+
 			console::info("ready!\n");
 
 			ready = true;

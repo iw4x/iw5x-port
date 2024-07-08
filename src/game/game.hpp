@@ -29,7 +29,7 @@ namespace game
 		typedef const char* (*DB_GetXAssetName_t)(const XAsset* a1);
 		extern DB_GetXAssetName_t DB_GetXAssetName;
 
-		typedef void (*DB_LoadXAssets_t)(XZoneInfo* zoneInfo, unsigned int zoneCount, int sync);
+		typedef void (*DB_LoadXAssets_t)(XZoneInfo* zoneInfo, unsigned int zoneCount, native::XFileSynchronicity sync);
 		extern DB_LoadXAssets_t DB_LoadXAssets;
 
 		typedef XAssetHeader (*DB_FindXAssetHeader_t)(XAssetType type, const char* name, int allowCreateDefault);
@@ -40,6 +40,9 @@ namespace game
 
 		typedef void (*DB_EnumXAssets_t)(XAssetType type, void(__cdecl* callback)(XAssetHeader, void*), void* userdata, bool overrides);
 		extern DB_EnumXAssets_t DB_EnumXAssets;
+
+		typedef int (*DB_GetXAssetSizeHandler_t)(XAssetType type);
+		extern DB_GetXAssetSizeHandler_t DB_GetXAssetSizeHandler;
 
 		typedef const dvar_t* (*Dvar_RegisterBool_t)(const char* dvarName, bool value,
 			unsigned __int16 flags, const char* description);
@@ -257,6 +260,8 @@ namespace game
 
 		extern int* g_script_error_level;
 		extern jmp_buf* g_script_error;
+		extern int* g_poolSize;
+		extern void** DB_XAssetPool;
 
 		extern scr_classStruct_t* g_classMap;
 

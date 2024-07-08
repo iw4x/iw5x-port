@@ -65,7 +65,7 @@ namespace asset_dumpers
 	{
 		command::add("dumpComWorld", [&](const command::params& params)
 			{
-				game::native::XAssetHeader com_header;
+				game::native::XAssetHeader com_header{};
 				game::native::DB_EnumXAssets(game::native::XAssetType::ASSET_TYPE_COMWORLD, [](game::native::XAssetHeader header, void* data) {
 					memcpy(data, &header, sizeof header);
 

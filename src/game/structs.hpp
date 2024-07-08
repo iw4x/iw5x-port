@@ -349,6 +349,14 @@ namespace game
 			BD_MAX_ERROR_CODE = 0x27E2,
 		};
 
+		enum XFileSynchronicity
+		{
+			DB_LOAD_ASYNC = 0x0,
+			DB_LOAD_SYNC = 0x1,
+			DB_LOAD_ASYNC_WAIT_ALLOC = 0x2,
+			DB_LOAD_ASYNC_FORCE_FREE = 0x3
+		};
+
 		enum bdNATType : uint8_t
 		{
 			BD_NAT_UNKNOWN = 0x0,

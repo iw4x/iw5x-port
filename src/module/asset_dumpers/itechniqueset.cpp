@@ -250,7 +250,7 @@ namespace asset_dumpers
 		{ game::native::TEXTURE_SRC_CODE_POST_EFFECT_1, iw4::native::TEXTURE_SRC_CODE_POST_EFFECT_1 },
 		{ game::native::TEXTURE_SRC_CODE_LIGHT_ATTENUATION, iw4::native::TEXTURE_SRC_CODE_LIGHT_ATTENUATION },
 
-		//{ game::native::TEXTURE_SRC_CODE_LIGHT_CUCOLORIS, iw4::native::TEXTURE_SRC_CODE_WHITE }, // WRONG !
+		{ game::native::TEXTURE_SRC_CODE_LIGHT_CUCOLORIS, iw4::native::TEXTURE_SRC_CODE_WHITE }, // WRONG !
 
 		{ game::native::TEXTURE_SRC_CODE_OUTDOOR, iw4::native::TEXTURE_SRC_CODE_OUTDOOR },
 		{ game::native::TEXTURE_SRC_CODE_FLOATZ, iw4::native::TEXTURE_SRC_CODE_FLOATZ },
