@@ -52,6 +52,8 @@ namespace asset_dumpers
 			iw4_light->defName = native_light->defName;
 		}
 
+		iw4_comworld->name = exporter::fix_map_name(iw4_comworld->name, local_allocator);
+
 		out.comWorld = iw4_comworld;
 	}
 
@@ -73,8 +75,8 @@ namespace asset_dumpers
 
 				if (com_header.data)
 				{
-					convert_and_write(com_header);
-					exporter::add_to_source(game::native::ASSET_TYPE_COMWORLD, com_header.comWorld->name);
+					const auto converted = convert_and_write(com_header);
+					exporter::add_to_source(game::native::ASSET_TYPE_COMWORLD, converted.comWorld->name);
 				}
 			});
 	}

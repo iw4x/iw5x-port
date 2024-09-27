@@ -196,6 +196,8 @@ namespace asset_dumpers
 		iw4_clipmap->mapEnts->stageCount = native_clipmap->stageCount;
 		iw4_clipmap->mapEnts->stages = native_clipmap->stages;
 
+		iw4_clipmap->name = exporter::fix_map_name(iw4_clipmap->name, local_allocator);
+
 		out.clipMap = iw4_clipmap;
 	}
 
@@ -220,8 +222,8 @@ namespace asset_dumpers
 
 				if (out.data)
 				{
-					convert_and_write(out);
-					exporter::add_to_source(game::native::ASSET_TYPE_CLIPMAP, out.clipMap->name);
+					const auto converted = convert_and_write(out);
+					exporter::add_to_source(game::native::ASSET_TYPE_CLIPMAP, converted.clipMap->name);
 				}
 			});
 	}

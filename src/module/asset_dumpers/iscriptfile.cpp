@@ -47,22 +47,28 @@ namespace asset_dumpers
 			std::string script_name = get_script_name(script);
 			std::string script_data = get_decompiled_script(script);
 
+			const bool is_mp = exporter::get_map_name().starts_with("mp_");
+
 			/////////////////////
 			/// quick GSC Fixups
 			///
-			if (script_name.ends_with("_fog.gsc"))
+			if (is_mp)
 			{
-				script_data = get_converted_fog(script_data);
-			}
-			if (script_name.ends_with("_fx.gsc") && script_name.starts_with("maps/createfx/"))
-			{
-				script_data = convert_to_strict_createfx(script_data);
-			}
+				if (script_name.ends_with("_fog.gsc"))
+				{
+					script_data = get_converted_fog(script_data);
+				}
+				if (script_name.ends_with("_fx.gsc") && script_name.starts_with("maps/createfx/"))
+				{
+					script_data = convert_to_strict_createfx(script_data);
+				}
 
-			script_data = add_fog_init(script_data);
-			script_data = general_compatibility_fixes(script_data);
+				script_data = add_fog_init(script_data);
+				script_data = general_compatibility_fixes(script_data);
+				script_data = rename_map_animtrees(script_data);
+			}
+			
 			script_data = rename_common_imports(script_data);
-			script_data = rename_map_animtrees(script_data);
 			///
 			////////////////////////////
 
@@ -72,12 +78,13 @@ namespace asset_dumpers
 				dump_character_related_script_recursively(script_data);
 			}
 
-
 			iw4_rawfile->buffer = local_allocator.allocate_array<char>(script_data.size());
 			memcpy(iw4_rawfile->buffer, script_data.data(), script_data.size());
 			iw4_rawfile->len = script_data.size();
 			iw4_rawfile->compressedLen = 0;
 			iw4_rawfile->name = local_allocator.duplicate_string(script_name);
+
+			iw4_rawfile->name = exporter::fix_map_name(iw4_rawfile->name, local_allocator);
 		}
 
 		out.rawfile = exporter::convert(game::native::ASSET_TYPE_RAWFILE, {iw4_rawfile}).rawfile;
@@ -87,7 +94,7 @@ namespace asset_dumpers
 	{
 		// Fog works completely differently in iw5 but the settings are very similar
 
-		const auto regex_str_template = "(?:{} *= *((?:[0-9]|\\.)*))";
+		constexpr auto regex_str_template = "(?:{} *= *((?:[0-9]|\\.)*))";
 		const std::string members[] =
 		{
 			"startdist", "halfwaydist", "red", "green" ,"blue", "maxopacity", "transitiontime"
@@ -156,7 +163,7 @@ namespace asset_dumpers
 
 	std::string iscriptfile::add_fog_init(const std::string& script)
 	{
-		const auto map_name = exporter::get_map_name();
+		const auto map_name = exporter::get_output_map_name();
 		auto script_copy = script;
 
 		// Add fog init
@@ -196,11 +203,13 @@ namespace asset_dumpers
 
 		std::string script_cpy = script;
 
+		console::info("- replacing iw5 functions with iw4 equivalents...\n");
 		for (auto replacement : replacements)
 		{
 			script_cpy = std::regex_replace(script_cpy, replacement.first, replacement.second);
 		}
 
+		console::info("- downgrading syntax (arrays)...\n");
 		// Downgrade syntax - we can't use on the fly arrays anymore
 		{
 			std::regex inline_array_catcher = std::regex("( *)(.*) \\[ ([^,]+) \\](.*;)");
@@ -217,6 +226,7 @@ namespace asset_dumpers
 			);
 		}
 
+		console::info("- downgrading syntax (ternaries)...\n");
 		// Downgrade syntax - ternaries
 		{
 			std::regex ternary_catcher = std::regex("( *)(.*)common_scripts\\\\utility::ter_op\\( (.*), (.*), (.*) \\)(.*;)");
@@ -233,6 +243,7 @@ namespace asset_dumpers
 			);
 		}
 
+		console::info("- downgrading syntax (multi array declarations)...\n");
 		// Multiple array declarations, more work
 		{
 			std::regex inline_multi_array_finder = std::regex("(.*)\\[ ((?:.)+, (?:.)+) \\](.*;)");
@@ -282,6 +293,8 @@ namespace asset_dumpers
 
 	std::string iscriptfile::rename_map_animtrees(const std::string& script)
 	{
+		console::info("- renaming animtrees...\n");
+
 		static std::regex animtree_catcher("#using_animtree\\(\"(.*)\"\\);");
 		std::smatch m;
 		
@@ -317,7 +330,7 @@ namespace asset_dumpers
 				}
 				else
 				{
-					assert(false);
+					//assert(false);
 				}
 			}
 		}
@@ -412,6 +425,13 @@ namespace asset_dumpers
 		for (size_t i = 0; i < ARRAYSIZE(includes_to_rename); i++)
 		{
 			final_output = std::regex_replace(final_output, std::regex(regex_ready_includes_to_rename[i]), std::format("{}::", "$1_5x"));
+		}
+
+		// Rename map
+		if (exporter::map_must_be_renamed())
+		{
+			const auto find = std::regex(exporter::get_map_name());
+			final_output = std::regex_replace(final_output, find, exporter::get_output_map_name());
 		}
 		
 		return final_output;
@@ -555,6 +575,8 @@ namespace asset_dumpers
 
 			if (script.data)
 			{
+				console::info("working on %s...\n", file.data());
+
 				std::string raw_script = get_decompiled_script(script.scriptfile);
 				std::string rawfile_name = std::format("{}_5x.gsc", file);
 

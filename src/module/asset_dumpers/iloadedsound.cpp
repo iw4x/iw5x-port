@@ -37,7 +37,7 @@ namespace asset_dumpers
 		else
 		{
 			// !
-			console::warn("Missing sound data for sound {}\n", header.loadSnd->name);
+			console::warn("Missing sound data for sound %s\n", header.loadSnd->name);
 			out.loadSnd->sound.data = local_allocator.allocate_array<char>(out.loadSnd->sound.info.data_len);
 		}
 

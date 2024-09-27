@@ -80,6 +80,8 @@ namespace asset_dumpers
 		SET_GLASS_SYS_MEMBER(effectChanceAccum);
 		SET_GLASS_SYS_MEMBER(lastPieceDeletionTime);
 
+		iw4_fxworld->name = exporter::fix_map_name(iw4_fxworld->name, local_allocator);
+
 		out.fxWorld = iw4_fxworld;
 	}
 
@@ -103,8 +105,8 @@ namespace asset_dumpers
 
 				if (out.data)
 				{
-					convert_and_write(out);
-					exporter::add_to_source(game::native::ASSET_TYPE_FXWORLD, out.fxWorld->name);
+					const auto converted = convert_and_write(out);
+					exporter::add_to_source(game::native::ASSET_TYPE_FXWORLD, converted.fxWorld->name);
 				}
 			});
 	}

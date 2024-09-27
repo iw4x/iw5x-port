@@ -50,6 +50,8 @@ std::vector<std::string> exporter::captured_fx{};
 bool exporter::capture = false;
 bool exporter::ready = false;
 std::string exporter::map_name{};
+std::string exporter::output_map_name{};
+bool exporter::must_be_renamed;
 std::vector<std::string> exporter::prepared_source{};
 std::unordered_map<std::string, std::string> exporter::rawfile_rename_map{};
 std::unordered_map<iw4::native::XAssetType, game::native::XAssetType> exporter::iw4_to_iw5_type_table =
@@ -135,9 +137,6 @@ std::string exporter::common_sounds[] = {
 
 typedef bool (*DB_Update_t)();
 DB_Update_t DB_Update = (DB_Update_t)0x4CDA40;
-
-typedef bool (*SV_Map_f_t)(int a1, const char* mapName, unsigned __int8 isPreloaded, unsigned __int8 migrate);
-SV_Map_f_t SV_Map_f = (SV_Map_f_t)0x56EEA0;
 
 typedef void (*Cbuf_Execute_t)(int localClient, int controllerIndex);
 Cbuf_Execute_t Cbuf_Execute = (Cbuf_Execute_t)0x546590;
@@ -324,6 +323,17 @@ void exporter::dump_map(const command::params& params)
 	if (params.size() < 2) return;
 	map_name = params[1];
 
+	if (map_name.starts_with("mp_"))
+	{
+		output_map_name = map_name;
+		must_be_renamed = false;
+	}
+	else
+	{
+		output_map_name = std::format("mp_5x_{}", map_name);
+		must_be_renamed = true;
+	}
+
 	iw4of_api->clear_writes();
 	iw4of_api->set_work_path(export_path_dvar->current.string);
 
@@ -401,13 +411,16 @@ void exporter::dump_map(const command::params& params)
 	captured_rawfiles.clear();
 	captured_scripts.clear();
 
+	bool is_mp = map_name.starts_with("mp_");
+	const std::string prefix = is_mp ? "mp/" : "";
+
 	prepared_source.emplace_back("\n");
-	command::execute(std::format("dumpScript maps/mp/{}", map_name), true);
-	command::execute(std::format("dumpScript maps/mp/{}_precache", map_name), true);
+	command::execute(std::format("dumpScript maps/{}{}", prefix, map_name), true);
+	command::execute(std::format("dumpScript maps/{}{}_precache", prefix, map_name), true);
 	command::execute(std::format("dumpScript maps/createart/{}_art", map_name), true);
 
 	prepared_source.emplace_back("\n");
-	command::execute(std::format("dumpScript maps/mp/{}_fx", map_name), true);
+	command::execute(std::format("dumpScript maps/{}{}_fx", prefix, map_name), true);
 	command::execute(std::format("dumpScript maps/createfx/{}_fx", map_name), true);
 	command::execute(std::format("dumpScript maps/createart/{}_fog", map_name), true);
 
@@ -460,8 +473,8 @@ void exporter::dump_map(const command::params& params)
 
 	console::info("Writing source...\n");
 
-	utils::io::write_file(std::format("{}/{}.csv", export_path_dvar->current.string, map_name), get_source(), false);
-	utils::io::write_file(std::format("{}/{}_load.csv", export_path_dvar->current.string, map_name), "material,$levelbriefing\n", false);
+	utils::io::write_file(std::format("{}/{}.csv", export_path_dvar->current.string, output_map_name), get_source(), false);
+	utils::io::write_file(std::format("{}/{}_load.csv", export_path_dvar->current.string, output_map_name), "material,$levelbriefing\n", false);
 
 	console::info("done!\n");
 
@@ -528,9 +541,10 @@ void exporter::load_common_zones()
 		info.allocFlags = 1;
 		info.freeFlags = 0;
 
-		game::native::DB_LoadXAssets(&info, 1, 0);
+		game::native::DB_LoadXAssets(&info, 1, game::native::DB_LOAD_SYNC);
 	}
 
+	DB_Update();
 
 	console::info("done!\n");
 }
@@ -598,6 +612,28 @@ iw4::native::XAssetHeader exporter::convert(game::native::XAssetType type, game:
 	}
 }
 
+const char* exporter::fix_map_name(const char* name, utils::memory::allocator& allocator)
+{
+	if (must_be_renamed)
+	{
+		std::string name_str = name;
+		std::string output = std::regex_replace(name_str, std::regex(map_name), output_map_name);
+		if (output != name_str)
+		{
+			const auto path = std::format("/{}", output_map_name);
+			if (output.contains(path))
+			{
+				 // It's a path! We need to add /mp
+				output = std::regex_replace(output, std::regex(path), std::format("/mp{}", path));
+			}
+
+			return allocator.duplicate_string(output);
+		}
+	}
+
+	return name;
+}
+
 void exporter::add_to_source(game::native::XAssetType type, const std::string asset)
 {
 	auto name = game::native::g_assetNames[type];
@@ -637,6 +673,8 @@ std::string exporter::get_source()
 
 	return source.str();
 }
+
+static int assetsAdded = 0;
 
 void exporter::DB_AddXAsset_Hk(game::native::XAssetType type, game::native::XAssetHeader* header)
 {
@@ -833,6 +871,16 @@ void* exporter::find_asset_for_api(int iw4_type, const std::string& name)
 	}
 
 	return reinterpret_cast<void*>(0);
+}
+
+void increase_pool_size(game::native::XAssetType type, uint32_t new_count)
+{
+	game::native::g_poolSize[type] = new_count;
+
+	const auto size = game::native::DB_GetXAssetSizeHandler(type);
+	void* poolEntry = utils::memory::allocate(new_count * size);
+	game::native::DB_XAssetPool[type] = poolEntry;
+	game::native::g_poolSize[type] = new_count;
 }
 
 void exporter::post_load()

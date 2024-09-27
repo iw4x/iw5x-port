@@ -24,8 +24,11 @@ namespace asset_dumpers
 		assert(header.glassWorld);
 
 		// No conversion necessary
+		auto iw4_game_world = local_allocator.allocate<game::native::GlassWorld>();
+		iw4_game_world->g_glassData = header.glassWorld->g_glassData;
+		iw4_game_world->name = exporter::fix_map_name(header.glassWorld->name, local_allocator);
 
-		out.gameWorldMp = header.glassWorld;
+		out.gameWorldMp = iw4_game_world;
 	}
 
 	void iglassworld::write(const iw4::native::XAssetHeader& header)
@@ -48,8 +51,8 @@ namespace asset_dumpers
 
 				if (out.data)
 				{
-					convert_and_write(out);
-					exporter::add_to_source(game::native::ASSET_TYPE_GLASSWORLD, out.glassWorld->name);
+					const auto converted = convert_and_write(out);
+					exporter::add_to_source(game::native::ASSET_TYPE_GLASSWORLD, converted.gameWorldMp->name);
 				}
 			});
 	}

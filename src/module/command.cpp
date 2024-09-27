@@ -342,8 +342,21 @@ void command::add_sp_commands()
 	});
 }
 
+
+
 void command::post_load()
 {
+	add("map", [](const params& params)
+		{
+			if (params.size() == 1)
+			{
+				const auto map_name = params.get(0);
+				game::native::SV_Map_f(0, map_name, false, false);
+			}
+		});
+
+
+
 	add("quit", game::native::Com_Quit_f);
 
 	if (game::is_mp())

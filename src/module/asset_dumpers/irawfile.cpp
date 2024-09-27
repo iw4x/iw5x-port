@@ -22,29 +22,43 @@ namespace asset_dumpers
 	{
 		assert(header.rawfile);
 
+		game::native::RawFile* iw4_rawfile = local_allocator.allocate<game::native::RawFile>();
+		iw4_rawfile->buffer = header.rawfile->buffer;
+		iw4_rawfile->compressedLen = header.rawfile->compressedLen;
+		iw4_rawfile->len = header.rawfile->len;
+
 		std::string name(header.rawfile->name);
-		if (name.ends_with(".vision"))
+		if (name.contains(exporter::get_output_map_name()))
 		{
-			// IW4 is a very vibrant game, so let's saturate vision a little bit
-			saturate_vision(header.rawfile);
-		}
-
-		if (name.ends_with(".atr"))
-		{
-			out.rawfile = local_allocator.allocate<game::native::RawFile>();
-			memcpy_s(out.rawfile, sizeof game::native::RawFile, header.rawfile, sizeof game::native::RawFile);
-
-			// We rename animtrees because they're canonically part of common_mp and will cause problems in iw4
-			out.rawfile->name = local_allocator.duplicate_string(
-				std::format("{}_5x.atr", name.substr(0, name.size() - 4))
-			);
+			// This file was already renamed!
+			iw4_rawfile->name = header.rawfile->name;
 		}
 		else
 		{
-			out.rawfile = header.rawfile;
+			iw4_rawfile->name = exporter::fix_map_name(header.rawfile->name, local_allocator);
 		}
 
-		exporter::add_to_source(game::native::XAssetType::ASSET_TYPE_RAWFILE, out.rawfile->name);
+		const auto len = iw4_rawfile->compressedLen == 0 ? iw4_rawfile->len : iw4_rawfile->compressedLen;
+
+		if (name.ends_with(".vision"))
+		{
+			iw4_rawfile->buffer = local_allocator.allocate_array<char>(len);
+			memcpy_s(iw4_rawfile->buffer, len, header.rawfile->buffer, len);
+
+			// IW4 is a very vibrant game, so let's saturate vision a little bit
+			saturate_vision(iw4_rawfile);
+		}
+		else if (name.ends_with(".atr"))
+		{
+			// We rename animtrees because they're canonically part of common_mp and will cause problems in iw4
+			iw4_rawfile->name = local_allocator.duplicate_string(
+				std::format("{}_5x.atr", name.substr(0, name.size() - 4))
+			);
+		}
+
+		out.rawfile = iw4_rawfile;
+
+		exporter::add_to_source(game::native::XAssetType::ASSET_TYPE_RAWFILE, iw4_rawfile->name);
 	}
 
 	void irawfile::saturate_vision(game::native::RawFile* rawfile)
@@ -106,8 +120,8 @@ namespace asset_dumpers
 
 				if (entry)
 				{
-					convert_and_write(entry->asset.header);
-					exporter::add_to_source(game::native::XAssetType::ASSET_TYPE_RAWFILE, entry->asset.header.rawfile->name);
+					const auto converted = convert_and_write(entry->asset.header);
+					exporter::add_to_source(game::native::XAssetType::ASSET_TYPE_RAWFILE, converted.rawfile->name);
 				}
 				else
 				{

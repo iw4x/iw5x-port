@@ -1,6 +1,7 @@
 #pragma once
 #include <module/command.hpp>
 #include <game/structs.iw4.hpp>
+#include <utils/memory.hpp>
 
 #include "api.hpp"
 
@@ -21,6 +22,9 @@ public:
 	static iw4::native::XAssetHeader convert_and_write(game::native::XAssetType type, game::native::XAssetHeader header);
 	static iw4::native::XAssetHeader convert(game::native::XAssetType type, game::native::XAssetHeader header);
 	static std::string get_map_name() { return map_name; }
+	static std::string get_output_map_name() { return output_map_name; }
+	static const char* fix_map_name(const char* name, utils::memory::allocator& allocator);
+	static bool map_must_be_renamed() { return must_be_renamed; };
 	static void add_to_source(game::native::XAssetType type, const std::string asset);
 	static const iw4of::api* get_api() { return iw4of_api; };
 	static void add_rename_asset(const std::string& old_name, const std::string& new_name);
@@ -56,6 +60,8 @@ private:
 	static std::vector<std::string> captured_fx;
 
 	static std::string map_name;
+	static std::string output_map_name;
+	static bool must_be_renamed;
 	static std::vector<std::string> prepared_source;
 	static std::unordered_map<std::string, std::string> rawfile_rename_map;
 	static std::unordered_map<iw4::native::XAssetType, game::native::XAssetType> iw4_to_iw5_type_table;

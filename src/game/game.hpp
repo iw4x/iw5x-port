@@ -178,6 +178,9 @@ namespace game
 		typedef void (*SV_Cmd_TokenizeString_t)(const char* text_in);
 		extern SV_Cmd_TokenizeString_t SV_Cmd_TokenizeString;
 
+		typedef bool (*SV_Map_f_t)(int a1, const char* mapName, unsigned __int8 isPreloaded, unsigned __int8 migrate);
+		extern SV_Map_f_t SV_Map_f;
+
 		typedef void (*SV_Cmd_EndTokenizedString_t)();
 		extern SV_Cmd_EndTokenizedString_t SV_Cmd_EndTokenizedString;
 

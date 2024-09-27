@@ -66,6 +66,8 @@ namespace asset_dumpers
 		iw4_ents->entityString = local_allocator.duplicate_string(str);
 		iw4_ents->numEntityChars = str.size();
 
+		iw4_ents->name = exporter::fix_map_name(iw4_ents->name, local_allocator);
+
 		out.mapEnts = iw4_ents;
 	}
 

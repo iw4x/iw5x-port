@@ -83,6 +83,8 @@ namespace game
 		SV_DirectConnect_t SV_DirectConnect;
 		SV_ClientEnterWorld_t SV_ClientEnterWorld;
 		SV_Cmd_TokenizeString_t SV_Cmd_TokenizeString;
+		SV_Map_f_t SV_Map_f;
+
 		SV_Cmd_EndTokenizedString_t SV_Cmd_EndTokenizedString;
 		SV_SpawnServer_t SV_SpawnServer;
 		SV_GetConfigstring_t SV_GetConfigstring;
@@ -813,6 +815,7 @@ namespace game
 		native::SV_DirectConnect = native::SV_DirectConnect_t(SELECT_VALUE(0x0, 0x572750));
 		native::SV_ClientEnterWorld = native::SV_ClientEnterWorld_t(SELECT_VALUE(0x0, 0x571100));
 		native::SV_Cmd_TokenizeString = native::SV_Cmd_TokenizeString_t(SELECT_VALUE(0x0, 0x545D40));
+		native::SV_Map_f = native::SV_Map_f_t(0x56EEA0);
 		native::SV_Cmd_EndTokenizedString = native::SV_Cmd_EndTokenizedString_t(SELECT_VALUE(0x0, 0x545D70));
 		native::SV_SpawnServer = native::SV_SpawnServer_t(SELECT_VALUE(0x0, 0x575020));
 		native::SV_GetConfigstring = native::SV_GetConfigstring_t(SELECT_VALUE(0x4C6E30, 0x573D50));

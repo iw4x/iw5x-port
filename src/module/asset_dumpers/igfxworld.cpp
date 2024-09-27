@@ -139,6 +139,9 @@ namespace asset_dumpers
 
 		iw4_world->checksum = 0xC0D80000;
 
+		iw4_world->name = exporter::fix_map_name(iw4_world->name, local_allocator);
+		iw4_world->baseName = exporter::fix_map_name(iw4_world->baseName, local_allocator);
+
 		out.gfxWorld = iw4_world;
 	}
 
@@ -313,8 +316,8 @@ namespace asset_dumpers
 
 				if (out.data)
 				{
-					convert_and_write(out);
-					exporter::add_to_source(game::native::ASSET_TYPE_GFXWORLD, out.gfxWorld->name);
+					const auto converted = convert_and_write(out);
+					exporter::add_to_source(game::native::ASSET_TYPE_GFXWORLD, converted.gfxWorld->name);
 				}
 			});
 	}
