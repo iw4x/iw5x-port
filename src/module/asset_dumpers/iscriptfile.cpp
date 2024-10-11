@@ -584,8 +584,12 @@ namespace asset_dumpers
 				{
 					// Specific fix for _load - we have to remove this function
 					static std::regex remove_destructible_killcam("(setupdestructiblekillcaments\\(\\)\n\\{)[\\S\\s]*(\\})");
-
 					raw_script = std::regex_replace(raw_script, remove_destructible_killcam, "$1\n    // iw5xport: Nothing to see here!\n$2");
+					
+					// Change visionsetpain dvar to match IW4 since IW5 dvar sets gray vision
+					static std::regex vision_set_pain(R"(visionsetpain\(\s*"near_death_mp"\s*,\s*0\s*\);)");
+					raw_script = std::regex_replace(raw_script, vision_set_pain, R"(visionsetpain( getDvar( "mapname" ) );)");
+
 				}
 
 				if (file.ends_with("_destructible_types"))
