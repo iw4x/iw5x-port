@@ -54,6 +54,26 @@ namespace asset_dumpers
 			// This is okay because the two parameters we're missing are the last two
 			// and for the rest, struct is the same size. so i guess we can do this?
 			memcpy(&iw4_world->cells[i], &native_world->cells[i], sizeof iw4::native::GfxCell);
+
+			for (size_t ref_probe_index = 0; ref_probe_index < iw4_world->cells[i].reflectionProbeCount; ref_probe_index++)
+			{
+				if (iw4_world->cells[i].reflectionProbes[ref_probe_index] == 0)
+				{
+					// vvv This crashes IW4 on a sampler error. If you know why, please tell me
+					//if (native_world->cells[i].reflectionProbeReferenceCount <= native_world->cells[i].reflectionProbeCount)
+					//{
+					//	iw4_world->cells[i].reflectionProbes[ref_probe_index] = 
+					//		std::min(
+					//			native_world->cells[i].reflectionProbeReferences[ref_probe_index],
+					//			static_cast<unsigned char>(iw4_world->draw.reflectionProbeCount-1)
+					//		);
+					//}
+					//else
+					{
+						iw4_world->cells[i].reflectionProbes[ref_probe_index] = 1; // it's using a ref probe reference, so we put something there to avoid "all red"
+					}
+				}
+			}
 		}
 
 		iw4_world->draw = convert(native_world, native_world->draw);
@@ -220,7 +240,16 @@ namespace asset_dumpers
 			// data is already good but we need to dump every model
 			for (unsigned int i = 0; i < iw4_dpvs_static.smodelCount; i++)
 			{
+				static_assert(sizeof(game::native::GfxStaticModelDrawInst) == sizeof(iw4::native::GfxStaticModelDrawInst));
+
 				auto inst = &iw4_dpvs_static.smodelDrawInsts[i];
+
+				// IW5 uses "reflection probe references" which IW4 doesn't have, so in doubt, give us something to avoid the reddening
+				if (inst->reflectionProbeIndex == 0)
+				{
+					inst->reflectionProbeIndex = 1;
+				}
+
 				inst->model = exporter::convert(game::native::XAssetType::ASSET_TYPE_XMODEL, { inst->model }).model;
 			}
 		}

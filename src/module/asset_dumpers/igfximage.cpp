@@ -25,22 +25,6 @@ namespace asset_dumpers
 
 	void igfximage::write(const iw4::native::XAssetHeader& header)
 	{
-		auto image = header.image;
-		std::string name = image->name;
-
-		// Reflection probe 0 is "all red" for IW3, IW4, and IW5
-		// This is a sort of... tradition, i assume
-		// But some IW5 maps like mp_nola still _use_ this reflection probe
-		// On IW5 this is probably supported, but in IW4 it makes it look all red
-		// Let's skip it and write RP1 instead over RP0.
-		if (name == "*reflection_probe1"s)
-		{
-			const char* backup = image->name;
-			image->name = "*reflection_probe0";
-			exporter::get_api()->write(iw4::native::ASSET_TYPE_IMAGE, header.data);
-			image->name = backup;
-		}
-
 		[[maybe_unused]] bool result = exporter::get_api()->write(iw4::native::ASSET_TYPE_IMAGE, header.data);
 		assert(result);
 	}

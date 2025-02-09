@@ -527,8 +527,8 @@ void exporter::load_common_zones()
 	{
 		common_zones.emplace_back("code_post_gfx_mp");
 		common_zones.emplace_back("localized_code_post_gfx_mp");
-		common_zones.emplace_back("localized_common_mp");
 		common_zones.emplace_back("patch_mp");
+		common_zones.emplace_back("localized_common_mp");
 		common_zones.emplace_back("common_mp");
 	}
 

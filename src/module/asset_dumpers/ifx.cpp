@@ -118,6 +118,10 @@ namespace asset_dumpers
 			auto iw4_def = &iw4_fx->elemDefs[i];
 			auto native_def = &native_fx->elemDefs[i];
 
+			// although, some IW5 FX flags will soft-lock IW4. It's very rare (happens on boardwalk) and I'm not sure why
+			// For know we can clamp them safely
+			iw4_def->flags &= 0x00FFFFFF;
+
 			iw4_def->visuals = iw4::native::FxElemDefVisuals{};
 
 			// fxElemType is IDENTICAL
