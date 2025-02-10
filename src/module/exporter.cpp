@@ -424,8 +424,14 @@ void exporter::dump_map(const command::params& params)
 	command::execute(std::format("dumpScript maps/createfx/{}_fx", map_name), true);
 	command::execute(std::format("dumpScript maps/createart/{}_fog", map_name), true);
 
-	prepared_source.emplace_back("\n");
-	command::execute("dumpRawFile animtrees/animated_props.atr", true);
+	{
+		bool is_patch_mp = map_name.starts_with("patch_mp");
+		if (is_patch_mp)
+		{
+			prepared_source.emplace_back("\n");
+			command::execute("dumpRawFile animtrees/animated_props.atr", true);
+		}
+	}
 
 	prepared_source.emplace_back("\n");
 	console::info("Exporting Vision...\n");
