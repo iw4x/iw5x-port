@@ -69,6 +69,12 @@ namespace asset_dumpers
 		SET_XMODEL_MEMBER(partClassification);
 		SET_XMODEL_MEMBER(baseMat);
 
+		for (size_t i = 0; i < native_model->numBones; i++)
+		{
+			// IW4 expects a hitlocation between 0 and 19 included, otherwise you get a hardcrash when you hit the model with a bullet!
+			native_model->partClassification[i] = std::clamp(native_model->partClassification[i], static_cast<uint8_t>(0), static_cast<uint8_t>(19));
+		}
+
 		const auto num_surfs = native_model->numsurfs;
 
 		iw4_model->materialHandles = local_allocator.allocate_array<iw4::native::Material*>(num_surfs);
